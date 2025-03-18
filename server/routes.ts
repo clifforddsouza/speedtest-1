@@ -1,6 +1,18 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import crypto from 'crypto';
+
+// Speed test endpoints for high bandwidth testing
+app.get('/api/speedtest/download', (req, res) => {
+  const size = parseInt(req.query.size as string) || 25 * 1024 * 1024; // 25MB chunks
+  const buffer = crypto.randomBytes(size);
+  res.send(buffer);
+});
+
+app.post('/api/speedtest/upload', express.raw({limit: '50mb', type: '*/*'}), (req, res) => {
+  res.sendStatus(200);
+});
 import { insertSpeedTestSchema } from "@shared/schema";
 import { z } from "zod";
 

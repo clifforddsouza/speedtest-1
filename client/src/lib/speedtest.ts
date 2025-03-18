@@ -48,6 +48,52 @@ export const measureSpeed = async (
   type: 'download' | 'upload',
   progressCallback: (progress: number, dataAmount: number) => void
 ): Promise<number> => {
+  const testSize = 250 * 1024 * 1024; // 250MB total test size
+  const chunkSize = 25 * 1024 * 1024; // 25MB chunks
+  let totalBytes = 0;
+  const startTime = performance.now();
+
+  try {
+    if (type === 'download') {
+      for (let offset = 0; offset < testSize && !abortController.signal.aborted; offset += chunkSize) {
+        const response = await fetch(`/api/speedtest/download?size=${chunkSize}`);
+        if (!response.ok) throw new Error('Download failed');
+        const blob = await response.blob();
+        totalBytes += blob.size;
+        
+        const progress = (totalBytes / testSize) * 100;
+        const duration = (performance.now() - startTime) / 1000;
+        const speed = (totalBytes * 8) / (1000000 * duration); // Mbps
+        
+        progressCallback(progress, totalBytes / (1024 * 1024));
+      }
+    } else {
+      const data = new Uint8Array(chunkSize);
+      crypto.getRandomValues(data);
+      
+      for (let offset = 0; offset < testSize && !abortController.signal.aborted; offset += chunkSize) {
+        const blob = new Blob([data]);
+        const response = await fetch('/api/speedtest/upload', {
+          method: 'POST',
+          body: blob
+        });
+        if (!response.ok) throw new Error('Upload failed');
+        
+        totalBytes += chunkSize;
+        const progress = (totalBytes / testSize) * 100;
+        const duration = (performance.now() - startTime) / 1000;
+        const speed = (totalBytes * 8) / (1000000 * duration); // Mbps
+        
+        progressCallback(progress, totalBytes / (1024 * 1024));
+      }
+    }
+    
+    const duration = (performance.now() - startTime) / 1000;
+    return (totalBytes * 8) / (1000000 * duration); // Final speed in Mbps
+  } catch (error) {
+    console.error(`Error measuring ${type} speed:`, error);
+    throw error;
+  }
   try {
     // In a real implementation, we would:
     // 1. For download: fetch large files from the server
