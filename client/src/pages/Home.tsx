@@ -3,6 +3,8 @@ import CustomerForm from "@/components/CustomerForm";
 import SpeedTestPanel from "@/components/SpeedTestPanel";
 import TestResultsPanel from "@/components/TestResultsPanel";
 import ResultsDetailModal from "@/components/ResultsDetailModal";
+import SpeedTestGraph from "@/components/SpeedTestGraph";
+import PercentileAnalysis from "@/components/PercentileAnalysis";
 import type { SpeedTest } from "@shared/schema";
 
 export default function Home() {
@@ -63,6 +65,12 @@ export default function Home() {
         />
         
         <SpeedTestPanel customerId={customerId} testLocation={testLocation} testNotes={testNotes} />
+        
+        {/* New Graph Component */}
+        <SpeedTestGraph customerId={customerId} />
+        
+        {/* New Percentile Analysis */}
+        <PercentileAnalysis customerId={customerId} />
         
         <TestResultsPanel onViewDetails={handleViewDetailedResults} />
 
