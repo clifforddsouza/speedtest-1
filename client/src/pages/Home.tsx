@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import CustomerForm from "@/components/CustomerForm";
 import SpeedTestPanel from "@/components/SpeedTestPanel";
 import TestResultsPanel from "@/components/TestResultsPanel";
