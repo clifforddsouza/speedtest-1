@@ -51,7 +51,7 @@ export default function Home() {
             <div className="text-sm text-gray-500">
               <span>Server: Chicago, IL</span>
             </div>
-            <Link href="/admin" className="bg-primary text-white px-3 py-1 rounded text-sm font-medium hover:bg-opacity-90 transition-colors">
+            <Link href="/admin/login" className="bg-primary text-white px-3 py-1 rounded text-sm font-medium hover:bg-opacity-90 transition-colors">
               Admin Dashboard
             </Link>
           </div>
