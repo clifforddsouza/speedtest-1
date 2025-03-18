@@ -49,8 +49,13 @@ export default function Home() {
             </h1>
             <span className="ml-2 text-xs bg-primary text-white px-2 py-1 rounded-full">+ Packet Loss</span>
           </div>
-          <div className="text-sm text-gray-500">
-            <span>Server: Chicago, IL</span>
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-500">
+              <span>Server: Chicago, IL</span>
+            </div>
+            <Link href="/admin" className="bg-primary text-white px-3 py-1 rounded text-sm font-medium hover:bg-opacity-90 transition-colors">
+              Admin Dashboard
+            </Link>
           </div>
         </div>
       </header>
