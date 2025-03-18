@@ -12,6 +12,9 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarIcon } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -26,7 +29,8 @@ import {
   ReferenceLine,
 } from "recharts";
 import type { SpeedTest } from "@shared/schema";
-import { format, startOfMonth, endOfMonth, sub, isWithinInterval, startOfQuarter, endOfQuarter } from "date-fns";
+import { format, startOfMonth, endOfMonth, sub, isWithinInterval, startOfQuarter, endOfQuarter, isAfter, isBefore } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export default function AdminDashboard() {
   // State for filters and tabs
@@ -34,6 +38,9 @@ export default function AdminDashboard() {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [filterCustomerId, setFilterCustomerId] = useState<string>("");
   const [dateRange, setDateRange] = useState<number>(6); // Last 6 months/quarters by default
+  const [startDate, setStartDate] = useState<Date | undefined>(sub(new Date(), { months: 6 }));
+  const [endDate, setEndDate] = useState<Date | undefined>(new Date());
+  const [useDatePicker, setUseDatePicker] = useState<boolean>(false);
 
   // Fetch all test data
   const { data: speedTests, isLoading } = useQuery({
@@ -80,10 +87,23 @@ export default function AdminDashboard() {
   // Extract unique customer IDs
   const customerIds = Array.from(new Set(speedTests.map(test => test.customerId)));
 
-  // Filter tests by customer ID if one is selected
-  const filteredTests = selectedCustomerId 
-    ? speedTests.filter(test => test.customerId === selectedCustomerId)
-    : speedTests;
+  // Filter tests by customer ID and date range if selected
+  const filteredTests = speedTests.filter(test => {
+    // Filter by customer ID if selected
+    if (selectedCustomerId && test.customerId !== selectedCustomerId) {
+      return false;
+    }
+    
+    // Filter by custom date range if enabled
+    if (useDatePicker && startDate && endDate) {
+      const testDate = new Date(test.timestamp);
+      if (isBefore(testDate, startOfMonth(startDate)) || isAfter(testDate, endOfMonth(endDate))) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
 
   // Helper functions for percentile calculations
   const calcPercentile = (values: number[], percentile: number) => {
@@ -274,19 +294,84 @@ export default function AdminDashboard() {
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-              <Select
-                value={dateRange.toString()}
-                onValueChange={(value) => setDateRange(parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select date range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3">Last 3 {activeTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
-                  <SelectItem value="6">Last 6 {activeTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
-                  <SelectItem value="12">Last 12 {activeTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center space-x-2 mb-2">
+                <input 
+                  type="checkbox" 
+                  id="useDatePicker" 
+                  checked={useDatePicker} 
+                  onChange={() => setUseDatePicker(!useDatePicker)}
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <label htmlFor="useDatePicker" className="text-sm text-gray-600">
+                  Use custom date range
+                </label>
+              </div>
+              
+              {useDatePicker ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">From</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={startDate}
+                          onSelect={setStartDate}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">To</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={endDate}
+                          onSelect={setEndDate}
+                          initialFocus
+                          disabled={(date) => 
+                            startDate ? isBefore(date, startDate) : false
+                          }
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+              ) : (
+                <Select
+                  value={dateRange.toString()}
+                  onValueChange={(value) => setDateRange(parseInt(value))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select date range" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">Last 3 {activeTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
+                    <SelectItem value="6">Last 6 {activeTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
+                    <SelectItem value="12">Last 12 {activeTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
         </Card>
