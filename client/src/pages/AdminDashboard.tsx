@@ -29,7 +29,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import type { SpeedTest } from "@shared/schema";
-import { format, startOfMonth, endOfMonth, sub, isWithinInterval, startOfQuarter, endOfQuarter, isAfter, isBefore } from "date-fns";
+import { format, startOfMonth, endOfMonth, sub, add, isWithinInterval, startOfQuarter, endOfQuarter, isAfter, isBefore, isSameMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 
 export default function AdminDashboard() {
@@ -121,32 +121,71 @@ export default function AdminDashboard() {
   }
 
   const groupDataByPeriod = (data: SpeedTest[], type: "monthly" | "quarterly") => {
-    // Generate periods (based on dateRange setting)
+    // Generate periods
     const periods: Period[] = [];
-    const now = new Date();
     
-    for (let i = 0; i < dateRange; i++) {
+    if (useDatePicker && startDate && endDate) {
+      // Use custom date range
       if (type === "monthly") {
-        const monthStart = startOfMonth(sub(now, { months: i }));
-        const monthEnd = endOfMonth(monthStart);
-        periods.push({
-          start: monthStart,
-          end: monthEnd,
-          label: format(monthStart, 'MMM yyyy')
-        });
+        // Generate months between start and end dates
+        let current = startOfMonth(startDate);
+        while (isBefore(current, endDate) || isSameMonth(current, endDate)) {
+          const monthStart = current;
+          const monthEnd = endOfMonth(current);
+          
+          periods.push({
+            start: monthStart,
+            end: monthEnd,
+            label: format(monthStart, 'MMM yyyy')
+          });
+          
+          // Move to next month
+          current = startOfMonth(add(current, { months: 1 }));
+        }
       } else {
-        const quarterStart = startOfQuarter(sub(now, { months: i * 3 }));
-        const quarterEnd = endOfQuarter(quarterStart);
-        periods.push({
-          start: quarterStart,
-          end: quarterEnd,
-          label: `Q${Math.floor(quarterStart.getMonth() / 3) + 1} ${quarterStart.getFullYear()}`
-        });
+        // Generate quarters between start and end dates
+        let current = startOfQuarter(startDate);
+        while (isBefore(current, endDate)) {
+          const quarterStart = current;
+          const quarterEnd = endOfQuarter(current);
+          
+          periods.push({
+            start: quarterStart,
+            end: quarterEnd,
+            label: `Q${Math.floor(quarterStart.getMonth() / 3) + 1} ${quarterStart.getFullYear()}`
+          });
+          
+          // Move to next quarter
+          current = startOfQuarter(add(current, { months: 3 }));
+        }
+      }
+    } else {
+      // Use predefined date range
+      const now = new Date();
+      
+      for (let i = 0; i < dateRange; i++) {
+        if (type === "monthly") {
+          const monthStart = startOfMonth(sub(now, { months: i }));
+          const monthEnd = endOfMonth(monthStart);
+          periods.push({
+            start: monthStart,
+            end: monthEnd,
+            label: format(monthStart, 'MMM yyyy')
+          });
+        } else {
+          const quarterStart = startOfQuarter(sub(now, { months: i * 3 }));
+          const quarterEnd = endOfQuarter(quarterStart);
+          periods.push({
+            start: quarterStart,
+            end: quarterEnd,
+            label: `Q${Math.floor(quarterStart.getMonth() / 3) + 1} ${quarterStart.getFullYear()}`
+          });
+        }
       }
     }
-
+    
     // Sort periods from oldest to newest
-    periods.reverse();
+    periods.sort((a, b) => a.start.getTime() - b.start.getTime());
 
     // Initialize result array
     const result = periods.map(period => ({
