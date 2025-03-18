@@ -89,8 +89,8 @@ export default function AdminDashboard() {
 
   // Filter tests by customer ID and date range if selected
   const filteredTests = speedTests.filter(test => {
-    // Filter by customer ID if selected
-    if (selectedCustomerId && test.customerId !== selectedCustomerId) {
+    // Filter by customer ID if selected (but not "all")
+    if (selectedCustomerId && selectedCustomerId !== "all" && test.customerId !== selectedCustomerId) {
       return false;
     }
     
@@ -307,7 +307,7 @@ export default function AdminDashboard() {
                   <SelectValue placeholder="Select customer ID" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Customers</SelectItem>
+                  <SelectItem value="all">All Customers</SelectItem>
                   {filteredCustomerIds.map(id => (
                     <SelectItem key={id} value={id}>{id}</SelectItem>
                   ))}
