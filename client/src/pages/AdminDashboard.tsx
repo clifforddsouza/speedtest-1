@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,7 +14,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, LogOut } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import {
   BarChart,
   Bar,
@@ -41,6 +42,46 @@ export default function AdminDashboard() {
   const [startDate, setStartDate] = useState<Date | undefined>(sub(new Date(), { months: 6 }));
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [useDatePicker, setUseDatePicker] = useState<boolean>(false);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('/api/admin/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        // Remove authentication state from localStorage
+        localStorage.removeItem('isAdminAuthenticated');
+        
+        // Show success toast
+        toast({
+          title: "Success",
+          description: "Logged out successfully",
+        });
+        
+        // Redirect to login page
+        setLocation('/admin/login');
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to logout",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An error occurred during logout",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Fetch all test data
   const { data: speedTests, isLoading } = useQuery({
@@ -64,22 +105,40 @@ export default function AdminDashboard() {
 
   if (!speedTests || speedTests.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-          <Link href="/">
-            <Button variant="outline">Back to Speed Test</Button>
-          </Link>
-        </div>
-        <Card className="p-6">
-          <div className="text-center py-12">
-            <h2 className="text-xl font-semibold mb-2">No Test Data Available</h2>
-            <p className="text-gray-500">There is no speed test data to analyze. Run some tests first.</p>
-            <Link href="/">
-              <Button className="mt-4">Go to Speed Test</Button>
-            </Link>
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm py-4">
+          <div className="container mx-auto px-4">
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
+              <div className="flex space-x-2">
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={handleLogout}
+                  className="flex items-center"
+                >
+                  <LogOut className="h-4 w-4 mr-1" />
+                  Logout
+                </Button>
+                <Link href="/">
+                  <Button variant="outline">Back to Speed Test</Button>
+                </Link>
+              </div>
+            </div>
           </div>
-        </Card>
+        </header>
+        
+        <div className="container mx-auto px-4 py-8">
+          <Card className="p-6">
+            <div className="text-center py-12">
+              <h2 className="text-xl font-semibold mb-2">No Test Data Available</h2>
+              <p className="text-gray-500">There is no speed test data to analyze. Run some tests first.</p>
+              <Link href="/">
+                <Button className="mt-4">Go to Speed Test</Button>
+              </Link>
+            </div>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -276,9 +335,20 @@ export default function AdminDashboard() {
         <div className="container mx-auto px-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
-            <Link href="/">
-              <Button variant="outline">Back to Speed Test</Button>
-            </Link>
+            <div className="flex space-x-2">
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={handleLogout}
+                className="flex items-center"
+              >
+                <LogOut className="h-4 w-4 mr-1" />
+                Logout
+              </Button>
+              <Link href="/">
+                <Button variant="outline">Back to Speed Test</Button>
+              </Link>
+            </div>
           </div>
         </div>
       </header>
