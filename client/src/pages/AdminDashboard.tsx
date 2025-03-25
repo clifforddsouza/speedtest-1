@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import UserRegistrationForm from "@/components/UserRegistrationForm";
 import { 
   Select, 
   SelectContent, 
@@ -129,6 +130,35 @@ export default function AdminDashboard() {
         </header>
         
         <div className="container mx-auto px-4 py-8">
+          {/* User Registration */}
+          <Card className="p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">User Management</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <UserRegistrationForm />
+              <div className="bg-gray-50 rounded-lg p-6 flex flex-col justify-center">
+                <h3 className="text-xl font-medium text-primary mb-4">Why Register Users?</h3>
+                <ul className="space-y-2">
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">✓</span>
+                    <span>Assign unique customer IDs for tracking</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">✓</span>
+                    <span>Enable user-specific test history</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">✓</span>
+                    <span>Improve data organization for analytics</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-500 mr-2">✓</span>
+                    <span>Secure access to sensitive network data</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </Card>
+          
           <Card className="p-6">
             <div className="text-center py-12">
               <h2 className="text-xl font-semibold mb-2">No Test Data Available</h2>
@@ -354,6 +384,35 @@ export default function AdminDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* User Registration */}
+        <Card className="p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">User Management</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <UserRegistrationForm />
+            <div className="bg-gray-50 rounded-lg p-6 flex flex-col justify-center">
+              <h3 className="text-xl font-medium text-primary mb-4">Why Register Users?</h3>
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Assign unique customer IDs for tracking</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Enable user-specific test history</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Improve data organization for analytics</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-500 mr-2">✓</span>
+                  <span>Secure access to sensitive network data</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </Card>
+        
         {/* Filters */}
         <Card className="p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Report Filters</h2>
