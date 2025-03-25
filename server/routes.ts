@@ -1,22 +1,78 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import crypto from 'crypto';
-
-// Speed test endpoints for high bandwidth testing
-app.get('/api/speedtest/download', (req, res) => {
-  const size = parseInt(req.query.size as string) || 25 * 1024 * 1024; // 25MB chunks
-  const buffer = crypto.randomBytes(size);
-  res.send(buffer);
-});
-
-app.post('/api/speedtest/upload', express.raw({limit: '50mb', type: '*/*'}), (req, res) => {
-  res.sendStatus(200);
-});
+import express from 'express';
 import { insertSpeedTestSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Speed test endpoints for high bandwidth testing
+  app.get('/api/speedtest/download', (req, res) => {
+    const size = parseInt(req.query.size as string) || 25 * 1024 * 1024; // 25MB chunks
+    const buffer = crypto.randomBytes(size);
+    res.send(buffer);
+  });
+
+  app.post('/api/speedtest/upload', express.raw({limit: '50mb', type: '*/*'}), (req, res) => {
+    res.sendStatus(200);
+  });
+  
+  // Admin authentication
+  app.post("/api/admin/login", (req: Request, res: Response) => {
+    const { username, password } = req.body;
+    
+    // Hardcoded admin credentials for simplicity
+    if (username === "admin" && password === "speedtest123") {
+      // Set session data
+      if (req.session) {
+        req.session.isAuthenticated = true;
+        req.session.username = username;
+      }
+      
+      res.status(200).json({ message: "Login successful" });
+    } else {
+      res.status(401).json({ message: "Invalid username or password" });
+    }
+  });
+  
+  app.post("/api/admin/logout", (req: Request, res: Response) => {
+    // Clear session
+    if (req.session) {
+      req.session.destroy((err) => {
+        if (err) {
+          return res.status(500).json({ message: "Failed to logout" });
+        }
+        res.status(200).json({ message: "Logout successful" });
+      });
+    } else {
+      res.status(200).json({ message: "No active session" });
+    }
+  });
+  
+  app.get("/api/admin/session", (req: Request, res: Response) => {
+    if (req.session && req.session.isAuthenticated) {
+      res.status(200).json({ 
+        isAuthenticated: true,
+        username: req.session.username
+      });
+    } else {
+      res.status(401).json({ 
+        isAuthenticated: false,
+        message: "Not authenticated" 
+      });
+    }
+  });
+  
+  // Middleware to check if user is authenticated for admin API routes
+  const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+    // Check session authentication
+    if (req.session && req.session.isAuthenticated) {
+      next();
+    } else {
+      res.status(401).json({ message: "Unauthorized" });
+    }
+  };
   // Speed test API routes
   app.get("/api/speed-tests", async (req, res) => {
     try {
