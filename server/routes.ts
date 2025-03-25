@@ -5,8 +5,12 @@ import crypto from 'crypto';
 import express from 'express';
 import { insertSpeedTestSchema } from "@shared/schema";
 import { z } from "zod";
+import { setupAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication routes
+  setupAuth(app);
+
   // Speed test endpoints for high bandwidth testing
   app.get('/api/speedtest/download', (req, res) => {
     const size = parseInt(req.query.size as string) || 25 * 1024 * 1024; // 25MB chunks

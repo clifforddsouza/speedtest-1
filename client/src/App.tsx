@@ -6,12 +6,17 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminLogin from "@/pages/AdminLogin";
+import AuthPage from "@/pages/auth-page";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { AuthProvider } from "@/hooks/use-auth";
+import { ProtectedRoute as UserProtectedRoute } from "@/lib/protected-route";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/auth" component={AuthPage} />
+      <UserProtectedRoute path="/dashboard" component={Home} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin">
         {() => (
@@ -28,8 +33,10 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <AuthProvider>
+        <Router />
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
