@@ -1,0 +1,295 @@
+Replit version 83a48cdb, pid2 version 0.0.1137
+_app-666707dba3c571dc.js:13 
+      /////////////////////
+   ///////////////////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////        Curious and driven?
+  ///////////////@@@@@@@///////        Work with us!
+  ///////////////@@@@@@@///////
+  ///////////////@@@@@@@///////        https://join.replit.com/hack.with.us
+  ////////@@@@@@@//////////////
+  ////////@@@@@@@//////////////
+  ////////@@@@@@#//////////////
+   ///////////////////////////
+      /////////////////////
+      
+
+                
+          
+          
+          
+         Chrome is moving towards a new experience that allows users to choose to browse without third-party cookies.Understand this warningAI
+_app-666707dba3c571dc.js:13 [LaunchDarkly] LaunchDarkly client initialized
+_app-666707dba3c571dc.js:13 [TikTok Pixel] - Invalid pixel ID
+Issue: The pixel ID is invalid. This could prevent your pixel from receiving data.
+Suggestion: Please go to Events Manager and find the correct pixel ID.
+(anonymous) @ _app-666707dba3c571dc.js:13
+(anonymous) @ main.MTg3NDRiNWI0MA.js:2
+value @ main.MTg3NDRiNWI0MA.js:2
+value @ main.MTg3NDRiNWI0MA.js:2
+(anonymous) @ main.MTg3NDRiNWI0MA.js:2Understand this warningAI
+framework-f9b353393d18e429.js:1 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this errorAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'ambient-light-sensor'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'battery'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'execution-while-not-rendered'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'execution-while-out-of-viewport'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'layout-animations'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'legacy-image-formats'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'navigation-override'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'oversized-images'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'publickey-credentials'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'speaker-selection'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'unoptimized-images'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'unsized-media'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Unrecognized feature: 'pointer-lock'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Allow attribute will take precedence over 'allowfullscreen'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Allow attribute will take precedence over 'allowpaymentrequest'.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this warningAI
+framework-f9b353393d18e429.js:1 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+_ @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uD @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this errorAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.Understand this errorAI
+workspace_iframe.html:32 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.Understand this errorAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Unrecognized feature: 'ambient-light-sensor'.Understand this warningAI
+workspace_iframe.html:32 Unrecognized feature: 'ambient-light-sensor'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Unrecognized feature: 'battery'.Understand this warningAI
+workspace_iframe.html:32 Unrecognized feature: 'battery'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Unrecognized feature: 'execution-while-not-rendered'.Understand this warningAI
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-not-rendered'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Unrecognized feature: 'execution-while-out-of-viewport'.Understand this warningAI
+workspace_iframe.html:32 Unrecognized feature: 'execution-while-out-of-viewport'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Unrecognized feature: 'layout-animations'.Understand this warningAI
+workspace_iframe.html:32 Unrecognized feature: 'layout-animations'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Unrecognized feature: 'legacy-image-formats'.Understand this warningAI
+workspace_iframe.html:32 Unrecognized feature: 'legacy-image-formats'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Unrecognized feature: 'navigation-override'.Understand this warningAI
+workspace_iframe.html:32 Unrecognized feature: 'navigation-override'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Unrecognized feature: 'oversized-images'.Understand this warningAI
+workspace_iframe.html:32 Unrecognized feature: 'oversized-images'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Unrecognized feature: 'publickey-credentials'.Understand this warningAI
+workspace_iframe.html:32 Unrecognized feature: 'publickey-credentials'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Unrecognized feature: 'speaker-selection'.Understand this warningAI
+workspace_iframe.html:32 Unrecognized feature: 'speaker-selection'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Unrecognized feature: 'unoptimized-images'.Understand this warningAI
+workspace_iframe.html:32 Unrecognized feature: 'unoptimized-images'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Unrecognized feature: 'unsized-media'.Understand this warningAI
+workspace_iframe.html:32 Unrecognized feature: 'unsized-media'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Allow attribute will take precedence over 'allowfullscreen'.Understand this warningAI
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowfullscreen'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar32%3A:32 Allow attribute will take precedence over 'allowpaymentrequest'.Understand this warningAI
+workspace_iframe.html:32 Allow attribute will take precedence over 'allowpaymentrequest'.Understand this warningAI
+58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/__replco/workspace_iframe.html?initialPath=%2F&id=%3Ar33%3A:32 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.Understand this errorAI
+stallwart.build.js:1 stallwart: failed ping 1
+stallwart.build.js:1 stallwart: failed ping 2
+stallwart.build.js:1 stallwart: failed ping 3
+24WARNING: Too many active WebGL contexts. Oldest context will be lost.Understand this warningAI
+client:536 WebSocket connection to 'wss://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/?token=Q51Y03GyfGSS' failed: 
+t @ Network.js:227
+setupWebSocket @ client:536
+(anonymous) @ client:531Understand this errorAI
+Network.js:227 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=Q51Y03GyfGSS' is invalid.
+    at new t (Network.js:227:18)
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+t @ Network.js:227
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555Understand this errorAI
+stallwart.build.js:1 stallwart: failed ping 4
+client:536 WebSocket connection to 'wss://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/?token=Q51Y03GyfGSS' failed: 
+t @ Network.js:227
+setupWebSocket @ client:536
+(anonymous) @ client:531Understand this errorAI
+Network.js:227 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=Q51Y03GyfGSS' is invalid.
+    at new t (Network.js:227:18)
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+t @ Network.js:227
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555Understand this errorAI
+10_app-666707dba3c571dc.js:13 webglcontextlost event received
+stallwart.build.js:1 stallwart: failed ping 1
+stallwart.build.js:1 stallwart: failed ping 2
+stallwart.build.js:1 stallwart: failed ping 3
+stallwart.build.js:1 stallwart: failed ping 4
+3_app-666707dba3c571dc.js:13 webgl context not restored; firing onContextLoss
+(anonymous) @ _app-666707dba3c571dc.js:13
+(anonymous) @ 1836.5120ca83faf9d8bb.js:15
+n @ _app-666707dba3c571dc.js:13Understand this warningAI
+stallwart.build.js:1 stallwart: failed ping 5
+stallwart.build.js:1 stallwart: session stalled
+7_app-666707dba3c571dc.js:13 webgl context not restored; firing onContextLoss
+(anonymous) @ _app-666707dba3c571dc.js:13
+(anonymous) @ 1836.5120ca83faf9d8bb.js:15
+n @ _app-666707dba3c571dc.js:13Understand this warningAI
+2_app-666707dba3c571dc.js:13 Invalid href 'https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev//' passed to next/router in page: '/replEnvironmentDesktop'. Repeated forward-slashes (//) or backslashes \ are not valid in the href.
+(anonymous) @ _app-666707dba3c571dc.js:13
+d @ main-735f9d05618b0ce3.js:1
+(anonymous) @ _app-666707dba3c571dc.js:29
+useMemo @ framework-f9b353393d18e429.js:1
+t.useMemo @ framework-f9b353393d18e429.js:1
+(anonymous) @ _app-666707dba3c571dc.js:29
+ld @ framework-f9b353393d18e429.js:1
+ou @ framework-f9b353393d18e429.js:1
+i @ framework-f9b353393d18e429.js:1
+uI @ framework-f9b353393d18e429.js:1
+(anonymous) @ framework-f9b353393d18e429.js:1
+uM @ framework-f9b353393d18e429.js:1
+uS @ framework-f9b353393d18e429.js:1
+C @ framework-f9b353393d18e429.js:1
+z @ framework-f9b353393d18e429.js:1Understand this errorAI
+SpeedTelemetryTracker:1 Banner not shown: beforeinstallpromptevent.preventDefault() called. The page must call beforeinstallpromptevent.prompt() to show the banner.
