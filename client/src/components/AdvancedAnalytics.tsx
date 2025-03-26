@@ -322,9 +322,11 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
       trendData[0] && trendData[2] && 
       trendData[0][analysisMetric] !== undefined && 
       trendData[2][analysisMetric] !== undefined) {
-    if (trendData[2][analysisMetric] > trendData[0][analysisMetric]) {
+    const firstValue = trendData[0][analysisMetric] || 0;
+    const lastValue = trendData[2][analysisMetric] || 0;
+    if (lastValue > firstValue) {
       trendDirection = "up";
-    } else if (trendData[2][analysisMetric] < trendData[0][analysisMetric]) {
+    } else if (lastValue < firstValue) {
       trendDirection = "down";
     }
   }

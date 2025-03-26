@@ -113,7 +113,7 @@ export default function HistoricalDataViewer({ customerId, adminView = false }: 
     if (!startDate || !endDate) return data;
     
     return data.filter(test => {
-      const testDate = parseISO(test.timestamp);
+      const testDate = new Date(test.timestamp);
       return isWithinInterval(testDate, { 
         start: startOfMonth(startDate), 
         end: endOfMonth(endDate) 
@@ -149,7 +149,7 @@ export default function HistoricalDataViewer({ customerId, adminView = false }: 
     
     // Transform data for chart visualization
     return filteredData.map(test => {
-      const timestamp = parseISO(test.timestamp);
+      const timestamp = new Date(test.timestamp);
       
       return {
         date: format(timestamp, "yyyy-MM-dd"),

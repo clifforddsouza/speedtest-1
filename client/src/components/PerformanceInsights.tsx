@@ -450,7 +450,7 @@ export default function PerformanceInsights({ customerId }: PerformanceInsightsP
                 }`}
               >
                 <div className="shrink-0 pt-0.5">
-                  {insight.icon && <insight.icon className="h-5 w-5" />}
+                  {'icon' in insight && insight.icon && <insight.icon className="h-5 w-5" />}
                 </div>
                 <div>
                   <h4 className="font-medium">{insight.title}</h4>
