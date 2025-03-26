@@ -147,10 +147,18 @@ export const measurePacketLoss = async (): Promise<number> => {
               clearTimeout(timeoutId);
               cleanup();
               
-              console.log(`Packet loss test results: ${data.lostPackets} lost out of ${data.sentPackets} (${data.packetLossPercentage}%)`);
+              // Calculate packet loss based on our local counts rather than server-reported counts
+              // This is more accurate as it reflects what the client actually experienced
+              const clientLostPackets = packetCount - acknowledgedPackets;
+              const clientPacketLossPercentage = packetCount > 0 
+                ? (clientLostPackets / packetCount) * 100 
+                : 0;
               
-              // Return the packet loss percentage
-              resolve(data.packetLossPercentage);
+              console.log(`Server reports: ${data.lostPackets} lost out of ${data.sentPackets} (${data.packetLossPercentage}%)`);
+              console.log(`Client calculates: ${clientLostPackets} lost out of ${packetCount} (${clientPacketLossPercentage.toFixed(2)}%)`);
+              
+              // Return the client-calculated packet loss percentage for more accurate results
+              resolve(parseFloat(clientPacketLossPercentage.toFixed(2)));
               break;
             }
             
@@ -177,7 +185,10 @@ export const measurePacketLoss = async (): Promise<number> => {
         } else {
           // Calculate with what we have
           const lostPackets = packetCount - acknowledgedPackets;
-          const packetLossPercentage = (lostPackets / packetCount) * 100;
+          const packetLossPercentage = packetCount > 0 
+            ? (lostPackets / packetCount) * 100 
+            : 0;
+          console.log(`Client calculated packet loss: ${lostPackets} lost out of ${packetCount} (${packetLossPercentage.toFixed(2)}%)`);
           resolve(parseFloat(packetLossPercentage.toFixed(2)));
         }
       };
@@ -196,7 +207,10 @@ export const measurePacketLoss = async (): Promise<number> => {
           } else {
             // Calculate with what we have
             const lostPackets = packetCount - acknowledgedPackets;
-            const packetLossPercentage = (lostPackets / packetCount) * 100;
+            const packetLossPercentage = packetCount > 0 
+              ? (lostPackets / packetCount) * 100 
+              : 0;
+            console.log(`Client calculated packet loss (on close): ${lostPackets} lost out of ${packetCount} (${packetLossPercentage.toFixed(2)}%)`);
             resolve(parseFloat(packetLossPercentage.toFixed(2)));
           }
         }
