@@ -55,52 +55,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Admin dashboard - get all users (available only to admins)
-  app.get("/api/admin/users", isAdmin, async (req, res) => {
-    try {
-      const users = await storage.getUsers();
-      // Don't send passwords to the client
-      const usersWithoutPasswords = users.map(user => {
-        const { password, ...userWithoutPassword } = user;
-        return userWithoutPassword;
-      });
-      res.json(usersWithoutPasswords);
-    } catch (error) {
-      console.error("Error fetching users for admin:", error);
-      res.status(500).json({ message: "Failed to fetch users" });
-    }
-  });
-  
-  // Admin dashboard - register new user (available only to admins)
-  app.post("/api/admin/register", isAdmin, async (req, res) => {
-    try {
-      const { username, password, role } = req.body;
-      
-      // Check if username already exists
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username already exists" });
-      }
-      
-      // Hash the password
-      const hashedPassword = await hashPassword(password);
-      
-      // Create the user
-      const user = await storage.createUser({
-        username,
-        password: hashedPassword,
-        role
-      });
-      
-      // Don't send password back to client
-      const { password: _, ...userWithoutPassword } = user;
-      
-      res.status(201).json(userWithoutPassword);
-    } catch (error) {
-      console.error("Error creating user:", error);
-      res.status(500).json({ message: "Failed to create user" });
-    }
-  });
+  // Admin dashboard endpoints are defined in auth.ts
   
   // Create default super admin user if none exists
   (async () => {

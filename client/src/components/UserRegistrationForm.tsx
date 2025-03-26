@@ -56,7 +56,7 @@ export default function UserRegistrationForm() {
       setIsSubmitting(true);
       const { confirmPassword, ...userData } = data;
 
-      const response = await apiRequest("POST", "/api/admin/register", userData);
+      const response = await apiRequest("POST", "/api/admin/users", userData);
       
       toast({
         title: "Success",
