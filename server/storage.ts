@@ -12,6 +12,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   getUsers(): Promise<User[]>;
   updateUser(id: number, updates: Partial<User>): Promise<User>;
+  deleteUser(id: number): Promise<void>;
   
   // Speed test operations
   createSpeedTest(test: InsertSpeedTest): Promise<SpeedTest>;
@@ -114,6 +115,17 @@ export class DatabaseStorage implements IStorage {
     }
     
     return user;
+  }
+  
+  async deleteUser(id: number): Promise<void> {
+    const result = await db
+      .delete(users)
+      .where(eq(users.id, id))
+      .returning({ id: users.id });
+      
+    if (result.length === 0) {
+      throw new Error(`User with ID ${id} not found`);
+    }
   }
 }
 

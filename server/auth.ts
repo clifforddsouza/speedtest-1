@@ -186,6 +186,82 @@ export function setupAuth(app: Express) {
     }
   });
   
+  // Update user information - admin function
+  app.patch("/api/admin/users/:id", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { username, role } = req.body;
+      
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if attempting to update a super admin
+      const currentUser = req.user as SelectUser;
+      if (user.role === UserRole.SUPER_ADMIN && currentUser.role !== UserRole.SUPER_ADMIN) {
+        return res.status(403).json({ message: "Cannot modify a super admin account" });
+      }
+      
+      // Check for role change limitations
+      if (role && currentUser.role !== UserRole.SUPER_ADMIN && role === UserRole.SUPER_ADMIN) {
+        return res.status(403).json({ message: "Only super admins can promote users to super admin" });
+      }
+      
+      // Check if username already exists
+      if (username && username !== user.username) {
+        const existingUser = await storage.getUserByUsername(username);
+        if (existingUser) {
+          return res.status(400).json({ message: "Username already exists" });
+        }
+      }
+      
+      // Update user
+      const updatedUser = await storage.updateUser(userId, { username, role });
+      
+      // Don't send password back to client
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Error updating user" });
+    }
+  });
+  
+  // Update user password - admin function
+  app.patch("/api/admin/users/:id/password", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { password } = req.body;
+      
+      if (!password) {
+        return res.status(400).json({ message: "Password is required" });
+      }
+      
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Check if attempting to change a super admin's password
+      const currentUser = req.user as SelectUser;
+      if (user.role === UserRole.SUPER_ADMIN && currentUser.role !== UserRole.SUPER_ADMIN) {
+        return res.status(403).json({ message: "Cannot change a super admin's password" });
+      }
+      
+      // Update user password
+      const hashedPassword = await hashPassword(password);
+      const updatedUser = await storage.updateUser(userId, { password: hashedPassword });
+      
+      // Don't send password back to client
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      res.status(500).json({ message: "Error updating user password" });
+    }
+  });
+  
   // Update user status (active/inactive) - admin function
   app.patch("/api/admin/users/:id/status", isAdmin, async (req, res) => {
     try {
@@ -212,6 +288,36 @@ export function setupAuth(app: Express) {
       res.json(userWithoutPassword);
     } catch (error) {
       res.status(500).json({ message: "Error updating user status" });
+    }
+  });
+  
+  // Delete user - super admin function
+  app.delete("/api/admin/users/:id", isSuperAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Check if user exists
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Prevent deleting oneself
+      const currentUser = req.user as SelectUser;
+      if (user.id === currentUser.id) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      // Check if attempting to delete a super admin
+      if (user.role === UserRole.SUPER_ADMIN && currentUser.role !== UserRole.SUPER_ADMIN) {
+        return res.status(403).json({ message: "Cannot delete a super admin account" });
+      }
+      
+      // Delete user
+      await storage.deleteUser(userId);
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ message: "Error deleting user" });
     }
   });
 }
