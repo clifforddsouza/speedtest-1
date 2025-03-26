@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserRegistrationForm from "@/components/UserRegistrationForm";
 import UserManagementTable from "@/components/UserManagementTable";
+import { Settings, BarChart3, LogOut } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -16,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, LogOut } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   BarChart,
@@ -37,7 +38,8 @@ import { cn } from "@/lib/utils";
 
 export default function AdminDashboard() {
   // State for filters and tabs
-  const [activeTab, setActiveTab] = useState<"monthly" | "quarterly">("monthly");
+  const [activeReportTab, setActiveReportTab] = useState<"monthly" | "quarterly">("monthly");
+  const [activeSection, setActiveSection] = useState<"dashboard" | "settings">("dashboard");
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
   const [filterCustomerId, setFilterCustomerId] = useState<string>("");
   const [dateRange, setDateRange] = useState<number>(6); // Last 6 months/quarters by default
@@ -105,86 +107,8 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!speedTests || speedTests.length === 0) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm py-4">
-          <div className="container mx-auto px-4">
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
-              <div className="flex space-x-2">
-                <Button 
-                  variant="destructive" 
-                  size="sm" 
-                  onClick={handleLogout}
-                  className="flex items-center"
-                >
-                  <LogOut className="h-4 w-4 mr-1" />
-                  Logout
-                </Button>
-                <Link href="/">
-                  <Button variant="outline">Back to Speed Test</Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </header>
-        
-        <div className="container mx-auto px-4 py-8">
-          {/* User Registration */}
-          <Card className="p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">User Registration</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <UserRegistrationForm />
-              <div className="bg-gray-50 rounded-lg p-6 flex flex-col justify-center">
-                <h3 className="text-xl font-medium text-primary mb-4">Why Register Users?</h3>
-                <ul className="space-y-2">
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2">✓</span>
-                    <span>Assign unique customer IDs for tracking</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2">✓</span>
-                    <span>Enable user-specific test history</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2">✓</span>
-                    <span>Improve data organization for analytics</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="text-green-500 mr-2">✓</span>
-                    <span>Secure access to sensitive network data</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </Card>
-          
-          {/* User Management Table */}
-          <Card className="p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Current Users</h2>
-            <UserManagementTable />
-          </Card>
-          
-          <Card className="p-6">
-            <div className="text-center py-12">
-              <h2 className="text-xl font-semibold mb-2">No Test Data Available</h2>
-              <p className="text-gray-500">There is no speed test data to analyze. Run some tests first.</p>
-              <Link href="/">
-                <Button className="mt-4">Go to Speed Test</Button>
-              </Link>
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  // Extract unique customer IDs
-  const customerIds = Array.from(new Set(speedTests.map(test => test.customerId)));
-
   // Filter tests by customer ID and date range if selected
-  const filteredTests = speedTests.filter(test => {
+  const filteredTests = speedTests ? speedTests.filter(test => {
     // Filter by customer ID if selected (but not "all")
     if (selectedCustomerId && selectedCustomerId !== "all" && test.customerId !== selectedCustomerId) {
       return false;
@@ -199,7 +123,7 @@ export default function AdminDashboard() {
     }
     
     return true;
-  });
+  }) : [];
 
   // Helper functions for percentile calculations
   const calcPercentile = (values: number[], percentile: number) => {
@@ -208,6 +132,9 @@ export default function AdminDashboard() {
     const index = Math.floor(sorted.length * (percentile / 100));
     return sorted[index];
   };
+
+  // Extract unique customer IDs
+  const customerIds = speedTests ? Array.from(new Set(speedTests.map(test => test.customerId))) : [];
 
   // Group data by period (month or quarter)
   interface Period {
@@ -286,7 +213,7 @@ export default function AdminDashboard() {
     // Initialize result array
     const result = periods.map(period => ({
       period: period.label,
-      periodLabel: period.label, // Add this to fix the error
+      periodLabel: period.label, 
       downloadTests: [] as number[],
       uploadTests: [] as number[],
       pingTests: [] as number[],
@@ -352,10 +279,10 @@ export default function AdminDashboard() {
     }));
   };
 
-  const monthlyData = groupDataByPeriod(filteredTests, "monthly");
-  const quarterlyData = groupDataByPeriod(filteredTests, "quarterly");
+  const monthlyData = filteredTests.length > 0 ? groupDataByPeriod(filteredTests, "monthly") : [];
+  const quarterlyData = filteredTests.length > 0 ? groupDataByPeriod(filteredTests, "quarterly") : [];
   
-  const currentData = activeTab === "monthly" ? monthlyData : quarterlyData;
+  const currentData = activeReportTab === "monthly" ? monthlyData : quarterlyData;
 
   // Filter specific customer data by partial match
   const handleCustomerFilterChange = (value: string) => {
@@ -366,395 +293,496 @@ export default function AdminDashboard() {
     ? customerIds.filter(id => id.toLowerCase().includes(filterCustomerId.toLowerCase()))
     : customerIds;
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
-            <div className="flex space-x-2">
-              <Button 
-                variant="destructive" 
-                size="sm" 
-                onClick={handleLogout}
-                className="flex items-center"
-              >
-                <LogOut className="h-4 w-4 mr-1" />
-                Logout
-              </Button>
-              <Link href="/">
-                <Button variant="outline">Back to Speed Test</Button>
-              </Link>
-            </div>
+  // Common header for both data present and no data views
+  const AdminHeader = () => (
+    <header className="bg-white shadow-sm py-4">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-primary">Admin Dashboard</h1>
+          <div className="flex space-x-2">
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={handleLogout}
+              className="flex items-center"
+            >
+              <LogOut className="h-4 w-4 mr-1" />
+              Logout
+            </Button>
+            <Link href="/">
+              <Button variant="outline">Back to Speed Test</Button>
+            </Link>
           </div>
         </div>
-      </header>
+      </div>
+    </header>
+  );
 
-      <main className="container mx-auto px-4 py-8">
-        {/* User Registration */}
-        <Card className="p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">User Registration</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <UserRegistrationForm />
-            <div className="bg-gray-50 rounded-lg p-6 flex flex-col justify-center">
-              <h3 className="text-xl font-medium text-primary mb-4">Why Register Users?</h3>
-              <ul className="space-y-2">
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Assign unique customer IDs for tracking</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Enable user-specific test history</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Improve data organization for analytics</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-500 mr-2">✓</span>
-                  <span>Secure access to sensitive network data</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </Card>
+  // Content for when no test data is available
+  if (!speedTests || speedTests.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <AdminHeader />
         
-        {/* User Management Table */}
-        <Card className="p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Current Users</h2>
-          <UserManagementTable />
-        </Card>
-        
-        {/* Filters */}
-        <Card className="p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Report Filters</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Customer ID</label>
-              <div className="flex space-x-2">
-                <Input
-                  type="text"
-                  placeholder="Filter customers..."
-                  value={filterCustomerId}
-                  onChange={(e) => handleCustomerFilterChange(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <Select
-                value={selectedCustomerId}
-                onValueChange={setSelectedCustomerId}
-              >
-                <SelectTrigger className="mt-2">
-                  <SelectValue placeholder="Select customer ID" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Customers</SelectItem>
-                  {filteredCustomerIds.map(id => (
-                    <SelectItem key={id} value={id}>{id}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Time Period</label>
-              <Select
-                value={activeTab}
-                onValueChange={(value) => setActiveTab(value as "monthly" | "quarterly")}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select time period" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                  <SelectItem value="quarterly">Quarterly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
-              <div className="flex items-center space-x-2 mb-2">
-                <input 
-                  type="checkbox" 
-                  id="useDatePicker" 
-                  checked={useDatePicker} 
-                  onChange={() => setUseDatePicker(!useDatePicker)}
-                  className="rounded border-gray-300 text-primary focus:ring-primary"
-                />
-                <label htmlFor="useDatePicker" className="text-sm text-gray-600">
-                  Use custom date range
-                </label>
-              </div>
-              
-              {useDatePicker ? (
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">From</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={startDate}
-                          onSelect={setStartDate}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">To</label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-left font-normal"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={endDate}
-                          onSelect={setEndDate}
-                          initialFocus
-                          disabled={(date) => 
-                            startDate ? isBefore(date, startDate) : false
-                          }
-                        />
-                      </PopoverContent>
-                    </Popover>
+        <div className="container mx-auto px-4 py-8">
+          {/* Main Tab Navigation */}
+          <Card className="p-4 mb-6">
+            <Tabs 
+              defaultValue="dashboard" 
+              value={activeSection}
+              onValueChange={(value) => setActiveSection(value as "dashboard" | "settings")}
+              className="w-full"
+            >
+              <TabsList className="grid grid-cols-2 w-[400px] mb-4">
+                <TabsTrigger value="dashboard" className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  <span>Dashboard</span>
+                </TabsTrigger>
+                <TabsTrigger value="settings" className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  <span>Settings</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </Card>
+
+          {activeSection === "settings" ? (
+            <>
+              {/* User Registration */}
+              <Card className="p-6 mb-6">
+                <h2 className="text-lg font-semibold mb-4">User Registration</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <UserRegistrationForm />
+                  <div className="bg-gray-50 rounded-lg p-6 flex flex-col justify-center">
+                    <h3 className="text-xl font-medium text-primary mb-4">Why Register Users?</h3>
+                    <ul className="space-y-2">
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        <span>Assign unique customer IDs for tracking</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        <span>Enable user-specific test history</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        <span>Improve data organization for analytics</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        <span>Secure access to sensitive network data</span>
+                      </li>
+                    </ul>
                   </div>
                 </div>
-              ) : (
-                <Select
-                  value={dateRange.toString()}
-                  onValueChange={(value) => setDateRange(parseInt(value))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select date range" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="3">Last 3 {activeTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
-                    <SelectItem value="6">Last 6 {activeTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
-                    <SelectItem value="12">Last 12 {activeTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-          </div>
-        </Card>
-
-        {/* 90th Percentile Download/Upload Chart */}
-        <Card className="p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Speed Test 90th Percentile Trends</h2>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={currentData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="period" 
-                  tick={{ fontSize: 12 }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={60}
-                />
-                <YAxis 
-                  label={{ value: 'Speed (Mbps)', angle: -90, position: 'insideLeft' }}
-                  domain={[0, 'dataMax + 10']}
-                />
-                <Tooltip 
-                  formatter={(value: any, name: string) => {
-                    if (name.includes("download")) return [`${value.toFixed(1)} Mbps`, name.replace("download", "Download ")];
-                    if (name.includes("upload")) return [`${value.toFixed(1)} Mbps`, name.replace("upload", "Upload ")];
-                    return [value, name];
-                  }}
-                />
-                <Legend />
-                <Bar dataKey="download90" name="download90" fill="#3b82f6" />
-                <Bar dataKey="upload90" name="upload90" fill="#10b981" />
-                <ReferenceLine 
-                  y={25} // A reference line for example minimum acceptable download speed
-                  stroke="red" 
-                  strokeDasharray="3 3" 
-                  label={{ 
-                    value: 'Min. Target Speed', 
-                    position: 'insideBottomRight',
-                    fill: 'red' 
-                  }} 
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* Detailed Percentile Metrics Table */}
-        <Card className="p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Detailed {activeTab === "monthly" ? "Monthly" : "Quarterly"} Percentile Analysis</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Period
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Download Avg
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Download 50th
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Download 90th
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Download 95th
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Upload Avg
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Upload 50th
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Upload 90th
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Upload 95th
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tests
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentData.map((item, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {item.period}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.downloadAvg.toFixed(1)} Mbps
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.download50.toFixed(1)} Mbps
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold bg-blue-50">
-                      {item.download90.toFixed(1)} Mbps
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.download95.toFixed(1)} Mbps
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.uploadAvg.toFixed(1)} Mbps
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.upload50.toFixed(1)} Mbps
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold bg-green-50">
-                      {item.upload90.toFixed(1)} Mbps
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.upload95.toFixed(1)} Mbps
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.testCount}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-
-        {/* Additional Metrics Table */}
-        <Card className="p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Network Quality Metrics</h2>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Period
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ping Avg
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Ping 90th
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Jitter Avg
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Jitter 90th
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Packet Loss Avg
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Packet Loss 90th
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {currentData.map((item, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {item.period}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.pingAvg.toFixed(1)} ms
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                      {item.ping90.toFixed(1)} ms
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.jitterAvg.toFixed(1)} ms
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                      {item.jitter90.toFixed(1)} ms
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {item.packetLossAvg.toFixed(2)}%
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                      {item.packetLoss90.toFixed(2)}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-
-        {/* Export Buttons */}
-        <div className="flex justify-end space-x-4">
-          <Button variant="outline">
-            Export CSV
-          </Button>
-          <Button variant="outline">
-            Export PDF
-          </Button>
-          <Button>
-            Generate Report
-          </Button>
+              </Card>
+              
+              {/* User Management Table */}
+              <Card className="p-6 mb-6">
+                <h2 className="text-lg font-semibold mb-4">Current Users</h2>
+                <UserManagementTable />
+              </Card>
+            </>
+          ) : (
+            <Card className="p-6">
+              <div className="text-center py-12">
+                <h2 className="text-xl font-semibold mb-2">No Test Data Available</h2>
+                <p className="text-gray-500">There is no speed test data to analyze. Run some tests first.</p>
+                <Link href="/">
+                  <Button className="mt-4">Go to Speed Test</Button>
+                </Link>
+              </div>
+            </Card>
+          )}
         </div>
+      </div>
+    );
+  }
+
+  // Main dashboard view with test data
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <AdminHeader />
+
+      <main className="container mx-auto px-4 py-8">
+        {/* Main Tab Navigation */}
+        <Card className="p-4 mb-6">
+          <Tabs 
+            defaultValue="dashboard" 
+            value={activeSection}
+            onValueChange={(value) => setActiveSection(value as "dashboard" | "settings")}
+            className="w-full"
+          >
+            <TabsList className="grid grid-cols-2 w-[400px] mb-4">
+              <TabsTrigger value="dashboard" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                <span>Dashboard</span>
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                <span>Settings</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </Card>
+
+        {activeSection === "settings" ? (
+          <>
+            {/* User Registration */}
+            <Card className="p-6 mb-6">
+              <h2 className="text-lg font-semibold mb-4">User Registration</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <UserRegistrationForm />
+                <div className="bg-gray-50 rounded-lg p-6 flex flex-col justify-center">
+                  <h3 className="text-xl font-medium text-primary mb-4">Why Register Users?</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-start">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span>Assign unique customer IDs for tracking</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span>Enable user-specific test history</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span>Improve data organization for analytics</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-500 mr-2">✓</span>
+                      <span>Secure access to sensitive network data</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </Card>
+            
+            {/* User Management Table */}
+            <Card className="p-6 mb-6">
+              <h2 className="text-lg font-semibold mb-4">Current Users</h2>
+              <UserManagementTable />
+            </Card>
+          </>
+        ) : (
+          <>
+            {/* Filters */}
+            <Card className="p-6 mb-6">
+              <h2 className="text-lg font-semibold mb-4">Report Filters</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Customer ID</label>
+                  <div className="flex space-x-2">
+                    <Input
+                      type="text"
+                      placeholder="Filter customers..."
+                      value={filterCustomerId}
+                      onChange={(e) => handleCustomerFilterChange(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                  <Select
+                    value={selectedCustomerId}
+                    onValueChange={setSelectedCustomerId}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder="Select customer ID" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Customers</SelectItem>
+                      {filteredCustomerIds.map(id => (
+                        <SelectItem key={id} value={id}>{id}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Time Period</label>
+                  <Select
+                    value={activeReportTab}
+                    onValueChange={(value) => setActiveReportTab(value as "monthly" | "quarterly")}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select time period" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="quarterly">Quarterly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <input 
+                      type="checkbox" 
+                      id="useDatePicker" 
+                      checked={useDatePicker} 
+                      onChange={() => setUseDatePicker(!useDatePicker)}
+                      className="rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <label htmlFor="useDatePicker" className="text-sm text-gray-600">
+                      Use custom date range
+                    </label>
+                  </div>
+                  
+                  {useDatePicker ? (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">From</label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={startDate}
+                              onSelect={setStartDate}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">To</label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={endDate}
+                              onSelect={setEndDate}
+                              initialFocus
+                              disabled={(date) => 
+                                startDate ? isBefore(date, startDate) : false
+                              }
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </div>
+                  ) : (
+                    <Select
+                      value={dateRange.toString()}
+                      onValueChange={(value) => setDateRange(parseInt(value))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select date range" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3">Last 3 {activeReportTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
+                        <SelectItem value="6">Last 6 {activeReportTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
+                        <SelectItem value="12">Last 12 {activeReportTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              </div>
+            </Card>
+
+            {/* 90th Percentile Download/Upload Chart */}
+            <Card className="p-6 mb-6">
+              <h2 className="text-lg font-semibold mb-4">Speed Test 90th Percentile Trends</h2>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={currentData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="period" 
+                      tick={{ fontSize: 12 }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={60}
+                    />
+                    <YAxis 
+                      label={{ value: 'Speed (Mbps)', angle: -90, position: 'insideLeft' }}
+                      domain={[0, 'dataMax + 10']}
+                    />
+                    <Tooltip 
+                      formatter={(value: any, name: string) => {
+                        if (name.includes("download")) return [`${value.toFixed(1)} Mbps`, name.replace("download", "Download ")];
+                        if (name.includes("upload")) return [`${value.toFixed(1)} Mbps`, name.replace("upload", "Upload ")];
+                        return [value, name];
+                      }}
+                    />
+                    <Legend />
+                    <Bar dataKey="download90" name="download90" fill="#3b82f6" />
+                    <Bar dataKey="upload90" name="upload90" fill="#10b981" />
+                    <ReferenceLine 
+                      y={25} // A reference line for example minimum acceptable download speed
+                      stroke="red" 
+                      strokeDasharray="3 3" 
+                      label={{ 
+                        value: 'Min. Target Speed', 
+                        position: 'insideBottomRight',
+                        fill: 'red' 
+                      }} 
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            {/* Detailed Percentile Metrics Table */}
+            <Card className="p-6 mb-6">
+              <h2 className="text-lg font-semibold mb-4">Detailed {activeReportTab === "monthly" ? "Monthly" : "Quarterly"} Percentile Analysis</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Period
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Download Avg
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Download 50th
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Download 90th
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Download 95th
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Upload Avg
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Upload 50th
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Upload 90th
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Upload 95th
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Tests
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {currentData.map((item, index) => (
+                      <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {item.period}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {item.downloadAvg.toFixed(1)} Mbps
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {item.download50.toFixed(1)} Mbps
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold bg-blue-50">
+                          {item.download90.toFixed(1)} Mbps
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {item.download95.toFixed(1)} Mbps
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {item.uploadAvg.toFixed(1)} Mbps
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {item.upload50.toFixed(1)} Mbps
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold bg-green-50">
+                          {item.upload90.toFixed(1)} Mbps
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {item.upload95.toFixed(1)} Mbps
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {item.testCount}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+            {/* Additional Metrics Table */}
+            <Card className="p-6 mb-6">
+              <h2 className="text-lg font-semibold mb-4">Network Quality Metrics</h2>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Period
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ping Avg
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ping 90th
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Jitter Avg
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Jitter 90th
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Packet Loss Avg
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Packet Loss 90th
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {currentData.map((item, index) => (
+                      <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {item.period}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {item.pingAvg.toFixed(1)} ms
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
+                          {item.ping90.toFixed(1)} ms
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {item.jitterAvg.toFixed(1)} ms
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
+                          {item.jitter90.toFixed(1)} ms
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {item.packetLossAvg.toFixed(2)}%
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
+                          {item.packetLoss90.toFixed(2)}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </>
+        )}
       </main>
     </div>
   );
