@@ -9,7 +9,7 @@ interface TestResultsPanelProps {
 }
 
 export default function TestResultsPanel({ onViewDetails }: TestResultsPanelProps) {
-  const { data: testResults, isLoading, isError } = useQuery({
+  const { data: testResults, isLoading, isError } = useQuery<SpeedTest[]>({
     queryKey: ["/api/speed-tests"],
     staleTime: 10000, // 10 seconds
   });

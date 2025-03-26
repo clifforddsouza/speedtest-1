@@ -197,7 +197,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     receivedPackets: number;
     startTime: number;
     lastActivity: number;
+    inducedPacketLossRate: number; // Percentage of packets to drop artificially
   }>();
+  
+  // For simulating network issues - controls the percentage of packets we artificially drop
+  // This would be 0 in production, but for testing we can set it higher
+  const DEFAULT_INDUCED_PACKET_LOSS = 40; // 40% packet loss for testing
   
   // Clean up inactive tests periodically
   setInterval(() => {
@@ -230,7 +235,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               sentPackets: 0,
               receivedPackets: 0,
               startTime: Date.now(),
-              lastActivity: Date.now()
+              lastActivity: Date.now(),
+              inducedPacketLossRate: DEFAULT_INDUCED_PACKET_LOSS
             });
             
             ws.send(JSON.stringify({
@@ -239,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               status: 'ready'
             }));
             
-            console.log(`Initialized packet loss test ${testId}`);
+            console.log(`Initialized packet loss test ${testId} with ${DEFAULT_INDUCED_PACKET_LOSS}% induced packet loss`);
             break;
           }
           
@@ -257,11 +263,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             test.receivedPackets++;
             test.lastActivity = Date.now();
             
-            // Send packet acknowledgment
-            ws.send(JSON.stringify({
-              type: 'ack',
-              packetId: data.packetId
-            }));
+            // Simulate packet loss for testing
+            // Generate a random number between 0-100 and check if we should drop this packet
+            const shouldDropPacket = Math.random() * 100 < test.inducedPacketLossRate;
+            
+            if (shouldDropPacket) {
+              // Intentionally don't send acknowledgment to simulate packet loss
+              console.log(`Induced packet loss - dropping packet ${data.packetId}`);
+            } else {
+              // Send packet acknowledgment
+              ws.send(JSON.stringify({
+                type: 'ack',
+                packetId: data.packetId
+              }));
+            }
             break;
           }
           
