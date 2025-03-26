@@ -145,6 +145,16 @@ export default function SpeedTestPanel({ customerId, testLocation, testNotes }: 
       // Test complete
       setTestStatus("Test Complete");
       
+      // Log the packet loss value before saving
+      console.log("Packet loss to be saved:", packetLossResult);
+      
+      // Make sure packet loss is a valid number
+      const processedPacketLoss = typeof packetLossResult === 'number' 
+        ? packetLossResult
+        : parseFloat(String(packetLossResult)) || 0;
+        
+      console.log("Processed packet loss:", processedPacketLoss);
+      
       // Save results
       saveTestMutation.mutate({
         customerId,
@@ -154,7 +164,7 @@ export default function SpeedTestPanel({ customerId, testLocation, testNotes }: 
         uploadSpeed: uploadResult,
         ping: pingResult,
         jitter: jitterResult,
-        packetLoss: packetLossResult,
+        packetLoss: processedPacketLoss,
         isp: ispInfo,
         ipAddress: ipInfo,
         server: serverInfo,

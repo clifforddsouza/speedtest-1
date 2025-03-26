@@ -72,8 +72,17 @@ export class MemStorage implements IStorage {
     const downloadData = insertTest.downloadData ?? null;
     const uploadData = insertTest.uploadData ?? null;
     
+    // Ensure packet loss is stored as a number (not as a string or always 0)
+    const packetLoss = typeof insertTest.packetLoss === 'number' 
+      ? insertTest.packetLoss 
+      : parseFloat(String(insertTest.packetLoss));
+
+    console.log("Original packetLoss value:", insertTest.packetLoss);
+    console.log("Processed packetLoss value:", packetLoss);
+    
     const test: SpeedTest = { 
-      ...insertTest, 
+      ...insertTest,
+      packetLoss, // Use the processed packet loss value 
       testLocation,
       notes,
       testDuration,

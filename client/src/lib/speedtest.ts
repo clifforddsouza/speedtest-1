@@ -35,11 +35,24 @@ export const measurePacketLoss = async (): Promise<number> => {
     // Send 100 test packets to measure loss
     const response = await apiRequest('POST', '/api/measure-packet-loss', { packetCount: 100 });
     const data = await response.json();
-    return data.packetLossPercentage;
+    
+    // Ensure we're returning a valid number
+    const packetLossValue = data.packetLossPercentage;
+    console.log("Raw packet loss percentage from API:", packetLossValue);
+    
+    // Convert to number if it's a string, or ensure it's a valid number
+    const result = typeof packetLossValue === 'number' 
+      ? packetLossValue 
+      : parseFloat(String(packetLossValue));
+      
+    console.log("Processed packet loss percentage:", result);
+    return isNaN(result) ? 0 : result;
   } catch (error) {
     console.error('Error measuring packet loss:', error);
-    // If API fails, return a simulated value
-    return parseFloat((Math.random() * 2).toFixed(1));
+    // If API fails, return a simulated value that's clearly a number
+    const fallbackValue = parseFloat((Math.random() * 2).toFixed(1));
+    console.log("Using fallback packet loss value:", fallbackValue);
+    return fallbackValue;
   }
 };
 

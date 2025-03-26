@@ -116,6 +116,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/speed-tests", async (req, res) => {
     try {
+      console.log("Received speed test data:", JSON.stringify(req.body, null, 2));
+      
       const parsedBody = insertSpeedTestSchema.safeParse(req.body);
       
       if (!parsedBody.success) {
@@ -125,7 +127,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Ensure packet loss is properly set as a number
+      if (parsedBody.data.packetLoss !== undefined && parsedBody.data.packetLoss !== null) {
+        // Convert to number if it's a string
+        parsedBody.data.packetLoss = Number(parsedBody.data.packetLoss);
+      }
+      
+      console.log("Validated speed test data:", JSON.stringify(parsedBody.data, null, 2));
+      
       const speedTest = await storage.createSpeedTest(parsedBody.data);
+      console.log("Saved speed test:", JSON.stringify(speedTest, null, 2));
+      
       res.status(201).json(speedTest);
     } catch (error) {
       console.error("Error creating speed test:", error);
@@ -156,11 +168,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const lostPackets = Math.floor(Math.random() * (packetCount * 0.05));
       const packetLossPercentage = (lostPackets / packetCount) * 100;
       
+      // Ensure we're returning a proper number, not a string
+      const packetLossValue = parseFloat(packetLossPercentage.toFixed(2));
+      console.log("Server generating packet loss value:", packetLossValue);
+      
       res.json({
         sentPackets: packetCount,
         receivedPackets: packetCount - lostPackets,
         lostPackets,
-        packetLossPercentage: parseFloat(packetLossPercentage.toFixed(2))
+        packetLossPercentage: packetLossValue
       });
     } catch (error) {
       console.error("Error measuring packet loss:", error);
