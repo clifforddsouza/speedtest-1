@@ -16,6 +16,7 @@ export interface IStorage {
   
   // Speed test operations
   createSpeedTest(test: InsertSpeedTest): Promise<SpeedTest>;
+  createSpeedTestsBatch(tests: InsertSpeedTest[]): Promise<SpeedTest[]>; // Batch insert
   getSpeedTests(): Promise<SpeedTest[]>;
   getSpeedTestsByCustomerId(customerId: string): Promise<SpeedTest[]>;
   getSpeedTest(id: number): Promise<SpeedTest | undefined>;
@@ -81,6 +82,28 @@ export class DatabaseStorage implements IStorage {
       .returning();
       
     return test;
+  }
+  
+  async createSpeedTestsBatch(insertTests: InsertSpeedTest[]): Promise<SpeedTest[]> {
+    if (insertTests.length === 0) return [];
+    
+    // Process the batch of tests
+    const now = new Date();
+    const processedTests = insertTests.map(test => ({
+      ...test,
+      // Ensure packet loss is a number
+      packetLoss: typeof test.packetLoss === 'number' 
+        ? test.packetLoss 
+        : parseFloat(String(test.packetLoss)),
+      timestamp: now
+    }));
+    
+    // Insert all tests in a single database operation
+    const tests = await db.insert(speedTests)
+      .values(processedTests)
+      .returning();
+      
+    return tests;
   }
 
   async getSpeedTests(): Promise<SpeedTest[]> {

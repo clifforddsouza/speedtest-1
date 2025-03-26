@@ -9,6 +9,7 @@ import { setupAuth, isAdmin } from "./auth";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { WebSocket, WebSocketServer } from 'ws';
+import os from 'os';
 
 // For creating the initial admin user
 const scryptAsync = promisify(scrypt);
@@ -52,6 +53,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching speed tests for admin:", error);
       res.status(500).json({ message: "Failed to fetch speed tests" });
+    }
+  });
+  
+  // Server monitoring endpoint for administrators
+  app.get("/api/admin/server-status", isAdmin, (req, res) => {
+    try {
+      // Gather performance metrics
+      const status = {
+        uptime: process.uptime(),
+        timestamp: Date.now(),
+        cpuUsage: process.cpuUsage(),
+        memoryUsage: process.memoryUsage(),
+        loadAverage: os.loadavg(),
+        cpuCount: os.cpus().length,
+        freeMemory: os.freemem(),
+        totalMemory: os.totalmem(),
+        connections: {
+          active: activeConnections.size,
+          max: MAX_CONCURRENT_TESTS,
+          activeTests: packetLossTests.size
+        },
+        platform: process.platform,
+        nodeVersion: process.version
+      };
+      
+      res.json(status);
+    } catch (error) {
+      console.error("Error fetching server status:", error);
+      res.status(500).json({ message: "Failed to fetch server status" });
     }
   });
   
@@ -149,6 +179,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating speed test:", error);
       res.status(500).json({ message: "Failed to save speed test data" });
+    }
+  });
+  
+  // Batch submission endpoint for multiple test results
+  app.post("/api/speed-tests/batch", async (req, res) => {
+    try {
+      if (!Array.isArray(req.body)) {
+        return res.status(400).json({ 
+          message: "Expected an array of speed test data" 
+        });
+      }
+      
+      console.log(`Received batch of ${req.body.length} speed tests`);
+      
+      // Validate each test in the batch
+      const validTests: InsertSpeedTest[] = [];
+      const invalidTests: { index: number; errors: any }[] = [];
+      
+      req.body.forEach((testData, index) => {
+        const parsedTest = insertSpeedTestSchema.safeParse(testData);
+        
+        if (parsedTest.success) {
+          // Ensure packet loss is properly set as a number
+          if (parsedTest.data.packetLoss !== undefined && parsedTest.data.packetLoss !== null) {
+            parsedTest.data.packetLoss = Number(parsedTest.data.packetLoss);
+          }
+          validTests.push(parsedTest.data);
+        } else {
+          invalidTests.push({
+            index,
+            errors: parsedTest.error.format()
+          });
+        }
+      });
+      
+      console.log(`Validated ${validTests.length} tests, found ${invalidTests.length} invalid tests`);
+      
+      // Only process if we have valid tests
+      if (validTests.length === 0) {
+        return res.status(400).json({
+          message: "No valid tests in the batch",
+          invalidTests
+        });
+      }
+      
+      // Store the valid tests in a batch operation
+      const savedTests = await storage.createSpeedTestsBatch(validTests);
+      
+      res.status(201).json({
+        message: `Successfully stored ${savedTests.length} tests`,
+        savedCount: savedTests.length,
+        invalidCount: invalidTests.length,
+        invalidTests: invalidTests.length > 0 ? invalidTests : undefined
+      });
+    } catch (error) {
+      console.error("Error processing batch speed test submission:", error);
+      res.status(500).json({ message: "Failed to process batch submission" });
     }
   });
 
