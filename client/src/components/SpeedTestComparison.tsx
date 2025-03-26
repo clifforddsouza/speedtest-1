@@ -440,7 +440,7 @@ export default function SpeedTestComparison({ customerId }: SpeedTestComparisonP
               
               {comparisonView === "metric" ? (
                 // For metric view
-                <Bar dataKey="value" name="Value" fill={(entry) => entry.fill || "#3b82f6"} />
+                <Bar dataKey="value" name="Value" fill="#3b82f6" />
               ) : (
                 // For other views with multiple metrics
                 <>
