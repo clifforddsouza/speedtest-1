@@ -3,26 +3,102 @@ import { apiRequest } from './queryClient';
 // Helper to simulate test delays in development
 const simulateDelay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Measure ping - simulated in development
+// Measure ping - real implementation
 export const measurePing = async (): Promise<number> => {
   try {
-    // In a real implementation, we would measure actual ping
-    // For now, we'll simulate a ping between 10ms and 50ms
-    await simulateDelay(1000);
-    return Math.floor(Math.random() * 40) + 10;
+    console.log('Starting real ping measurement');
+    const pingEndpoint = '/api/speedtest/download?size=1';
+    const pingCount = 10; // Number of ping measurements to average
+    let totalPing = 0;
+    
+    // Run multiple ping tests and average them
+    for (let i = 0; i < pingCount; i++) {
+      const startTime = Date.now();
+      const response = await fetch(pingEndpoint, {
+        method: 'GET',
+        cache: 'no-store', // Bypass cache for accurate measurements
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // Read the response to complete the request
+      await response.arrayBuffer();
+      
+      const endTime = Date.now();
+      const pingTime = endTime - startTime;
+      
+      console.log(`Ping measurement ${i+1}/${pingCount}: ${pingTime}ms`);
+      totalPing += pingTime;
+      
+      // Short delay between measurements
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    // Calculate the average ping
+    const averagePing = Math.round(totalPing / pingCount);
+    console.log(`Average ping: ${averagePing}ms`);
+    
+    return averagePing;
   } catch (error) {
     console.error('Error measuring ping:', error);
     throw error;
   }
 };
 
-// Measure jitter - simulated in development
+// Measure jitter - real implementation
 export const measureJitter = async (): Promise<number> => {
   try {
-    // In a real implementation, we would measure actual jitter
-    // For now, we'll simulate jitter between 1ms and 5ms
-    await simulateDelay(1000);
-    return parseFloat((Math.random() * 4 + 1).toFixed(1));
+    console.log('Starting real jitter measurement');
+    const jitterEndpoint = '/api/speedtest/download?size=1';
+    const measurementCount = 20; // Number of ping measurements for jitter
+    const pingTimes: number[] = [];
+    
+    // Perform multiple ping measurements
+    for (let i = 0; i < measurementCount; i++) {
+      const startTime = Date.now();
+      
+      const response = await fetch(jitterEndpoint, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      await response.arrayBuffer();
+      
+      const pingTime = Date.now() - startTime;
+      pingTimes.push(pingTime);
+      
+      console.log(`Jitter measurement ${i+1}/${measurementCount}: ${pingTime}ms`);
+      
+      // Add some randomness to the delay between tests
+      await new Promise(resolve => setTimeout(resolve, 80 + Math.random() * 40));
+    }
+    
+    // Calculate jitter as the average deviation between consecutive ping times
+    let totalDeviation = 0;
+    for (let i = 1; i < pingTimes.length; i++) {
+      const deviation = Math.abs(pingTimes[i] - pingTimes[i - 1]);
+      totalDeviation += deviation;
+    }
+    
+    // Average deviation (jitter)
+    const averageJitter = parseFloat((totalDeviation / (pingTimes.length - 1)).toFixed(1));
+    console.log(`Calculated jitter: ${averageJitter}ms from ${measurementCount} measurements`);
+    
+    return averageJitter;
   } catch (error) {
     console.error('Error measuring jitter:', error);
     throw error;
@@ -226,33 +302,151 @@ export const measurePacketLoss = async (): Promise<number> => {
   });
 };
 
-// Measure download/upload speed - simulated in development
+// Constants for speed test
+const TEST_DURATION_MS = 10000; // 10 seconds
+const UPDATE_INTERVAL_MS = 200; // Update progress every 200ms
+const DOWNLOAD_CHUNK_SIZE = 25 * 1024 * 1024; // 25MB chunk size for download
+const UPLOAD_CHUNK_SIZE = 10 * 1024 * 1024; // 10MB chunk size for upload
+const MAX_CHUNKS = 5; // Maximum number of chunks to download/upload
+
+// Measure download/upload speed - real implementation
 export const measureSpeed = async (
   type: 'download' | 'upload',
   progressCallback: (progress: number, dataAmount: number) => void
 ): Promise<number> => {
   try {
-    // In a real implementation, we would:
-    // 1. For download: fetch large files from the server
-    // 2. For upload: send large files to the server
-    // 3. Measure the time and calculate the speed
+    const startTime = Date.now();
+    let bytesTransferred = 0;
+    let currentSpeed = 0;
+    let progress = 0;
     
-    // For now, we'll simulate a test that takes 3 seconds
-    const maxSpeed = type === 'download' ? 100 : 40; // Mbps
-    const finalSpeed = Math.floor(Math.random() * (maxSpeed - maxSpeed/2)) + maxSpeed/2;
-    let dataAmount = 0;
+    // For accurate progress reporting
+    const updateInterval = setInterval(() => {
+      const elapsedSecs = (Date.now() - startTime) / 1000;
+      if (elapsedSecs > 0) {
+        // Calculate current speed in Mbps (megabits per second)
+        currentSpeed = (bytesTransferred * 8) / elapsedSecs / 1024 / 1024;
+        
+        // Calculate progress percentage
+        progress = Math.min(100, ((Date.now() - startTime) / TEST_DURATION_MS) * 100);
+        
+        // Report progress and data amount (in MB)
+        progressCallback(progress, bytesTransferred / 1024 / 1024);
+      }
+    }, UPDATE_INTERVAL_MS);
     
-    // Simulate 30 steps of progress
-    for (let progress = 0; progress <= 100; progress += 3.33) {
-      // Calculate the current data amount based on progress
-      const stepData = (finalSpeed * 0.125) * (progress / 100); // Convert Mbps to MBps
-      dataAmount = parseFloat((stepData * 3).toFixed(1)); // Assuming 3 seconds total
-      
-      progressCallback(progress, dataAmount);
-      await simulateDelay(100);
+    const clearUpdateInterval = () => {
+      clearInterval(updateInterval);
+      // Ensure we report 100% at the end
+      progressCallback(100, bytesTransferred / 1024 / 1024);
+    };
+    
+    try {
+      if (type === 'download') {
+        // Download test
+        console.log('Starting real download speed test');
+        
+        // Track concurrent downloads
+        const downloads = [];
+        const chunkSizeParam = `?size=${DOWNLOAD_CHUNK_SIZE}`;
+        
+        // Start multiple concurrent downloads to saturate the connection
+        for (let i = 0; i < MAX_CHUNKS; i++) {
+          const downloadPromise = fetch(`/api/speedtest/download${chunkSizeParam}`).then(async response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error('ReadableStream not supported');
+            
+            let done = false;
+            while (!done && (Date.now() - startTime) < TEST_DURATION_MS) {
+              const result = await reader.read();
+              done = result.done;
+              if (result.value) {
+                bytesTransferred += result.value.length;
+              }
+            }
+            
+            // Close the reader if we're done with the test duration
+            if (!done) {
+              await reader.cancel();
+            }
+          });
+          
+          downloads.push(downloadPromise);
+        }
+        
+        // Wait for all downloads to finish or for max duration to be reached
+        const timeoutPromise = new Promise(resolve => setTimeout(resolve, TEST_DURATION_MS));
+        await Promise.race([Promise.all(downloads), timeoutPromise]);
+        
+      } else if (type === 'upload') {
+        // Upload test
+        console.log('Starting real upload speed test');
+        
+        // Create a buffer with random data to upload
+        const generateRandomData = (size: number) => {
+          const buffer = new ArrayBuffer(size);
+          const view = new Uint8Array(buffer);
+          for (let i = 0; i < size; i++) {
+            view[i] = Math.floor(Math.random() * 256);
+          }
+          return buffer;
+        };
+        
+        // Generate a chunk of random data
+        const chunk = generateRandomData(UPLOAD_CHUNK_SIZE);
+        
+        // Track concurrent uploads
+        const uploads = [];
+        
+        // Start multiple concurrent uploads
+        for (let i = 0; i < MAX_CHUNKS; i++) {
+          const uploadPromise = (async () => {
+            const startChunkTime = Date.now();
+            
+            // Continue uploading chunks until the test duration is reached
+            while (Date.now() - startTime < TEST_DURATION_MS) {
+              const response = await fetch('/api/speedtest/upload', {
+                method: 'POST',
+                body: chunk,
+                headers: {
+                  'Content-Type': 'application/octet-stream',
+                }
+              });
+              
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              
+              bytesTransferred += chunk.byteLength;
+            }
+          })();
+          
+          uploads.push(uploadPromise);
+        }
+        
+        // Wait for all uploads to finish or timeout
+        const timeoutPromise = new Promise(resolve => setTimeout(resolve, TEST_DURATION_MS));
+        await Promise.race([Promise.all(uploads), timeoutPromise]);
+      }
+    } catch (error) {
+      console.error(`Error during ${type} speed test:`, error);
+      throw error;
+    } finally {
+      // Clean up and report final speed
+      clearUpdateInterval();
     }
     
-    return finalSpeed;
+    // Calculate final speed
+    const elapsedSecs = (Date.now() - startTime) / 1000;
+    const finalSpeedMbps = (bytesTransferred * 8) / elapsedSecs / 1024 / 1024;
+    
+    console.log(`${type} test completed: ${bytesTransferred} bytes in ${elapsedSecs.toFixed(2)}s = ${finalSpeedMbps.toFixed(2)} Mbps`);
+    
+    return parseFloat(finalSpeedMbps.toFixed(2));
   } catch (error) {
     console.error(`Error measuring ${type} speed:`, error);
     throw error;
