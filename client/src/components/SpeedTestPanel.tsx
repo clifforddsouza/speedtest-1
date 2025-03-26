@@ -38,13 +38,27 @@ export default function SpeedTestPanel({ customerId, testLocation, testNotes }: 
       const response = await apiRequest("POST", "/api/speed-tests", testData);
       return await response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/speed-tests"] });
-      toast({
-        title: "Test Completed",
-        description: "Your speed test results have been saved.",
-        duration: 3000,
-      });
+    onSuccess: (data) => {
+      // Check if the test was actually stored or not due to 6-month policy
+      if (data.testStored === false) {
+        // Test was completed but not stored due to 6-month policy
+        const existingDate = new Date(data.existingTestDate).toLocaleDateString();
+        const nextTestDate = new Date(data.customerCanTestAgain).toLocaleDateString();
+        
+        toast({
+          title: "Test Completed - Not Stored",
+          description: `This customer ID already has a test from ${existingDate}. A new test can be stored after ${nextTestDate}.`,
+          duration: 5000,
+        });
+      } else {
+        // Test was completed and stored successfully
+        queryClient.invalidateQueries({ queryKey: ["/api/speed-tests"] });
+        toast({
+          title: "Test Completed",
+          description: "Your speed test results have been saved.",
+          duration: 3000,
+        });
+      }
     },
     onError: (error) => {
       toast({
@@ -208,6 +222,19 @@ export default function SpeedTestPanel({ customerId, testLocation, testNotes }: 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
       <h2 className="text-lg font-semibold mb-4">Speed Test</h2>
+      
+      {/* Policy Information */}
+      <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 text-sm text-blue-800">
+        <div className="flex items-start">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 mt-0.5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+          </svg>
+          <div>
+            <p className="font-medium mb-1">6-Month Testing Policy</p>
+            <p>Each Customer ID can only have one test stored in our database every 6 months. You can still run tests with the same ID, but only the first test within 6 months will be saved in our system.</p>
+          </div>
+        </div>
+      </div>
       
       {/* Test Controls */}
       <div className="flex justify-between items-center mb-6">
