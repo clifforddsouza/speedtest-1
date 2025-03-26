@@ -174,6 +174,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up WebSocket server for packet loss testing
   const wss = new WebSocketServer({ server: httpServer, path: '/api/ws-packet-test' });
   
+  // Track active connections and set limits for concurrent testing
+  const activeConnections = new Map<string, {
+    ws: WebSocket;
+    startTime: number;
+    lastActivity: number;
+    testId?: string;
+  }>();
+  
+  const MAX_CONCURRENT_TESTS = 20; // Set limit higher than needed (10-15)
+  
   // Track active packet loss tests
   const packetLossTests = new Map<string, {
     id: string;
@@ -181,14 +191,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     receivedPackets: number;
     startTime: number;
     lastActivity: number;
+    connectionId: string;
   }>();
   
   // No artificial packet loss - we'll measure real network conditions
   
-  // Clean up inactive tests periodically
+  // Clean up inactive tests and connections periodically
   setInterval(() => {
     const now = Date.now();
-    // Use Array.from to avoid TypeScript iteration error
+    // Clean up inactive tests
     Array.from(packetLossTests.entries()).forEach(([id, test]) => {
       // Remove tests that have been inactive for more than 30 seconds
       if (now - test.lastActivity > 30000) {
@@ -196,15 +207,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Removed inactive packet loss test ${id}`);
       }
     });
+    
+    // Clean up inactive connections
+    Array.from(activeConnections.entries()).forEach(([id, conn]) => {
+      // Remove connections that have been inactive for more than 60 seconds
+      if (now - conn.lastActivity > 60000) {
+        if (conn.ws.readyState === WebSocket.OPEN) {
+          conn.ws.close();
+        }
+        activeConnections.delete(id);
+        console.log(`Removed inactive connection ${id}`);
+      }
+    });
   }, 10000);
   
   wss.on('connection', (ws: WebSocket) => {
     console.log('New WebSocket connection for packet loss test');
+    
+    // Generate a unique connection ID
+    const connectionId = crypto.randomUUID();
     let testId: string | null = null;
+    
+    // Check if we're at connection limit
+    if (activeConnections.size >= MAX_CONCURRENT_TESTS) {
+      console.log(`Connection limit reached (${activeConnections.size}/${MAX_CONCURRENT_TESTS}). Rejecting new connection.`);
+      ws.send(JSON.stringify({
+        type: 'error',
+        message: 'Server is at capacity. Please try again later.'
+      }));
+      ws.close();
+      return;
+    }
+    
+    // Store the connection
+    activeConnections.set(connectionId, {
+      ws,
+      startTime: Date.now(),
+      lastActivity: Date.now()
+    });
+    
+    console.log(`Active connections: ${activeConnections.size}/${MAX_CONCURRENT_TESTS}`);
     
     ws.on('message', (message: Buffer) => {
       try {
         const data = JSON.parse(message.toString());
+        
+        // Update last activity time for this connection
+        const conn = activeConnections.get(connectionId);
+        if (conn) {
+          conn.lastActivity = Date.now();
+        }
         
         // Handle different message types
         switch (data.type) {
@@ -216,8 +268,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
               sentPackets: 0,
               receivedPackets: 0,
               startTime: Date.now(),
-              lastActivity: Date.now()
+              lastActivity: Date.now(),
+              connectionId
             });
+            
+            // Update connection with testId
+            const conn = activeConnections.get(connectionId);
+            if (conn) {
+              conn.testId = testId;
+            }
             
             ws.send(JSON.stringify({
               type: 'init',
@@ -321,17 +380,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     ws.on('close', () => {
       console.log('WebSocket connection closed');
+      
+      // Clean up test if exists
       if (testId && packetLossTests.has(testId)) {
         packetLossTests.delete(testId);
         console.log(`Cleaned up packet loss test ${testId} on connection close`);
       }
+      
+      // Clean up connection tracking
+      activeConnections.delete(connectionId);
+      console.log(`Connection ${connectionId} closed. Active connections: ${activeConnections.size}/${MAX_CONCURRENT_TESTS}`);
     });
     
     ws.on('error', (error) => {
       console.error('WebSocket error:', error);
+      
+      // Clean up test if exists
       if (testId && packetLossTests.has(testId)) {
         packetLossTests.delete(testId);
       }
+      
+      // Clean up connection tracking
+      activeConnections.delete(connectionId);
+      console.log(`Connection ${connectionId} closed due to error. Active connections: ${activeConnections.size}/${MAX_CONCURRENT_TESTS}`);
     });
   });
 
