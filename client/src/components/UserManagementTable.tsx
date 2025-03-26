@@ -1,46 +1,28 @@
-import { useState, useEffect } from "react";
 import { User, UserRole } from "@shared/schema";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { apiRequest } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function UserManagementTable() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        const response = await apiRequest("GET", "/api/admin/users");
-        
-        if (response.ok) {
-          const data = await response.json();
-          setUsers(data);
-        } else {
-          toast({
-            title: "Error",
-            description: "Failed to fetch users. You may not have permission.",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch users",
-          variant: "destructive",
-        });
-        console.error("Error fetching users:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, [toast]);
+  // Using React Query to fetch users
+  const { data: users, isLoading, error } = useQuery<User[]>({
+    queryKey: ["/api/admin/users"],
+  });
+  
+  // Handle errors
+  if (error) {
+    console.error("Error fetching users:", error);
+    toast({
+      title: "Error",
+      description: "Failed to fetch users. You may not have permission.",
+      variant: "destructive",
+    });
+  }
 
   // Function to get badge color based on role
   const getRoleBadgeColor = (role: string) => {
@@ -62,11 +44,11 @@ export default function UserManagementTable() {
         <CardTitle>Current Users</CardTitle>
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {isLoading ? (
           <div className="flex justify-center py-6">
             <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
           </div>
-        ) : users.length === 0 ? (
+        ) : !users || users.length === 0 ? (
           <div className="text-center py-6 text-gray-500">
             No users found
           </div>

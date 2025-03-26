@@ -21,7 +21,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 // Extend user schema with validation
@@ -63,6 +63,9 @@ export default function UserRegistrationForm() {
           title: "Success",
           description: "User registered successfully",
         });
+        
+        // Invalidate the users query to trigger a refetch
+        queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
         
         form.reset();
       } else {
