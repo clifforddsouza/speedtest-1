@@ -3,10 +3,20 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import crypto from 'crypto';
 import express from 'express';
-import { insertSpeedTestSchema } from "@shared/schema";
+import { insertSpeedTestSchema, UserRole } from "@shared/schema";
 import { z } from "zod";
-import { setupAuth } from "./auth";
+import { setupAuth, isAdmin } from "./auth";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
 import { WebSocket, WebSocketServer } from 'ws';
+
+// For creating the initial admin user
+const scryptAsync = promisify(scrypt);
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
@@ -23,61 +33,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendStatus(200);
   });
   
-  // Admin authentication
-  app.post("/api/admin/login", (req: Request, res: Response) => {
-    const { username, password } = req.body;
-    
-    // Hardcoded admin credentials for simplicity
-    if (username === "admin" && password === "admin") {
-      // Set session data
-      if (req.session) {
-        req.session.isAuthenticated = true;
-        req.session.username = username;
-      }
+  // Admin dashboard session check
+  app.get("/api/admin/session", isAdmin, (req: Request, res: Response) => {
+    // If the isAdmin middleware passes, this means user is authenticated and has admin role
+    const user = req.user!;
+    res.status(200).json({ 
+      isAuthenticated: true,
+      username: user.username,
+      role: user.role
+    });
+  });
+  
+  // Admin dashboard analytics (get all speed tests)
+  app.get("/api/admin/speed-tests", isAdmin, async (req, res) => {
+    try {
+      const tests = await storage.getSpeedTests();
+      res.json(tests);
+    } catch (error) {
+      console.error("Error fetching speed tests for admin:", error);
+      res.status(500).json({ message: "Failed to fetch speed tests" });
+    }
+  });
+  
+  // Create default super admin user if none exists
+  (async () => {
+    try {
+      // Check if there's at least one super admin
+      const users = await storage.getUsers();
+      const hasAdmin = users.some(user => user.role === UserRole.ADMIN || user.role === UserRole.SUPER_ADMIN);
       
-      res.status(200).json({ message: "Login successful" });
-    } else {
-      res.status(401).json({ message: "Invalid username or password" });
+      if (!hasAdmin && users.length === 0) {
+        console.log("Creating default super admin user...");
+        // Create a default super admin user
+        const adminPassword = await hashPassword("admin");
+        await storage.createUser({
+          username: "admin",
+          password: adminPassword,
+          role: UserRole.SUPER_ADMIN
+        });
+        console.log("Default super admin user created successfully");
+      }
+    } catch (error) {
+      console.error("Error during admin setup:", error);
     }
-  });
-  
-  app.post("/api/admin/logout", (req: Request, res: Response) => {
-    // Clear session
-    if (req.session) {
-      req.session.destroy((err) => {
-        if (err) {
-          return res.status(500).json({ message: "Failed to logout" });
-        }
-        res.status(200).json({ message: "Logout successful" });
-      });
-    } else {
-      res.status(200).json({ message: "No active session" });
-    }
-  });
-  
-  app.get("/api/admin/session", (req: Request, res: Response) => {
-    if (req.session && req.session.isAuthenticated) {
-      res.status(200).json({ 
-        isAuthenticated: true,
-        username: req.session.username
-      });
-    } else {
-      res.status(401).json({ 
-        isAuthenticated: false,
-        message: "Not authenticated" 
-      });
-    }
-  });
-  
-  // Middleware to check if user is authenticated for admin API routes
-  const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-    // Check session authentication
-    if (req.session && req.session.isAuthenticated) {
-      next();
-    } else {
-      res.status(401).json({ message: "Unauthorized" });
-    }
-  };
+  })();
   // Speed test API routes
   app.get("/api/speed-tests", async (req, res) => {
     try {
