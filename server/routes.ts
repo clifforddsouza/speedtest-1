@@ -135,43 +135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Validated speed test data:", JSON.stringify(parsedBody.data, null, 2));
       
-      // Check if this customer ID already has a test in the last 6 months
-      if (parsedBody.data.customerId) {
-        const customerTests = await storage.getSpeedTestsByCustomerId(parsedBody.data.customerId);
-        
-        if (customerTests.length > 0) {
-          // Calculate date 6 months ago
-          const sixMonthsAgo = new Date();
-          sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-          
-          // Check if any existing test is within the last 6 months
-          const recentTests = customerTests.filter(test => {
-            const testDate = new Date(test.timestamp);
-            return testDate >= sixMonthsAgo;
-          });
-          
-          if (recentTests.length > 0) {
-            // Sort tests by date (newest first)
-            recentTests.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-            const mostRecentTest = recentTests[0];
-            
-            // Customer already has a test within 6 months
-            console.log(`Customer ID ${parsedBody.data.customerId} already has a test within the last 6 months. Most recent test ID: ${mostRecentTest.id}, Date: ${mostRecentTest.timestamp}`);
-            
-            // Return success but with a flag indicating the test wasn't stored
-            return res.status(200).json({
-              message: "Test completed successfully but not stored due to 6-month policy",
-              testComplete: true,
-              testStored: false,
-              existingTestId: mostRecentTest.id,
-              existingTestDate: mostRecentTest.timestamp,
-              customerCanTestAgain: sixMonthsAgo.toISOString() // Date when customer can store a new test
-            });
-          }
-        }
-      }
-      
-      // If we get here, store the test
+      // Always store the test - no time restriction
       const speedTest = await storage.createSpeedTest(parsedBody.data);
       console.log("Saved speed test:", JSON.stringify(speedTest, null, 2));
       
