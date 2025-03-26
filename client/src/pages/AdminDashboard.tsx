@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserRegistrationForm from "@/components/UserRegistrationForm";
+import UserManagementTable from "@/components/UserManagementTable";
 import { 
   Select, 
   SelectContent, 
@@ -132,7 +133,7 @@ export default function AdminDashboard() {
         <div className="container mx-auto px-4 py-8">
           {/* User Registration */}
           <Card className="p-6 mb-6">
-            <h2 className="text-lg font-semibold mb-4">User Management</h2>
+            <h2 className="text-lg font-semibold mb-4">User Registration</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <UserRegistrationForm />
               <div className="bg-gray-50 rounded-lg p-6 flex flex-col justify-center">
@@ -157,6 +158,12 @@ export default function AdminDashboard() {
                 </ul>
               </div>
             </div>
+          </Card>
+          
+          {/* User Management Table */}
+          <Card className="p-6 mb-6">
+            <h2 className="text-lg font-semibold mb-4">Current Users</h2>
+            <UserManagementTable />
           </Card>
           
           <Card className="p-6">
@@ -386,7 +393,7 @@ export default function AdminDashboard() {
       <main className="container mx-auto px-4 py-8">
         {/* User Registration */}
         <Card className="p-6 mb-6">
-          <h2 className="text-lg font-semibold mb-4">User Management</h2>
+          <h2 className="text-lg font-semibold mb-4">User Registration</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <UserRegistrationForm />
             <div className="bg-gray-50 rounded-lg p-6 flex flex-col justify-center">
@@ -411,6 +418,12 @@ export default function AdminDashboard() {
               </ul>
             </div>
           </div>
+        </Card>
+        
+        {/* User Management Table */}
+        <Card className="p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4">Current Users</h2>
+          <UserManagementTable />
         </Card>
         
         {/* Filters */}
