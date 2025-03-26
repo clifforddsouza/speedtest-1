@@ -12,23 +12,24 @@ export default function UserManagementTable() {
   // Using React Query to fetch users with proper type definitions
   const { 
     data, 
-    isLoading 
+    isLoading,
+    error 
   } = useQuery({
     queryKey: ["/api/admin/users"],
+    queryFn: getQueryFn({ on401: "throw" }),
+    // Handle errors in the onError callback
+    onError: (err: Error) => {
+      console.error("Error fetching users:", err);
+      toast({
+        title: "Error",
+        description: "Failed to fetch users. You may not have permission.",
+        variant: "destructive",
+      });
+    }
   });
   
   // Cast data to User array to ensure TypeScript knows what we're working with
   const users = data as User[] || [];
-
-  // Function to handle errors through the toast system
-  const handleError = (err: Error) => {
-    console.error("Error fetching users:", err);
-    toast({
-      title: "Error",
-      description: "Failed to fetch users. You may not have permission.",
-      variant: "destructive",
-    });
-  };
 
   // Function to get badge color based on role
   const getRoleBadgeColor = (role: string) => {
