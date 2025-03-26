@@ -55,6 +55,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Admin dashboard - get all users (available only to admins)
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      // Don't send passwords to the client
+      const usersWithoutPasswords = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      res.json(usersWithoutPasswords);
+    } catch (error) {
+      console.error("Error fetching users for admin:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+  
   // Create default super admin user if none exists
   (async () => {
     try {
