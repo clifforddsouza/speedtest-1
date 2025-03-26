@@ -9,7 +9,8 @@ import UserManagementTable from "@/components/UserManagementTable";
 import AdvancedAnalytics from "@/components/AdvancedAnalytics";
 import PerformanceInsights from "@/components/PerformanceInsights";
 import SpeedTestComparison from "@/components/SpeedTestComparison";
-import { Settings, BarChart3, LogOut, FileDown, Share2, Zap, Activity } from "lucide-react";
+import HistoricalDataViewer from "@/components/HistoricalDataViewer";
+import { Settings, BarChart3, LogOut, FileDown, Share2, Zap, Activity, History } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -492,6 +493,10 @@ export default function AdminDashboard() {
                   <TabsTrigger value="comparison" className="flex items-center gap-2">
                     <Share2 className="h-4 w-4" />
                     <span>Comparison Analysis</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="flex items-center gap-2">
+                    <History className="h-4 w-4" />
+                    <span>Historical Data</span>
                   </TabsTrigger>
                 </TabsList>
                 
@@ -977,6 +982,10 @@ export default function AdminDashboard() {
                 
                 <TabsContent value="comparison">
                   <SpeedTestComparison customerId={selectedCustomerId} />
+                </TabsContent>
+                
+                <TabsContent value="history">
+                  <HistoricalDataViewer customerId={selectedCustomerId} adminView={true} />
                 </TabsContent>
               </Tabs>
             </Card>
