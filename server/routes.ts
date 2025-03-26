@@ -6,6 +6,7 @@ import express from 'express';
 import { insertSpeedTestSchema } from "@shared/schema";
 import { z } from "zod";
 import { setupAuth } from "./auth";
+import { WebSocket, WebSocketServer } from 'ws';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
@@ -185,6 +186,163 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Set up WebSocket server for packet loss testing
+  const wss = new WebSocketServer({ server: httpServer, path: '/api/ws-packet-test' });
+  
+  // Track active packet loss tests
+  const packetLossTests = new Map<string, {
+    id: string;
+    sentPackets: number;
+    receivedPackets: number;
+    startTime: number;
+    lastActivity: number;
+  }>();
+  
+  // Clean up inactive tests periodically
+  setInterval(() => {
+    const now = Date.now();
+    // Use Array.from to avoid TypeScript iteration error
+    Array.from(packetLossTests.entries()).forEach(([id, test]) => {
+      // Remove tests that have been inactive for more than 30 seconds
+      if (now - test.lastActivity > 30000) {
+        packetLossTests.delete(id);
+        console.log(`Removed inactive packet loss test ${id}`);
+      }
+    });
+  }, 10000);
+  
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('New WebSocket connection for packet loss test');
+    let testId: string | null = null;
+    
+    ws.on('message', (message: Buffer) => {
+      try {
+        const data = JSON.parse(message.toString());
+        
+        // Handle different message types
+        switch (data.type) {
+          case 'init': {
+            // Initialize new test
+            testId = crypto.randomUUID();
+            packetLossTests.set(testId, {
+              id: testId,
+              sentPackets: 0,
+              receivedPackets: 0,
+              startTime: Date.now(),
+              lastActivity: Date.now()
+            });
+            
+            ws.send(JSON.stringify({
+              type: 'init',
+              testId,
+              status: 'ready'
+            }));
+            
+            console.log(`Initialized packet loss test ${testId}`);
+            break;
+          }
+          
+          case 'packet': {
+            // Record received packet
+            if (!testId || !packetLossTests.has(testId)) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: 'No active test session'
+              }));
+              return;
+            }
+            
+            const test = packetLossTests.get(testId)!;
+            test.receivedPackets++;
+            test.lastActivity = Date.now();
+            
+            // Send packet acknowledgment
+            ws.send(JSON.stringify({
+              type: 'ack',
+              packetId: data.packetId
+            }));
+            break;
+          }
+          
+          case 'client-sent': {
+            // Client reports how many packets it sent
+            if (!testId || !packetLossTests.has(testId)) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: 'No active test session'
+              }));
+              return;
+            }
+            
+            const test = packetLossTests.get(testId)!;
+            test.sentPackets = data.count;
+            test.lastActivity = Date.now();
+            break;
+          }
+          
+          case 'get-results': {
+            // Return test results
+            if (!testId || !packetLossTests.has(testId)) {
+              ws.send(JSON.stringify({
+                type: 'error',
+                message: 'No active test session'
+              }));
+              return;
+            }
+            
+            const test = packetLossTests.get(testId)!;
+            const lostPackets = test.sentPackets - test.receivedPackets;
+            const packetLossPercentage = test.sentPackets > 0 
+              ? (lostPackets / test.sentPackets) * 100 
+              : 0;
+            
+            ws.send(JSON.stringify({
+              type: 'results',
+              sentPackets: test.sentPackets,
+              receivedPackets: test.receivedPackets,
+              lostPackets,
+              packetLossPercentage: parseFloat(packetLossPercentage.toFixed(2)),
+              duration: Date.now() - test.startTime
+            }));
+            
+            console.log(`Packet loss test ${testId} results: ${lostPackets} lost out of ${test.sentPackets} (${packetLossPercentage.toFixed(2)}%)`);
+            
+            // Optionally clean up after results are retrieved
+            packetLossTests.delete(testId);
+            break;
+          }
+          
+          default:
+            ws.send(JSON.stringify({
+              type: 'error',
+              message: `Unknown message type: ${data.type}`
+            }));
+        }
+      } catch (error) {
+        console.error('Error processing WebSocket message:', error);
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: 'Invalid message format'
+        }));
+      }
+    });
+    
+    ws.on('close', () => {
+      console.log('WebSocket connection closed');
+      if (testId && packetLossTests.has(testId)) {
+        packetLossTests.delete(testId);
+        console.log(`Cleaned up packet loss test ${testId} on connection close`);
+      }
+    });
+    
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      if (testId && packetLossTests.has(testId)) {
+        packetLossTests.delete(testId);
+      }
+    });
+  });
 
   return httpServer;
 }
