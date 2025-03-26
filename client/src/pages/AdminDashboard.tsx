@@ -6,7 +6,10 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserRegistrationForm from "@/components/UserRegistrationForm";
 import UserManagementTable from "@/components/UserManagementTable";
-import { Settings, BarChart3, LogOut } from "lucide-react";
+import AdvancedAnalytics from "@/components/AdvancedAnalytics";
+import PerformanceInsights from "@/components/PerformanceInsights";
+import SpeedTestComparison from "@/components/SpeedTestComparison";
+import { Settings, BarChart3, LogOut, FileDown, Share2, Zap, Activity } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -32,6 +35,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
+import { convertSpeedTestsToCSV } from "@/lib/exportUtils";
 import type { SpeedTest } from "@shared/schema";
 import { format, startOfMonth, endOfMonth, sub, add, isWithinInterval, startOfQuarter, endOfQuarter, isAfter, isBefore, isSameMonth } from "date-fns";
 import { cn } from "@/lib/utils";

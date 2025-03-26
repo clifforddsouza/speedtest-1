@@ -30,7 +30,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarIcon, Download, ArrowDownToLine } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { convertSpeedTestsToCSV } from "@/lib/exportUtils";
+import { convertSpeedTestsToCSV } from "../lib/exportUtils";
 
 interface AdvancedAnalyticsProps {
   customerId?: string;
@@ -280,12 +280,15 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
       const relativeIndex = Math.min(currentIndex, previousData.length - 1);
       const previous = previousData[relativeIndex];
       
+      const currentVal = current[analysisMetric] as number;
+      const previousVal = previous ? (previous[analysisMetric] as number) : 0;
+      
       return {
         ...current,
-        [`${analysisMetric}Previous`]: previous ? previous[analysisMetric] : null,
-        [`${analysisMetric}Change`]: previous ? current[analysisMetric] - previous[analysisMetric] : null,
-        [`${analysisMetric}ChangePercent`]: previous && previous[analysisMetric] !== 0 
-          ? ((current[analysisMetric] - previous[analysisMetric]) / previous[analysisMetric] * 100)
+        [`${analysisMetric}Previous`]: previous ? previousVal : null,
+        [`${analysisMetric}Change`]: previous ? currentVal - previousVal : null,
+        [`${analysisMetric}ChangePercent`]: previous && previousVal !== 0 
+          ? ((currentVal - previousVal) / previousVal * 100)
           : null
       };
     });
@@ -315,7 +318,10 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
   // Calculate trend (simple: are the last 3 data points trending up or down)
   const trendData = chartData.slice(-3);
   let trendDirection = "steady";
-  if (trendData.length === 3) {
+  if (trendData.length === 3 && 
+      trendData[0] && trendData[2] && 
+      trendData[0][analysisMetric] !== undefined && 
+      trendData[2][analysisMetric] !== undefined) {
     if (trendData[2][analysisMetric] > trendData[0][analysisMetric]) {
       trendDirection = "up";
     } else if (trendData[2][analysisMetric] < trendData[0][analysisMetric]) {
