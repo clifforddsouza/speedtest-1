@@ -2,10 +2,23 @@ import { pgTable, text, serial, integer, boolean, timestamp, real } from "drizzl
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// User roles enum
+export const UserRole = {
+  SUPER_ADMIN: "super_admin",
+  ADMIN: "admin",
+  MANAGER: "manager",
+  USER: "user"
+} as const;
+
+export type UserRoleType = typeof UserRole[keyof typeof UserRole];
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  role: text("role").notNull().default(UserRole.USER),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const speedTests = pgTable("speed_tests", {
@@ -32,6 +45,7 @@ export const speedTests = pgTable("speed_tests", {
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  role: true,
 });
 
 export const insertSpeedTestSchema = createInsertSchema(speedTests).omit({

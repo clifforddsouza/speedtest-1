@@ -1,4 +1,4 @@
-import { users, type User, type InsertUser, speedTests, type SpeedTest, type InsertSpeedTest } from "@shared/schema";
+import { users, type User, type InsertUser, speedTests, type SpeedTest, type InsertSpeedTest, UserRole } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -6,9 +6,12 @@ import createMemoryStore from "memorystore";
 // you might need
 
 export interface IStorage {
+  // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  getUsers(): Promise<User[]>;
+  updateUser(id: number, updates: Partial<User>): Promise<User>;
   
   // Speed test operations
   createSpeedTest(test: InsertSpeedTest): Promise<SpeedTest>;
@@ -51,7 +54,18 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.userCurrentId++;
-    const user: User = { ...insertUser, id };
+    const role = insertUser.role || UserRole.USER;
+    const isActive = true;
+    const createdAt = new Date();
+    
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      role,
+      isActive, 
+      createdAt 
+    };
+    
     this.users.set(id, user);
     return user;
   }
@@ -115,6 +129,23 @@ export class MemStorage implements IStorage {
 
   async getSpeedTest(id: number): Promise<SpeedTest | undefined> {
     return this.speedTests.get(id);
+  }
+  
+  async getUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+  
+  async updateUser(id: number, updates: Partial<User>): Promise<User> {
+    const user = this.users.get(id);
+    
+    if (!user) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+    
+    const updatedUser: User = { ...user, ...updates };
+    this.users.set(id, updatedUser);
+    
+    return updatedUser;
   }
 }
 
