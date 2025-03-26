@@ -253,17 +253,18 @@ export const measurePacketLoss = async (): Promise<number> => {
         cleanup();
         clearTimeout(timeoutId);
         
-        // If we fail early with no packets, fall back to a simulated value
+        // Report connection error as high packet loss
         if (packetCount === 0) {
-          const fallbackValue = parseFloat((Math.random() * 2).toFixed(1));
-          console.warn('Using fallback packet loss value due to WebSocket error:', fallbackValue);
-          resolve(fallbackValue);
+          // We couldn't even start the test, which indicates a connectivity issue
+          console.warn('WebSocket error before any packets could be sent - reporting connectivity issue');
+          // 100% packet loss represents connection failure
+          resolve(100);
         } else {
           // Calculate with what we have
           const lostPackets = packetCount - acknowledgedPackets;
           const packetLossPercentage = packetCount > 0 
             ? (lostPackets / packetCount) * 100 
-            : 0;
+            : 100; // If somehow we sent 0 packets, that's 100% loss
           console.log(`Client calculated packet loss: ${lostPackets} lost out of ${packetCount} (${packetLossPercentage.toFixed(2)}%)`);
           resolve(parseFloat(packetLossPercentage.toFixed(2)));
         }
@@ -277,15 +278,15 @@ export const measurePacketLoss = async (): Promise<number> => {
         if (!testComplete) {
           // If the connection closed unexpectedly before we got results
           if (packetCount === 0) {
-            const fallbackValue = parseFloat((Math.random() * 2).toFixed(1));
-            console.warn('Using fallback packet loss value due to unexpected WebSocket close:', fallbackValue);
-            resolve(fallbackValue);
+            // No packets were sent, report as a connection problem (100% loss)
+            console.warn('WebSocket connection closed before any packets could be sent - reporting connectivity issue');
+            resolve(100);
           } else {
             // Calculate with what we have
             const lostPackets = packetCount - acknowledgedPackets;
             const packetLossPercentage = packetCount > 0 
               ? (lostPackets / packetCount) * 100 
-              : 0;
+              : 100; // If somehow we sent 0 packets, that's 100% loss
             console.log(`Client calculated packet loss (on close): ${lostPackets} lost out of ${packetCount} (${packetLossPercentage.toFixed(2)}%)`);
             resolve(parseFloat(packetLossPercentage.toFixed(2)));
           }
@@ -294,10 +295,10 @@ export const measurePacketLoss = async (): Promise<number> => {
       
     } catch (error) {
       console.error('Error in packet loss test:', error);
-      // If there's a critical error, fall back to a simulated value
-      const fallbackValue = parseFloat((Math.random() * 2).toFixed(1));
-      console.warn('Using fallback packet loss value due to critical error:', fallbackValue);
-      resolve(fallbackValue);
+      // Critical error indicates connectivity problems
+      console.warn('Critical error in packet loss test - reporting as connectivity issue');
+      // Report 100% packet loss to indicate a connection problem
+      resolve(100);
     }
   });
 };

@@ -145,42 +145,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Packet loss measurement endpoint
+  // Packet loss measurement endpoint (legacy - now uses WebSockets for more accurate measurement)
   app.post("/api/measure-packet-loss", async (req, res) => {
     try {
-      // Validate request body
-      const schema = z.object({
-        packetCount: z.number().int().positive(),
-      });
+      // This endpoint is kept for backwards compatibility
+      // The WebSocket-based packet loss test is more accurate and should be used instead
       
-      const parsedBody = schema.safeParse(req.body);
-      if (!parsedBody.success) {
-        return res.status(400).json({ 
-          message: "Invalid request data",
-          errors: parsedBody.error.format() 
-        });
-      }
-      
-      const { packetCount } = parsedBody.data;
-      
-      // Simulate packet loss (between 0% and 5%)
-      // In a real implementation, we would perform actual packet loss measurement here
-      const lostPackets = Math.floor(Math.random() * (packetCount * 0.05));
-      const packetLossPercentage = (lostPackets / packetCount) * 100;
-      
-      // Ensure we're returning a proper number, not a string
-      const packetLossValue = parseFloat(packetLossPercentage.toFixed(2));
-      console.log("Server generating packet loss value:", packetLossValue);
-      
+      // Return a response indicating that real packet loss measurement requires WebSockets
       res.json({
-        sentPackets: packetCount,
-        receivedPackets: packetCount - lostPackets,
-        lostPackets,
-        packetLossPercentage: packetLossValue
+        message: "This endpoint is deprecated. The application now uses WebSockets for real packet loss measurement.",
+        recommendation: "Use the WebSocket-based packet loss test for accurate results."
       });
     } catch (error) {
-      console.error("Error measuring packet loss:", error);
-      res.status(500).json({ message: "Failed to measure packet loss" });
+      console.error("Error in packet loss endpoint:", error);
+      res.status(500).json({ message: "Server error" });
     }
   });
 
@@ -196,12 +174,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     receivedPackets: number;
     startTime: number;
     lastActivity: number;
-    inducedPacketLossRate: number; // Percentage of packets to drop artificially
   }>();
   
-  // For simulating network issues - controls the percentage of packets we artificially drop
-  // This would be 0 in production, but for testing we can set it higher
-  const DEFAULT_INDUCED_PACKET_LOSS = 40; // 40% packet loss for testing
+  // No artificial packet loss - we'll measure real network conditions
   
   // Clean up inactive tests periodically
   setInterval(() => {
@@ -234,8 +209,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               sentPackets: 0,
               receivedPackets: 0,
               startTime: Date.now(),
-              lastActivity: Date.now(),
-              inducedPacketLossRate: DEFAULT_INDUCED_PACKET_LOSS
+              lastActivity: Date.now()
             });
             
             ws.send(JSON.stringify({
@@ -244,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               status: 'ready'
             }));
             
-            console.log(`Initialized packet loss test ${testId} with ${DEFAULT_INDUCED_PACKET_LOSS}% induced packet loss`);
+            console.log(`Initialized packet loss test ${testId} - measuring real network conditions`);
             break;
           }
           
@@ -262,19 +236,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             test.receivedPackets++;
             test.lastActivity = Date.now();
             
-            // Simulate packet loss for testing
-            // Generate a random number between 0-100 and check if we should drop this packet
-            const shouldDropPacket = Math.random() * 100 < test.inducedPacketLossRate;
+            // Always acknowledge received packets - we're measuring real network packet loss
+            ws.send(JSON.stringify({
+              type: 'ack',
+              packetId: data.packetId
+            }));
             
-            if (shouldDropPacket) {
-              // Intentionally don't send acknowledgment to simulate packet loss
-              console.log(`Induced packet loss - dropping packet ${data.packetId}`);
-            } else {
-              // Send packet acknowledgment
-              ws.send(JSON.stringify({
-                type: 'ack',
-                packetId: data.packetId
-              }));
+            // Log every 20th packet for debugging
+            if (data.packetId % 20 === 0) {
+              console.log(`Received and acknowledged packet ${data.packetId}`);
             }
             break;
           }
