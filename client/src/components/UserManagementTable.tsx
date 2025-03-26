@@ -9,20 +9,26 @@ import { useToast } from "@/hooks/use-toast";
 export default function UserManagementTable() {
   const { toast } = useToast();
 
-  // Using React Query to fetch users
-  const { data: users, isLoading, error } = useQuery<User[]>({
+  // Using React Query to fetch users with proper type definitions
+  const { 
+    data, 
+    isLoading 
+  } = useQuery({
     queryKey: ["/api/admin/users"],
   });
   
-  // Handle errors
-  if (error) {
-    console.error("Error fetching users:", error);
+  // Cast data to User array to ensure TypeScript knows what we're working with
+  const users = data as User[] || [];
+
+  // Function to handle errors through the toast system
+  const handleError = (err: Error) => {
+    console.error("Error fetching users:", err);
     toast({
       title: "Error",
       description: "Failed to fetch users. You may not have permission.",
       variant: "destructive",
     });
-  }
+  };
 
   // Function to get badge color based on role
   const getRoleBadgeColor = (role: string) => {
@@ -64,7 +70,7 @@ export default function UserManagementTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {users.map((user: User) => (
                 <TableRow key={user.id}>
                   <TableCell>{user.id}</TableCell>
                   <TableCell className="font-medium">{user.username}</TableCell>

@@ -56,26 +56,17 @@ export default function UserRegistrationForm() {
       setIsSubmitting(true);
       const { confirmPassword, ...userData } = data;
 
-      const response = await apiRequest("POST", "/api/register", userData);
+      const response = await apiRequest("POST", "/api/admin/register", userData);
       
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "User registered successfully",
-        });
-        
-        // Invalidate the users query to trigger a refetch
-        queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-        
-        form.reset();
-      } else {
-        const errorData = await response.json();
-        toast({
-          title: "Registration failed",
-          description: errorData.message || "Failed to register user",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Success",
+        description: "User registered successfully",
+      });
+      
+      // Invalidate the users query to trigger a refetch
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      
+      form.reset();
     } catch (error) {
       toast({
         title: "Error",
