@@ -9,7 +9,7 @@ import type { SpeedTest } from "@shared/schema";
 export default function Home() {
   const [customerId, setCustomerId] = useState<string>("");
   const [testLocation, setTestLocation] = useState<string>("");
-  const [testNotes, setTestNotes] = useState<string>("");
+  const [internetPlan, setInternetPlan] = useState<string>("not_specified");
   const [selectedTest, setSelectedTest] = useState<SpeedTest | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
 
@@ -62,13 +62,13 @@ export default function Home() {
         <CustomerForm 
           customerId={customerId}
           testLocation={testLocation}
-          testNotes={testNotes}
+          internetPlan={internetPlan}
           onCustomerIdChange={setCustomerId}
           onTestLocationChange={setTestLocation}
-          onTestNotesChange={setTestNotes}
+          onInternetPlanChange={setInternetPlan}
         />
         
-        <SpeedTestPanel customerId={customerId} testLocation={testLocation} testNotes={testNotes} />
+        <SpeedTestPanel customerId={customerId} testLocation={testLocation} internetPlan={internetPlan} />
         
         <TestResultsPanel onViewDetails={handleViewDetailedResults} />
 

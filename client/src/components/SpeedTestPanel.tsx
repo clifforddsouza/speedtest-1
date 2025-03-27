@@ -9,10 +9,10 @@ import { measureSpeed, measurePing, measureJitter, measurePacketLoss } from "@/l
 interface SpeedTestPanelProps {
   customerId: string;
   testLocation: string;
-  testNotes: string;
+  internetPlan: string;
 }
 
-export default function SpeedTestPanel({ customerId, testLocation, testNotes }: SpeedTestPanelProps) {
+export default function SpeedTestPanel({ customerId, testLocation, internetPlan }: SpeedTestPanelProps) {
   const { toast } = useToast();
   const [isTestRunning, setIsTestRunning] = useState(false);
   const [testStatus, setTestStatus] = useState("Ready");
@@ -160,7 +160,7 @@ export default function SpeedTestPanel({ customerId, testLocation, testNotes }: 
       saveTestMutation.mutate({
         customerId,
         testLocation,
-        notes: testNotes,
+        internetPlan,
         downloadSpeed: downloadResult,
         uploadSpeed: uploadResult,
         ping: pingResult,

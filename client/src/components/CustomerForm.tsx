@@ -1,22 +1,24 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { InternetPlan, InternetPlanType } from "@shared/schema";
 
 interface CustomerFormProps {
   customerId: string;
   testLocation: string;
-  testNotes: string;
+  internetPlan: string;
   onCustomerIdChange: (customerId: string) => void;
   onTestLocationChange: (location: string) => void;
-  onTestNotesChange: (notes: string) => void;
+  onInternetPlanChange: (plan: string) => void;
 }
 
 export default function CustomerForm({
   customerId,
   testLocation,
-  testNotes,
+  internetPlan,
   onCustomerIdChange,
   onTestLocationChange,
-  onTestNotesChange
+  onInternetPlanChange
 }: CustomerFormProps) {
   return (
     <div className="mb-6 bg-white rounded-lg shadow-sm p-6">
@@ -51,17 +53,22 @@ export default function CustomerForm({
             />
           </div>
           <div className="flex-1">
-            <Label htmlFor="testNotes" className="block text-sm font-medium text-gray-700 mb-1">
-              Notes
+            <Label htmlFor="internetPlan" className="block text-sm font-medium text-gray-700 mb-1">
+              Internet Plan
             </Label>
-            <Input
-              type="text"
-              id="testNotes"
-              value={testNotes}
-              onChange={(e) => onTestNotesChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="Any additional information"
-            />
+            <Select value={internetPlan} onValueChange={onInternetPlanChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select internet plan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="not_specified">Not specified</SelectItem>
+                {Object.values(InternetPlan).map((plan) => (
+                  <SelectItem key={plan} value={plan}>
+                    {plan}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </form>

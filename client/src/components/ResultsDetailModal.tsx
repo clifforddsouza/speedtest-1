@@ -35,7 +35,7 @@ export default function ResultsDetailModal({ test, onClose }: ResultsDetailModal
       `Download Data,${test.downloadData ? test.downloadData.toFixed(1) : '0'} MB`,
       `Upload Data,${test.uploadData ? test.uploadData.toFixed(1) : '0'} MB`,
       `Test Duration,${test.testDuration ? test.testDuration.toFixed(1) : '0'} seconds`,
-      `Notes,${test.notes || 'None'}`
+      `Internet Plan,${test.internetPlan || 'Not specified'}`
     ].join("\n");
 
     // Create a blob and download link
@@ -139,8 +139,8 @@ export default function ResultsDetailModal({ test, onClose }: ResultsDetailModal
                   <span className="font-medium">{test.testDuration ? test.testDuration.toFixed(1) : '0'} seconds</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Notes:</span>
-                  <span className="font-medium">{test.notes || 'None'}</span>
+                  <span className="text-gray-500">Internet Plan:</span>
+                  <span className="font-medium">{test.internetPlan || 'Not specified'}</span>
                 </div>
               </div>
             </div>

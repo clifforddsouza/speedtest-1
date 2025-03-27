@@ -10,7 +10,21 @@ export const UserRole = {
   USER: "user"
 } as const;
 
+// Internet plan options
+export const InternetPlan = {
+  PLAN_10: "10Mbps",
+  PLAN_50: "50Mbps",
+  PLAN_100: "100Mbps",
+  PLAN_250: "250Mbps",
+  PLAN_500: "500Mbps",
+  PLAN_1000: "1Gbps",
+  PLAN_2000: "2Gbps",
+  PLAN_5000: "5Gbps",
+  PLAN_10000: "10Gbps"
+} as const;
+
 export type UserRoleType = typeof UserRole[keyof typeof UserRole];
+export type InternetPlanType = typeof InternetPlan[keyof typeof InternetPlan];
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -25,7 +39,7 @@ export const speedTests = pgTable("speed_tests", {
   id: serial("id").primaryKey(),
   customerId: text("customer_id").notNull(),
   testLocation: text("test_location"),
-  notes: text("notes"),
+  internetPlan: text("internet_plan"), // Changed from notes to internetPlan
   timestamp: timestamp("timestamp").notNull().defaultNow(),
   downloadSpeed: real("download_speed").notNull(),
   uploadSpeed: real("upload_speed").notNull(),
@@ -40,6 +54,9 @@ export const speedTests = pgTable("speed_tests", {
   downloadData: real("download_data"),
   uploadData: real("upload_data"),
   testDuration: real("test_duration"),
+  // Adding percentile fields for export report
+  downloadPercentile: real("download_percentile"),
+  uploadPercentile: real("upload_percentile"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
