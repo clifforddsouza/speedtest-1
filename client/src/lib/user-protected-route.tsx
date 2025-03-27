@@ -11,6 +11,7 @@ export function UserProtectedRoute({
   component: () => React.JSX.Element;
 }) {
   const { user, isLoading } = useAuth();
+  console.log("UserProtectedRoute - Auth state:", { user, isLoading, path });
 
   if (isLoading) {
     return (
@@ -23,6 +24,7 @@ export function UserProtectedRoute({
   }
 
   if (!user) {
+    console.log("User not authenticated, redirecting to login");
     return (
       <Route path={path}>
         <Redirect to="/login" />
