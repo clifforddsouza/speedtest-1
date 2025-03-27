@@ -59,6 +59,16 @@ export const speedTests = pgTable("speed_tests", {
   uploadPercentile: real("upload_percentile"),
 });
 
+export const internetPlans = pgTable("internet_plans", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  downloadSpeed: real("download_speed").notNull(),
+  uploadSpeed: real("upload_speed").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -70,8 +80,16 @@ export const insertSpeedTestSchema = createInsertSchema(speedTests).omit({
   timestamp: true,
 });
 
+export const insertInternetPlanSchema = createInsertSchema(internetPlans).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
 export type InsertSpeedTest = z.infer<typeof insertSpeedTestSchema>;
 export type SpeedTest = typeof speedTests.$inferSelect;
+
+export type InsertInternetPlan = z.infer<typeof insertInternetPlanSchema>;
+export type InternetPlan = typeof internetPlans.$inferSelect;

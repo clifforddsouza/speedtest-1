@@ -6,11 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserRegistrationForm from "@/components/UserRegistrationForm";
 import UserManagementTable from "@/components/UserManagementTable";
+import InternetPlansTable from "@/components/InternetPlansTable";
 import AdvancedAnalytics from "@/components/AdvancedAnalytics";
 import PerformanceInsights from "@/components/PerformanceInsights";
 import SpeedTestComparison from "@/components/SpeedTestComparison";
 import HistoricalDataViewer from "@/components/HistoricalDataViewer";
-import { Settings, BarChart3, LogOut, FileDown, Share2, Zap, Activity, History } from "lucide-react";
+import { Settings, BarChart3, LogOut, FileDown, Share2, Zap, Activity, History, Wifi } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -497,6 +498,10 @@ export default function AdminDashboard() {
                   <TabsTrigger value="history" className="flex items-center gap-2">
                     <History className="h-4 w-4" />
                     <span>Historical Data</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="plans" className="flex items-center gap-2">
+                    <Wifi className="h-4 w-4" />
+                    <span>Internet Plans</span>
                   </TabsTrigger>
                 </TabsList>
                 
@@ -986,6 +991,10 @@ export default function AdminDashboard() {
                 
                 <TabsContent value="history">
                   <HistoricalDataViewer customerId={selectedCustomerId} adminView={true} />
+                </TabsContent>
+                
+                <TabsContent value="plans">
+                  <InternetPlansTable />
                 </TabsContent>
               </Tabs>
             </Card>

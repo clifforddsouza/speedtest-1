@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import crypto from 'crypto';
 import express from 'express';
-import { insertSpeedTestSchema, UserRole } from "@shared/schema";
+import { insertSpeedTestSchema, insertInternetPlanSchema, UserRole, type InsertSpeedTest } from "@shared/schema";
 import { z } from "zod";
 import { setupAuth, isAdmin } from "./auth";
 import { scrypt, randomBytes } from "crypto";
@@ -143,6 +143,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching speed test:", error);
       res.status(500).json({ message: "Failed to fetch speed test" });
+    }
+  });
+
+  // Internet plan API routes
+  app.get("/api/internet-plans", async (req, res) => {
+    try {
+      const plans = await storage.getInternetPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching internet plans:", error);
+      res.status(500).json({ message: "Failed to fetch internet plans" });
+    }
+  });
+
+  app.get("/api/internet-plans/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const plan = await storage.getInternetPlan(id);
+      if (!plan) {
+        return res.status(404).json({ message: "Internet plan not found" });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      console.error("Error fetching internet plan:", error);
+      res.status(500).json({ message: "Failed to fetch internet plan" });
+    }
+  });
+
+  app.post("/api/internet-plans", isAdmin, async (req, res) => {
+    try {
+      const parsedBody = insertInternetPlanSchema.safeParse(req.body);
+      
+      if (!parsedBody.success) {
+        return res.status(400).json({ 
+          message: "Invalid internet plan data",
+          errors: parsedBody.error.format() 
+        });
+      }
+      
+      const plan = await storage.createInternetPlan(parsedBody.data);
+      res.status(201).json(plan);
+    } catch (error) {
+      console.error("Error creating internet plan:", error);
+      res.status(500).json({ message: "Failed to create internet plan" });
+    }
+  });
+
+  app.put("/api/internet-plans/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const plan = await storage.getInternetPlan(id);
+      if (!plan) {
+        return res.status(404).json({ message: "Internet plan not found" });
+      }
+      
+      const parsedBody = insertInternetPlanSchema.partial().safeParse(req.body);
+      
+      if (!parsedBody.success) {
+        return res.status(400).json({ 
+          message: "Invalid internet plan data",
+          errors: parsedBody.error.format() 
+        });
+      }
+      
+      const updatedPlan = await storage.updateInternetPlan(id, parsedBody.data);
+      res.json(updatedPlan);
+    } catch (error) {
+      console.error("Error updating internet plan:", error);
+      res.status(500).json({ message: "Failed to update internet plan" });
+    }
+  });
+
+  app.delete("/api/internet-plans/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const plan = await storage.getInternetPlan(id);
+      if (!plan) {
+        return res.status(404).json({ message: "Internet plan not found" });
+      }
+      
+      await storage.deleteInternetPlan(id);
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting internet plan:", error);
+      res.status(500).json({ message: "Failed to delete internet plan" });
     }
   });
 
@@ -491,6 +589,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
       activeConnections.delete(connectionId);
       console.log(`Connection ${connectionId} closed due to error. Active connections: ${activeConnections.size}/${MAX_CONCURRENT_TESTS}`);
     });
+  });
+
+  // End of WebSocket handlers
+
+  // Administrative routes for managing internet plans - require admin role
+  app.post("/api/internet-plans", isAdmin, async (req, res) => {
+    try {
+      const parsedBody = insertInternetPlanSchema.safeParse(req.body);
+      
+      if (!parsedBody.success) {
+        return res.status(400).json({ 
+          message: "Invalid internet plan data",
+          errors: parsedBody.error.format() 
+        });
+      }
+      
+      // Check if a plan with the same name already exists
+      const existingPlan = await storage.getInternetPlanByName(parsedBody.data.name);
+      if (existingPlan) {
+        return res.status(409).json({ message: "An internet plan with this name already exists" });
+      }
+      
+      const plan = await storage.createInternetPlan(parsedBody.data);
+      res.status(201).json(plan);
+    } catch (error) {
+      console.error("Error creating internet plan:", error);
+      res.status(500).json({ message: "Failed to create internet plan" });
+    }
+  });
+
+  app.put("/api/internet-plans/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      // Validate update data - partial validation for updates
+      const parsedBody = insertInternetPlanSchema.partial().safeParse(req.body);
+      
+      if (!parsedBody.success) {
+        return res.status(400).json({ 
+          message: "Invalid internet plan data",
+          errors: parsedBody.error.format() 
+        });
+      }
+      
+      // Check if plan exists
+      const existingPlan = await storage.getInternetPlan(id);
+      if (!existingPlan) {
+        return res.status(404).json({ message: "Internet plan not found" });
+      }
+      
+      // If name is being updated, check it's not a duplicate
+      if (parsedBody.data.name && parsedBody.data.name !== existingPlan.name) {
+        const planWithSameName = await storage.getInternetPlanByName(parsedBody.data.name);
+        if (planWithSameName) {
+          return res.status(409).json({ message: "An internet plan with this name already exists" });
+        }
+      }
+      
+      const updatedPlan = await storage.updateInternetPlan(id, parsedBody.data);
+      res.json(updatedPlan);
+    } catch (error) {
+      console.error("Error updating internet plan:", error);
+      res.status(500).json({ message: "Failed to update internet plan" });
+    }
+  });
+
+  app.delete("/api/internet-plans/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      // Check if plan exists
+      const existingPlan = await storage.getInternetPlan(id);
+      if (!existingPlan) {
+        return res.status(404).json({ message: "Internet plan not found" });
+      }
+      
+      await storage.deleteInternetPlan(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting internet plan:", error);
+      res.status(500).json({ message: "Failed to delete internet plan" });
+    }
   });
 
   return httpServer;

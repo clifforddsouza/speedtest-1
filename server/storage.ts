@@ -1,4 +1,9 @@
-import { users, type User, type InsertUser, speedTests, type SpeedTest, type InsertSpeedTest, UserRole } from "@shared/schema";
+import { 
+  users, type User, type InsertUser, 
+  speedTests, type SpeedTest, type InsertSpeedTest, 
+  internetPlans, type InternetPlan, type InsertInternetPlan, 
+  UserRole 
+} from "@shared/schema";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { eq, desc } from "drizzle-orm";
@@ -20,6 +25,14 @@ export interface IStorage {
   getSpeedTests(): Promise<SpeedTest[]>;
   getSpeedTestsByCustomerId(customerId: string): Promise<SpeedTest[]>;
   getSpeedTest(id: number): Promise<SpeedTest | undefined>;
+  
+  // Internet plan operations
+  getInternetPlans(): Promise<InternetPlan[]>;
+  getInternetPlan(id: number): Promise<InternetPlan | undefined>;
+  getInternetPlanByName(name: string): Promise<InternetPlan | undefined>;
+  createInternetPlan(plan: InsertInternetPlan): Promise<InternetPlan>;
+  updateInternetPlan(id: number, updates: Partial<InternetPlan>): Promise<InternetPlan>;
+  deleteInternetPlan(id: number): Promise<void>;
   
   // Session store
   sessionStore: session.Store;
@@ -148,6 +161,78 @@ export class DatabaseStorage implements IStorage {
       
     if (result.length === 0) {
       throw new Error(`User with ID ${id} not found`);
+    }
+  }
+
+  // Internet Plan operations
+  async getInternetPlans(): Promise<InternetPlan[]> {
+    return db.select().from(internetPlans).orderBy(internetPlans.name);
+  }
+
+  async getInternetPlan(id: number): Promise<InternetPlan | undefined> {
+    const [plan] = await db.select().from(internetPlans).where(eq(internetPlans.id, id));
+    return plan;
+  }
+
+  async getInternetPlanByName(name: string): Promise<InternetPlan | undefined> {
+    const [plan] = await db.select().from(internetPlans).where(eq(internetPlans.name, name));
+    return plan;
+  }
+
+  async createInternetPlan(insertPlan: InsertInternetPlan): Promise<InternetPlan> {
+    // Make sure downloadSpeed and uploadSpeed are numbers
+    const downloadSpeed = typeof insertPlan.downloadSpeed === 'number'
+      ? insertPlan.downloadSpeed
+      : parseFloat(String(insertPlan.downloadSpeed));
+    
+    const uploadSpeed = typeof insertPlan.uploadSpeed === 'number'
+      ? insertPlan.uploadSpeed
+      : parseFloat(String(insertPlan.uploadSpeed));
+
+    const [plan] = await db.insert(internetPlans)
+      .values({
+        ...insertPlan,
+        downloadSpeed,
+        uploadSpeed,
+        isActive: insertPlan.isActive ?? true,
+        createdAt: new Date()
+      })
+      .returning();
+      
+    return plan;
+  }
+
+  async updateInternetPlan(id: number, updates: Partial<InternetPlan>): Promise<InternetPlan> {
+    // Process numeric fields if present
+    if (updates.downloadSpeed !== undefined && typeof updates.downloadSpeed !== 'number') {
+      updates.downloadSpeed = parseFloat(String(updates.downloadSpeed));
+    }
+    
+    if (updates.uploadSpeed !== undefined && typeof updates.uploadSpeed !== 'number') {
+      updates.uploadSpeed = parseFloat(String(updates.uploadSpeed));
+    }
+    
+    const [plan] = await db
+      .update(internetPlans)
+      .set(updates)
+      .where(eq(internetPlans.id, id))
+      .returning();
+      
+    if (!plan) {
+      throw new Error(`Internet plan with ID ${id} not found`);
+    }
+    
+    return plan;
+  }
+
+  async deleteInternetPlan(id: number): Promise<void> {
+    const result = await db
+      .delete(internetPlans)
+      .where(eq(internetPlans.id, id))
+      .returning({ id: internetPlans.id });
+      
+    if (result.length === 0) {
+      throw new Error(`Internet plan with ID ${id} not found`);
     }
   }
 }

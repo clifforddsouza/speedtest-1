@@ -1,7 +1,8 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { InternetPlan, InternetPlanType } from "@shared/schema";
+import { useQuery } from "@tanstack/react-query";
+import { type InternetPlan } from "@shared/schema";
 
 interface CustomerFormProps {
   customerId: string;
@@ -20,6 +21,17 @@ export default function CustomerForm({
   onTestLocationChange,
   onInternetPlanChange
 }: CustomerFormProps) {
+  // Fetch available internet plans
+  const { data: internetPlans, isLoading } = useQuery({
+    queryKey: ["/api/internet-plans"],
+    queryFn: async () => {
+      const res = await fetch("/api/internet-plans");
+      if (!res.ok) {
+        throw new Error("Failed to fetch internet plans");
+      }
+      return res.json() as Promise<InternetPlan[]>;
+    }
+  });
   return (
     <div className="mb-6 bg-white rounded-lg shadow-sm p-6">
       <h2 className="text-lg font-semibold mb-4">Customer Information</h2>
@@ -56,15 +68,15 @@ export default function CustomerForm({
             <Label htmlFor="internetPlan" className="block text-sm font-medium text-gray-700 mb-1">
               Internet Plan
             </Label>
-            <Select value={internetPlan} onValueChange={onInternetPlanChange}>
+            <Select value={internetPlan} onValueChange={onInternetPlanChange} disabled={isLoading}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select internet plan" />
+                <SelectValue placeholder={isLoading ? "Loading plans..." : "Select internet plan"} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="not_specified">Not specified</SelectItem>
-                {Object.values(InternetPlan).map((plan) => (
-                  <SelectItem key={plan} value={plan}>
-                    {plan}
+                {!isLoading && internetPlans && internetPlans.filter(plan => plan.isActive).map((plan) => (
+                  <SelectItem key={plan.id} value={plan.name}>
+                    {plan.name} ({plan.downloadSpeed}/{plan.uploadSpeed} Mbps)
                   </SelectItem>
                 ))}
               </SelectContent>
