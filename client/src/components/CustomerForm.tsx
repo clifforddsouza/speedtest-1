@@ -1,8 +1,23 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQuery } from "@tanstack/react-query";
 import { type InternetPlan } from "@shared/schema";
+import { useState } from "react";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 
 interface CustomerFormProps {
   customerId: string;
@@ -21,6 +36,8 @@ export default function CustomerForm({
   onTestLocationChange,
   onInternetPlanChange
 }: CustomerFormProps) {
+  const [open, setOpen] = useState(false);
+
   // Fetch available internet plans
   const { data: internetPlans, isLoading } = useQuery({
     queryKey: ["/api/internet-plans"],
@@ -32,6 +49,10 @@ export default function CustomerForm({
       return res.json() as Promise<InternetPlan[]>;
     }
   });
+
+  // Filter only active plans
+  const activePlans = internetPlans?.filter(plan => plan.isActive) || [];
+
   return (
     <div className="mb-6 bg-white rounded-lg shadow-sm p-6">
       <h2 className="text-lg font-semibold mb-4">Customer Information</h2>
@@ -68,19 +89,73 @@ export default function CustomerForm({
             <Label htmlFor="internetPlan" className="block text-sm font-medium text-gray-700 mb-1">
               Internet Plan
             </Label>
-            <Select value={internetPlan} onValueChange={onInternetPlanChange} disabled={isLoading}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={isLoading ? "Loading plans..." : "Select internet plan"} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="not_specified">Not specified</SelectItem>
-                {!isLoading && internetPlans && internetPlans.filter(plan => plan.isActive).map((plan) => (
-                  <SelectItem key={plan.id} value={plan.name}>
-                    {plan.name} ({plan.downloadSpeed}/{plan.uploadSpeed} Mbps)
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className="w-full justify-between"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    "Loading plans..."
+                  ) : internetPlan === "not_specified" ? (
+                    "Not specified"
+                  ) : internetPlan ? (
+                    internetPlan
+                  ) : (
+                    "Select internet plan"
+                  )}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-full p-0">
+                <Command>
+                  <div className="flex items-center border-b px-3">
+                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                    <CommandInput placeholder="Search plan..." className="flex-1" />
+                  </div>
+                  <CommandEmpty>No internet plan found.</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      key="not_specified"
+                      value="not_specified"
+                      onSelect={() => {
+                        onInternetPlanChange("not_specified");
+                        setOpen(false);
+                      }}
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          internetPlan === "not_specified" ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      Not specified
+                    </CommandItem>
+                    {activePlans.map((plan) => (
+                      <CommandItem
+                        key={plan.id}
+                        value={plan.name}
+                        onSelect={() => {
+                          onInternetPlanChange(plan.name);
+                          setOpen(false);
+                        }}
+                      >
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            internetPlan === plan.name ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {plan.name} ({plan.downloadSpeed}/{plan.uploadSpeed} Mbps)
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </form>
