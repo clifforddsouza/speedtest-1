@@ -179,17 +179,27 @@ export function getPerformanceGrade(score: number): string {
 /**
  * Converts an array of speed tests to a monthly report with percentiles
  * @param tests Array of SpeedTest objects
+ * @param planFilter Optional internet plan name to filter by
  * @returns CSV formatted string with monthly report including 80th percentile values
  */
-export function generateMonthlyPercentileReport(tests: SpeedTest[]): string {
+export function generateMonthlyPercentileReport(tests: SpeedTest[], planFilter?: string): string {
   if (!tests || tests.length === 0) {
     return "No data to export";
+  }
+  
+  // Apply plan filter if provided
+  const filteredTests = planFilter 
+    ? tests.filter(test => test.internetPlan === planFilter)
+    : tests;
+    
+  if (filteredTests.length === 0) {
+    return `No data found for the specified plan: ${planFilter}`;
   }
   
   // Group tests by month
   const testsByMonth = new Map<string, SpeedTest[]>();
   
-  tests.forEach(test => {
+  filteredTests.forEach(test => {
     const testDate = new Date(test.timestamp);
     const monthKey = format(testDate, "yyyy-MM"); // Format: 2023-01 for January 2023
     

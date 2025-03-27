@@ -39,6 +39,7 @@ import {
   ComposedChart,
 } from "recharts";
 import { convertSpeedTestsToCSV, generateMonthlyPercentileReport } from "@/lib/exportUtils";
+import { generateQuarterlyPercentileReport } from "@/lib/quarterlyReport";
 import type { SpeedTest } from "@shared/schema";
 import { format, startOfMonth, endOfMonth, sub, add, isWithinInterval, startOfQuarter, endOfQuarter, isAfter, isBefore, isSameMonth } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,7 @@ export default function AdminDashboard() {
   const [endDate, setEndDate] = useState<Date | undefined>(new Date());
   const [useDatePicker, setUseDatePicker] = useState<boolean>(false);
   const [dashboardTab, setDashboardTab] = useState<string>("reports");
+  const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
@@ -96,7 +98,7 @@ export default function AdminDashboard() {
   };
 
   // Fetch all test data
-  const { data: speedTests, isLoading } = useQuery({
+  const { data: speedTests, isLoading: isLoadingTests } = useQuery({
     queryKey: ["/api/speed-tests"],
     queryFn: async () => {
       const response = await fetch("/api/speed-tests");
@@ -106,6 +108,20 @@ export default function AdminDashboard() {
       return response.json() as Promise<SpeedTest[]>;
     }
   });
+  
+  // Fetch internet plans
+  const { data: internetPlans, isLoading: isLoadingPlans } = useQuery({
+    queryKey: ["/api/internet-plans"],
+    queryFn: async () => {
+      const response = await fetch("/api/internet-plans");
+      if (!response.ok) {
+        throw new Error("Failed to fetch internet plans");
+      }
+      return response.json();
+    }
+  });
+
+  const isLoading = isLoadingTests || isLoadingPlans;
 
   if (isLoading) {
     return (
@@ -115,10 +131,15 @@ export default function AdminDashboard() {
     );
   }
 
-  // Filter tests by customer ID and date range if selected
+  // Filter tests by customer ID, internet plan, and date range if selected
   const filteredTests = speedTests ? speedTests.filter(test => {
     // Filter by customer ID if selected (but not "all")
     if (selectedCustomerId && selectedCustomerId !== "all" && test.customerId !== selectedCustomerId) {
+      return false;
+    }
+    
+    // Filter by internet plan if selected
+    if (selectedPlan && test.internetPlan !== selectedPlan) {
       return false;
     }
     
@@ -575,6 +596,24 @@ export default function AdminDashboard() {
                       </div>
                       
                       <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Internet Plan</label>
+                        <Select
+                          value={selectedPlan}
+                          onValueChange={setSelectedPlan}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Internet Plan" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">All Plans</SelectItem>
+                            {internetPlans && internetPlans.map(plan => (
+                              <SelectItem key={plan.id} value={plan.name}>{plan.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Time Period</label>
                         <Select
                           value={activeReportTab}
@@ -743,6 +782,7 @@ export default function AdminDashboard() {
                                 
                                 // Create a descriptive filename with date range
                                 const customerId_ = selectedCustomerId || 'all-customers';
+                                const plan_ = selectedPlan || 'all-plans';
                                 const startPeriod = useDatePicker && startDate 
                                   ? format(startDate, 'yyyy-MM-dd') 
                                   : 'last-' + dateRange + '-months';
@@ -751,7 +791,7 @@ export default function AdminDashboard() {
                                   : 'now';
                                 
                                 link.setAttribute('href', url);
-                                link.setAttribute('download', `${customerId_}-monthly-percentiles-${startPeriod}-to-${endPeriod}.csv`);
+                                link.setAttribute('download', `${customerId_}-${plan_}-monthly-percentiles-${startPeriod}-to-${endPeriod}.csv`);
                                 document.body.appendChild(link);
                                 link.click();
                                 document.body.removeChild(link);
@@ -856,6 +896,50 @@ export default function AdminDashboard() {
                       </TabsContent>
                       
                       <TabsContent value="quarterly">
+                        <div className="flex justify-end mb-4">
+                          <Button 
+                            variant="secondary" 
+                            className="flex items-center gap-2"
+                            onClick={() => {
+                              // Export quarterly percentile report with 80th percentiles
+                              if (filteredTests.length > 0) {
+                                const csvContent = generateQuarterlyPercentileReport(filteredTests);
+                                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                
+                                // Create a descriptive filename with date range
+                                const customerId_ = selectedCustomerId || 'all-customers';
+                                const startPeriod = useDatePicker && startDate 
+                                  ? format(startDate, 'yyyy-MM-dd') 
+                                  : 'last-' + dateRange + '-quarters';
+                                const endPeriod = useDatePicker && endDate 
+                                  ? format(endDate, 'yyyy-MM-dd') 
+                                  : 'now';
+                                
+                                link.setAttribute('href', url);
+                                link.setAttribute('download', `${customerId_}-quarterly-percentiles-${startPeriod}-to-${endPeriod}.csv`);
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                
+                                toast({
+                                  title: "Export Successful",
+                                  description: `Quarterly report with 80th percentiles exported to CSV`,
+                                });
+                              } else {
+                                toast({
+                                  title: "Export Failed",
+                                  description: "No data to export",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}
+                          >
+                            <FileDown className="h-4 w-4" />
+                            Export Quarterly Report with 80th Percentiles
+                          </Button>
+                        </div>
                         <div className="overflow-x-auto">
                           <table className="min-w-full divide-y divide-gray-200">
                             <thead>
