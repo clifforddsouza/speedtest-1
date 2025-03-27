@@ -263,6 +263,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         parsedBody.data.packetLoss = Number(parsedBody.data.packetLoss);
       }
       
+      // Add the username of the logged-in user who ran the test
+      parsedBody.data.username = req.user?.username || 'unknown';
+      
       console.log("Validated speed test data:", JSON.stringify(parsedBody.data, null, 2));
       
       // Always store the test - no time restriction
@@ -303,6 +306,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (parsedTest.data.packetLoss !== undefined && parsedTest.data.packetLoss !== null) {
             parsedTest.data.packetLoss = Number(parsedTest.data.packetLoss);
           }
+          
+          // Add the username of the logged-in user who ran the test
+          parsedTest.data.username = req.user?.username || 'unknown';
+          
           validTests.push(parsedTest.data);
         } else {
           invalidTests.push({

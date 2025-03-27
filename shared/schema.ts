@@ -57,6 +57,8 @@ export const speedTests = pgTable("speed_tests", {
   // Adding percentile fields for export report
   downloadPercentile: real("download_percentile"),
   uploadPercentile: real("upload_percentile"),
+  // Adding username to track who ran the test
+  username: text("username"),
 });
 
 export const internetPlans = pgTable("internet_plans", {

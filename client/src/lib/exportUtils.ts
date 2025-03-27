@@ -18,6 +18,7 @@ export function convertSpeedTestsToCSV(tests: SpeedTest[]): string {
     "Internet Plan",
     "Date",
     "Time",
+    "Username",
     "Ping Latency",
     "Packetdrop",
     "Download Speed",
@@ -35,6 +36,7 @@ export function convertSpeedTestsToCSV(tests: SpeedTest[]): string {
       test.internetPlan || "-",
       format(timestamp, "yyyy-MM-dd"),
       format(timestamp, "HH:mm:ss"),
+      test.username || "-",
       `${test.ping} ms`,
       `${test.packetLoss}%`,
       `${test.downloadSpeed} Mbps`,
@@ -101,7 +103,8 @@ export function formatSpeedTestDataForReport(tests: SpeedTest[], customerId?: st
     },
     tests: tests.map(test => ({
       ...test,
-      formattedDate: format(new Date(test.timestamp), "MMM d, yyyy HH:mm:ss")
+      formattedDate: format(new Date(test.timestamp), "MMM d, yyyy HH:mm:ss"),
+      username: test.username || "Not recorded" // Ensure username is available in the report
     }))
   };
 }
