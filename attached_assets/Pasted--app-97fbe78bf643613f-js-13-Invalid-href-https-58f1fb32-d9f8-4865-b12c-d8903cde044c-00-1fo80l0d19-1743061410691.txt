@@ -1,0 +1,66 @@
+_app-97fbe78bf643613f.js:13 Invalid href 'https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev//admin' passed to next/router in page: '/replEnvironmentDesktop'. Repeated forward-slashes (//) or backslashes \ are not valid in the href.
+(anonymous) @ _app-97fbe78bf643613f.js:13
+d @ main-0ef0b7efad084a83.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+lU @ framework-3d21cc282a6df533.js:1
+t.useMemo @ framework-3d21cc282a6df533.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+ld @ framework-3d21cc282a6df533.js:1
+ou @ framework-3d21cc282a6df533.js:1
+i @ framework-3d21cc282a6df533.js:1
+uI @ framework-3d21cc282a6df533.js:1
+(anonymous) @ framework-3d21cc282a6df533.js:1
+uM @ framework-3d21cc282a6df533.js:1
+uS @ framework-3d21cc282a6df533.js:1
+C @ framework-3d21cc282a6df533.js:1
+z @ framework-3d21cc282a6df533.js:1Understand this errorAI
+Console.js:61 Admin session verified
+_app-97fbe78bf643613f.js:13 Invalid href 'https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev//' passed to next/router in page: '/replEnvironmentDesktop'. Repeated forward-slashes (//) or backslashes \ are not valid in the href.
+(anonymous) @ _app-97fbe78bf643613f.js:13
+d @ main-0ef0b7efad084a83.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+lU @ framework-3d21cc282a6df533.js:1
+t.useMemo @ framework-3d21cc282a6df533.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+ld @ framework-3d21cc282a6df533.js:1
+ou @ framework-3d21cc282a6df533.js:1
+i @ framework-3d21cc282a6df533.js:1
+uI @ framework-3d21cc282a6df533.js:1
+(anonymous) @ framework-3d21cc282a6df533.js:1
+uM @ framework-3d21cc282a6df533.js:1
+uS @ framework-3d21cc282a6df533.js:1
+C @ framework-3d21cc282a6df533.js:1
+z @ framework-3d21cc282a6df533.js:1Understand this errorAI
+_app-97fbe78bf643613f.js:13 Invalid href 'https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev//admin/login' passed to next/router in page: '/replEnvironmentDesktop'. Repeated forward-slashes (//) or backslashes \ are not valid in the href.
+(anonymous) @ _app-97fbe78bf643613f.js:13
+d @ main-0ef0b7efad084a83.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+lU @ framework-3d21cc282a6df533.js:1
+t.useMemo @ framework-3d21cc282a6df533.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+ld @ framework-3d21cc282a6df533.js:1
+ou @ framework-3d21cc282a6df533.js:1
+i @ framework-3d21cc282a6df533.js:1
+uI @ framework-3d21cc282a6df533.js:1
+(anonymous) @ framework-3d21cc282a6df533.js:1
+uM @ framework-3d21cc282a6df533.js:1
+uS @ framework-3d21cc282a6df533.js:1
+C @ framework-3d21cc282a6df533.js:1
+z @ framework-3d21cc282a6df533.js:1Understand this errorAI
+_app-97fbe78bf643613f.js:13 Invalid href 'https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev//admin' passed to next/router in page: '/replEnvironmentDesktop'. Repeated forward-slashes (//) or backslashes \ are not valid in the href.
+(anonymous) @ _app-97fbe78bf643613f.js:13
+d @ main-0ef0b7efad084a83.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+lU @ framework-3d21cc282a6df533.js:1
+t.useMemo @ framework-3d21cc282a6df533.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+ld @ framework-3d21cc282a6df533.js:1
+ou @ framework-3d21cc282a6df533.js:1
+i @ framework-3d21cc282a6df533.js:1
+uI @ framework-3d21cc282a6df533.js:1
+(anonymous) @ framework-3d21cc282a6df533.js:1
+uM @ framework-3d21cc282a6df533.js:1
+uS @ framework-3d21cc282a6df533.js:1
+C @ framework-3d21cc282a6df533.js:1
+z @ framework-3d21cc282a6df533.js:1Understand this errorAI
+Console.js:61 Admin session verified
