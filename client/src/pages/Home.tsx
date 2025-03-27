@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import CustomerForm from "@/components/CustomerForm";
 import SpeedTestPanel from "@/components/SpeedTestPanel";
 import TestResultsPanel from "@/components/TestResultsPanel";
 import ResultsDetailModal from "@/components/ResultsDetailModal";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import type { SpeedTest } from "@shared/schema";
 
 export default function Home() {
@@ -12,6 +14,8 @@ export default function Home() {
   const [internetPlan, setInternetPlan] = useState<string>("not_specified");
   const [selectedTest, setSelectedTest] = useState<SpeedTest | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const { user, logoutMutation } = useAuth();
+  const [, setLocation] = useLocation();
 
   const handleViewDetailedResults = (test: SpeedTest) => {
     setSelectedTest(test);
@@ -20,6 +24,15 @@ export default function Home() {
 
   const handleCloseModal = () => {
     setShowModal(false);
+  };
+  
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+      setLocation('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (
@@ -51,6 +64,23 @@ export default function Home() {
             <div className="text-sm text-gray-500">
               <span>Server: Chicago, IL</span>
             </div>
+            
+            {user && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">
+                  {user.username} ({user.role})
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleLogout}
+                  disabled={logoutMutation.isPending}
+                >
+                  {logoutMutation.isPending ? "Logging out..." : "Logout"}
+                </Button>
+              </div>
+            )}
+            
             <Link href="/admin/login" className="bg-primary text-white px-3 py-1 rounded text-sm font-medium hover:bg-opacity-90 transition-colors">
               Admin Dashboard
             </Link>
