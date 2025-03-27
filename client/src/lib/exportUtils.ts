@@ -15,6 +15,7 @@ export function convertSpeedTestsToCSV(tests: SpeedTest[]): string {
   const headers = [
     "Test ID",
     "Customer ID",
+    "Internet Plan",
     "Date",
     "Time",
     "Ping Latency",
@@ -31,6 +32,7 @@ export function convertSpeedTestsToCSV(tests: SpeedTest[]): string {
     return [
       test.id,
       test.customerId,
+      test.internetPlan || "-",
       format(timestamp, "yyyy-MM-dd"),
       format(timestamp, "HH:mm:ss"),
       `${test.ping} ms`,
