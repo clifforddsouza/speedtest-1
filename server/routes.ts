@@ -592,7 +592,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Internet plan API routes
-  app.get("/api/internet-plans", async (req, res) => {
+  app.get("/api/internet-plans", isAuthenticated, async (req, res) => {
     try {
       const plans = await storage.getInternetPlans();
       res.json(plans);
