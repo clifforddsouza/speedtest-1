@@ -436,42 +436,62 @@ export default function AdminDashboard() {
 
         {activeSection === "settings" ? (
           /* Settings Section */
-          <>
-            {/* User Registration */}
-            <Card className="p-6 mb-6">
-              <h2 className="text-lg font-semibold mb-4">User Registration</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <UserRegistrationForm />
-                <div className="bg-gray-50 rounded-lg p-6 flex flex-col justify-center">
-                  <h3 className="text-xl font-medium text-primary mb-4">Why Register Users?</h3>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <span className="text-green-500 mr-2">✓</span>
-                      <span>Assign unique customer IDs for tracking</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-green-500 mr-2">✓</span>
-                      <span>Enable user-specific test history</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-green-500 mr-2">✓</span>
-                      <span>Improve data organization for analytics</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-green-500 mr-2">✓</span>
-                      <span>Secure access to sensitive network data</span>
-                    </li>
-                  </ul>
+          <Card className="p-6 mb-6">
+            <Tabs defaultValue="users">
+              <TabsList className="mb-6">
+                <TabsTrigger value="users" className="flex items-center gap-2">
+                  <span>User Management</span>
+                </TabsTrigger>
+                <TabsTrigger value="plans" className="flex items-center gap-2">
+                  <span>Internet Plans</span>
+                </TabsTrigger>
+                <TabsTrigger value="add-user" className="flex items-center gap-2">
+                  <span>Add New User</span>
+                </TabsTrigger>
+              </TabsList>
+              
+              {/* User Management Tab */}
+              <TabsContent value="users">
+                <h2 className="text-lg font-semibold mb-4">Current Users</h2>
+                <UserManagementTable />
+              </TabsContent>
+              
+              {/* Internet Plans Tab */}
+              <TabsContent value="plans">
+                <h2 className="text-lg font-semibold mb-4">Internet Plans</h2>
+                <InternetPlansTable />
+              </TabsContent>
+              
+              {/* Add New User Tab */}
+              <TabsContent value="add-user">
+                <h2 className="text-lg font-semibold mb-4">Register New User</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <UserRegistrationForm />
+                  <div className="bg-gray-50 rounded-lg p-6 flex flex-col justify-center">
+                    <h3 className="text-xl font-medium text-primary mb-4">Why Register Users?</h3>
+                    <ul className="space-y-2">
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        <span>Assign unique customer IDs for tracking</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        <span>Enable user-specific test history</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        <span>Improve data organization for analytics</span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="text-green-500 mr-2">✓</span>
+                        <span>Secure access to sensitive network data</span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            </Card>
-            
-            {/* User Management Table */}
-            <Card className="p-6 mb-6">
-              <h2 className="text-lg font-semibold mb-4">Current Users</h2>
-              <UserManagementTable />
-            </Card>
-          </>
+              </TabsContent>
+            </Tabs>
+          </Card>
         ) : (
           /* Dashboard Section */
           <>
@@ -498,10 +518,6 @@ export default function AdminDashboard() {
                   <TabsTrigger value="history" className="flex items-center gap-2">
                     <History className="h-4 w-4" />
                     <span>Historical Data</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="plans" className="flex items-center gap-2">
-                    <Wifi className="h-4 w-4" />
-                    <span>Internet Plans</span>
                   </TabsTrigger>
                 </TabsList>
                 
@@ -991,10 +1007,6 @@ export default function AdminDashboard() {
                 
                 <TabsContent value="history">
                   <HistoricalDataViewer customerId={selectedCustomerId} adminView={true} />
-                </TabsContent>
-                
-                <TabsContent value="plans">
-                  <InternetPlansTable />
                 </TabsContent>
               </Tabs>
             </Card>

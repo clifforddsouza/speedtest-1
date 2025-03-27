@@ -591,9 +591,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // End of WebSocket handlers
+  // Internet plan API routes
+  app.get("/api/internet-plans", async (req, res) => {
+    try {
+      const plans = await storage.getInternetPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching internet plans:", error);
+      res.status(500).json({ message: "Failed to fetch internet plans" });
+    }
+  });
 
-  // Administrative routes for managing internet plans - require admin role
+  app.get("/api/internet-plans/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid ID format" });
+      }
+      
+      const plan = await storage.getInternetPlan(id);
+      if (!plan) {
+        return res.status(404).json({ message: "Internet plan not found" });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      console.error("Error fetching internet plan:", error);
+      res.status(500).json({ message: "Failed to fetch internet plan" });
+    }
+  });
+
   app.post("/api/internet-plans", isAdmin, async (req, res) => {
     try {
       const parsedBody = insertInternetPlanSchema.safeParse(req.body);
@@ -645,7 +672,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If name is being updated, check it's not a duplicate
       if (parsedBody.data.name && parsedBody.data.name !== existingPlan.name) {
         const planWithSameName = await storage.getInternetPlanByName(parsedBody.data.name);
-        if (planWithSameName) {
+        if (planWithSameName && planWithSameName.id !== id) {
           return res.status(409).json({ message: "An internet plan with this name already exists" });
         }
       }
