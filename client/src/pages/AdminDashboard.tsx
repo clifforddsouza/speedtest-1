@@ -437,58 +437,74 @@ export default function AdminDashboard() {
         {activeSection === "settings" ? (
           /* Settings Section */
           <Card className="p-6 mb-6">
-            <Tabs defaultValue="users">
+            <Tabs defaultValue="user-management">
               <TabsList className="mb-6">
-                <TabsTrigger value="users" className="flex items-center gap-2">
+                <TabsTrigger value="user-management" className="flex items-center gap-2">
                   <span>User Management</span>
                 </TabsTrigger>
-                <TabsTrigger value="plans" className="flex items-center gap-2">
-                  <span>Internet Plans</span>
-                </TabsTrigger>
-                <TabsTrigger value="add-user" className="flex items-center gap-2">
-                  <span>Add New User</span>
+                <TabsTrigger value="plan-management" className="flex items-center gap-2">
+                  <span>Plan Management</span>
                 </TabsTrigger>
               </TabsList>
               
               {/* User Management Tab */}
-              <TabsContent value="users">
-                <h2 className="text-lg font-semibold mb-4">Current Users</h2>
-                <UserManagementTable />
+              <TabsContent value="user-management">
+                <Tabs defaultValue="view-users">
+                  <TabsList className="mb-6">
+                    <TabsTrigger value="view-users">View Users</TabsTrigger>
+                    <TabsTrigger value="add-user">Add New User</TabsTrigger>
+                  </TabsList>
+                  
+                  {/* View Users Tab */}
+                  <TabsContent value="view-users">
+                    <h2 className="text-lg font-semibold mb-4">Current Users</h2>
+                    <UserManagementTable />
+                  </TabsContent>
+                  
+                  {/* Add User Tab */}
+                  <TabsContent value="add-user">
+                    <h2 className="text-lg font-semibold mb-4">Register New User</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <UserRegistrationForm />
+                      <div className="bg-gray-50 rounded-lg p-6 flex flex-col justify-center">
+                        <h3 className="text-xl font-medium text-primary mb-4">Why Register Users?</h3>
+                        <ul className="space-y-2">
+                          <li className="flex items-start">
+                            <span className="text-green-500 mr-2">✓</span>
+                            <span>Assign unique customer IDs for tracking</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-green-500 mr-2">✓</span>
+                            <span>Enable user-specific test history</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-green-500 mr-2">✓</span>
+                            <span>Improve data organization for analytics</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-green-500 mr-2">✓</span>
+                            <span>Secure access to sensitive network data</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </TabsContent>
               
-              {/* Internet Plans Tab */}
-              <TabsContent value="plans">
-                <h2 className="text-lg font-semibold mb-4">Internet Plans</h2>
-                <InternetPlansTable />
-              </TabsContent>
-              
-              {/* Add New User Tab */}
-              <TabsContent value="add-user">
-                <h2 className="text-lg font-semibold mb-4">Register New User</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <UserRegistrationForm />
-                  <div className="bg-gray-50 rounded-lg p-6 flex flex-col justify-center">
-                    <h3 className="text-xl font-medium text-primary mb-4">Why Register Users?</h3>
-                    <ul className="space-y-2">
-                      <li className="flex items-start">
-                        <span className="text-green-500 mr-2">✓</span>
-                        <span>Assign unique customer IDs for tracking</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-green-500 mr-2">✓</span>
-                        <span>Enable user-specific test history</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-green-500 mr-2">✓</span>
-                        <span>Improve data organization for analytics</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="text-green-500 mr-2">✓</span>
-                        <span>Secure access to sensitive network data</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
+              {/* Plan Management Tab */}
+              <TabsContent value="plan-management">
+                <Tabs defaultValue="view-plans">
+                  <TabsList className="mb-6">
+                    <TabsTrigger value="view-plans">Manage Plans</TabsTrigger>
+                  </TabsList>
+                  
+                  {/* View/Manage Plans Tab */}
+                  <TabsContent value="view-plans">
+                    <h2 className="text-lg font-semibold mb-4">Internet Plans</h2>
+                    <InternetPlansTable />
+                  </TabsContent>
+                </Tabs>
               </TabsContent>
             </Tabs>
           </Card>
