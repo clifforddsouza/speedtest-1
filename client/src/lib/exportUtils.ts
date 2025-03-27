@@ -11,21 +11,17 @@ export function convertSpeedTestsToCSV(tests: SpeedTest[]): string {
     return "No data to export";
   }
   
-  // Define CSV headers
+  // Define CSV headers based on requested format
   const headers = [
-    "ID",
+    "Test ID",
     "Customer ID",
     "Date",
     "Time",
-    "Download Speed (Mbps)",
-    "Upload Speed (Mbps)",
-    "Ping (ms)",
-    "Jitter (ms)",
-    "Packet Loss (%)",
-    "Location",
-    "ISP",
-    "Server",
-    "Notes"
+    "Ping Latency",
+    "Packetdrop",
+    "Download Speed",
+    "Upload Speed",
+    "Jitter"
   ].join(",");
   
   // Format each row of data
@@ -37,15 +33,11 @@ export function convertSpeedTestsToCSV(tests: SpeedTest[]): string {
       test.customerId,
       format(timestamp, "yyyy-MM-dd"),
       format(timestamp, "HH:mm:ss"),
-      test.downloadSpeed,
-      test.uploadSpeed,
-      test.ping,
-      test.jitter,
-      test.packetLoss,
-      test.testLocation || "-",
-      test.isp || "-",
-      test.server || "-",
-      `"${(test.notes || "").replace(/"/g, '""')}"`  // Handle quotes in notes field
+      `${test.ping} ms`,
+      `${test.packetLoss}%`,
+      `${test.downloadSpeed} Mbps`,
+      `${test.uploadSpeed} Mbps`,
+      `${test.jitter} ms`
     ].join(",");
   });
   
