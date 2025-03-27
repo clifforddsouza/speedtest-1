@@ -40,7 +40,7 @@ import {
 } from "recharts";
 import { convertSpeedTestsToCSV, generateMonthlyPercentileReport } from "@/lib/exportUtils";
 import { generateQuarterlyPercentileReport } from "@/lib/quarterlyReport";
-import type { SpeedTest } from "@shared/schema";
+import type { SpeedTest, InternetPlan } from "@shared/schema";
 import { format, startOfMonth, endOfMonth, sub, add, isWithinInterval, startOfQuarter, endOfQuarter, isAfter, isBefore, isSameMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -606,7 +606,7 @@ export default function AdminDashboard() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="">All Plans</SelectItem>
-                            {internetPlans && internetPlans.map(plan => (
+                            {internetPlans && internetPlans.map((plan: InternetPlan) => (
                               <SelectItem key={plan.id} value={plan.name}>{plan.name}</SelectItem>
                             ))}
                           </SelectContent>
@@ -727,6 +727,7 @@ export default function AdminDashboard() {
                             
                             // Create a descriptive filename with date range
                             const customerId_ = selectedCustomerId || 'all-customers';
+                            const plan_ = selectedPlan || 'all-plans';
                             const startPeriod = useDatePicker && startDate 
                               ? format(startDate, 'yyyy-MM-dd') 
                               : 'last-' + dateRange + (activeReportTab === 'monthly' ? 'months' : 'quarters');
@@ -735,7 +736,7 @@ export default function AdminDashboard() {
                               : 'now';
                             
                             link.setAttribute('href', url);
-                            link.setAttribute('download', `${customerId_}-${activeReportTab}-${startPeriod}-to-${endPeriod}.csv`);
+                            link.setAttribute('download', `${customerId_}-${plan_}-${activeReportTab}-${startPeriod}-to-${endPeriod}.csv`);
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
@@ -775,7 +776,7 @@ export default function AdminDashboard() {
                             onClick={() => {
                               // Export monthly percentile report with 80th percentiles
                               if (filteredTests.length > 0) {
-                                const csvContent = generateMonthlyPercentileReport(filteredTests);
+                                const csvContent = generateMonthlyPercentileReport(filteredTests, selectedPlan);
                                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                                 const url = URL.createObjectURL(blob);
                                 const link = document.createElement('a');
@@ -903,13 +904,14 @@ export default function AdminDashboard() {
                             onClick={() => {
                               // Export quarterly percentile report with 80th percentiles
                               if (filteredTests.length > 0) {
-                                const csvContent = generateQuarterlyPercentileReport(filteredTests);
+                                const csvContent = generateQuarterlyPercentileReport(filteredTests, selectedPlan);
                                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                                 const url = URL.createObjectURL(blob);
                                 const link = document.createElement('a');
                                 
                                 // Create a descriptive filename with date range
                                 const customerId_ = selectedCustomerId || 'all-customers';
+                                const plan_ = selectedPlan || 'all-plans';
                                 const startPeriod = useDatePicker && startDate 
                                   ? format(startDate, 'yyyy-MM-dd') 
                                   : 'last-' + dateRange + '-quarters';
@@ -918,7 +920,7 @@ export default function AdminDashboard() {
                                   : 'now';
                                 
                                 link.setAttribute('href', url);
-                                link.setAttribute('download', `${customerId_}-quarterly-percentiles-${startPeriod}-to-${endPeriod}.csv`);
+                                link.setAttribute('download', `${customerId_}-${plan_}-quarterly-percentiles-${startPeriod}-to-${endPeriod}.csv`);
                                 document.body.appendChild(link);
                                 link.click();
                                 document.body.removeChild(link);
