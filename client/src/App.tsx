@@ -18,8 +18,9 @@ function Router() {
       <Route path="/auth" component={AuthPage} />
       <UserProtectedRoute path="/dashboard" component={Home} />
       <Route path="/admin/login" component={AdminLogin} />
+      {/* Use a nested route pattern for the admin dashboard with the ProtectedRoute wrapper */}
       <Route path="/admin">
-        {() => (
+        {(params) => (
           <ProtectedRoute>
             <AdminDashboard />
           </ProtectedRoute>

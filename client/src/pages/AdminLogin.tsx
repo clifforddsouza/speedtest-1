@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,6 +12,27 @@ export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await fetch('/api/admin/session');
+        if (response.status === 200) {
+          // User is already authenticated and has admin privileges
+          localStorage.setItem('isAdminAuthenticated', 'true');
+          setLocation('/admin');
+        } else {
+          // User not authenticated or not admin
+          localStorage.removeItem('isAdminAuthenticated');
+        }
+      } catch (error) {
+        console.error("Error checking session:", error);
+      }
+    };
+    
+    checkSession();
+  }, [setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,27 +49,50 @@ export default function AdminLogin() {
     try {
       setIsLoading(true);
       
-      const response = await fetch('/api/login', {
+      // First attempt to login
+      const loginResponse = await fetch('/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
+        credentials: 'include' // Important for cookies
       });
       
-      if (response.ok) {
-        toast({
-          title: "Success",
-          description: "Logged in successfully",
+      if (loginResponse.ok) {
+        // Check if user has admin privileges
+        const sessionResponse = await fetch('/api/admin/session', {
+          credentials: 'include' // Important for cookies
         });
         
-        // Store authentication state in localStorage
-        localStorage.setItem('isAdminAuthenticated', 'true');
-        
-        // Redirect to admin dashboard
-        setLocation('/admin');
+        if (sessionResponse.status === 200) {
+          toast({
+            title: "Success",
+            description: "Logged in as administrator successfully",
+          });
+          
+          // Store authentication state in localStorage
+          localStorage.setItem('isAdminAuthenticated', 'true');
+          
+          // Redirect to admin dashboard
+          setLocation('/admin');
+        } else {
+          // User logged in but doesn't have admin privileges
+          toast({
+            title: "Access Denied",
+            description: "Your account does not have administrative privileges",
+            variant: "destructive"
+          });
+          
+          // Log the user out
+          await fetch('/api/logout', {
+            method: 'POST',
+            credentials: 'include'
+          });
+        }
       } else {
-        const data = await response.json();
+        // Login failed
+        const data = await loginResponse.json();
         toast({
           title: "Login Failed",
           description: data.message || "Invalid username or password",
@@ -56,6 +100,7 @@ export default function AdminLogin() {
         });
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Error",
         description: "An error occurred during login",
