@@ -87,7 +87,7 @@ export default function CustomerForm({
           </div>
           <div className="flex-1">
             <Label htmlFor="internetPlan" className="block text-sm font-medium text-gray-700 mb-1">
-              Internet Plan
+              Internet Plan <span className="text-red-500">*</span>
             </Label>
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
@@ -95,7 +95,7 @@ export default function CustomerForm({
                   variant="outline"
                   role="combobox"
                   aria-expanded={open}
-                  className="w-full justify-between"
+                  className={`w-full justify-between ${internetPlan === "not_specified" ? "border-red-300 ring-1 ring-red-300" : ""}`}
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -118,13 +118,12 @@ export default function CustomerForm({
                   </div>
                   <CommandEmpty>No internet plan found.</CommandEmpty>
                   <CommandGroup>
+                    {/* The 'Not specified' option is disabled to encourage selection of an actual plan */}
                     <CommandItem
                       key="not_specified"
                       value="not_specified"
-                      onSelect={() => {
-                        onInternetPlanChange("not_specified");
-                        setOpen(false);
-                      }}
+                      className="opacity-50 cursor-not-allowed"
+                      disabled={true}
                     >
                       <Check
                         className={cn(
@@ -132,7 +131,7 @@ export default function CustomerForm({
                           internetPlan === "not_specified" ? "opacity-100" : "opacity-0"
                         )}
                       />
-                      Not specified
+                      Not specified <span className="text-red-500 ml-2 text-xs">(Please select a valid plan)</span>
                     </CommandItem>
                     {activePlans.map((plan) => (
                       <CommandItem

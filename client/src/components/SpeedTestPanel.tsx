@@ -83,6 +83,16 @@ export default function SpeedTestPanel({ customerId, testLocation, internetPlan 
       return;
     }
 
+    if (internetPlan === "not_specified" || !internetPlan) {
+      toast({
+        title: "Internet Plan Required",
+        description: "Please select an Internet Plan before starting the test.",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+
     if (isTestRunning) return;
     
     setIsTestRunning(true);
