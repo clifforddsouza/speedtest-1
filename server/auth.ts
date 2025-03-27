@@ -7,6 +7,14 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser, UserRole } from "@shared/schema";
 
+// User middleware - checks if user is authenticated
+export const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+};
+
 // Admin middleware - checks if user is authenticated and has admin role
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   if (!req.isAuthenticated()) {

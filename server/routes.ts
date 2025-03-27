@@ -5,7 +5,7 @@ import crypto from 'crypto';
 import express from 'express';
 import { insertSpeedTestSchema, insertInternetPlanSchema, UserRole, type InsertSpeedTest } from "@shared/schema";
 import { z } from "zod";
-import { setupAuth, isAdmin } from "./auth";
+import { setupAuth, isAdmin, isAuthenticated } from "./auth";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 import { WebSocket, WebSocketServer } from 'ws';
@@ -23,14 +23,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
 
-  // Speed test endpoints for high bandwidth testing
-  app.get('/api/speedtest/download', (req, res) => {
+  // Speed test endpoints for high bandwidth testing - require authentication
+  app.get('/api/speedtest/download', isAuthenticated, (req, res) => {
     const size = parseInt(req.query.size as string) || 25 * 1024 * 1024; // 25MB chunks
     const buffer = crypto.randomBytes(size);
     res.send(buffer);
   });
 
-  app.post('/api/speedtest/upload', express.raw({limit: '50mb', type: '*/*'}), (req, res) => {
+  app.post('/api/speedtest/upload', isAuthenticated, express.raw({limit: '50mb', type: '*/*'}), (req, res) => {
     res.sendStatus(200);
   });
   
@@ -109,8 +109,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error during admin setup:", error);
     }
   })();
-  // Speed test API routes
-  app.get("/api/speed-tests", async (req, res) => {
+  // Speed test API routes - require authentication
+  app.get("/api/speed-tests", isAuthenticated, async (req, res) => {
     try {
       const customerId = req.query.customerId as string | undefined;
       
@@ -127,7 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/speed-tests/:id", async (req, res) => {
+  app.get("/api/speed-tests/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {
@@ -244,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/speed-tests", async (req, res) => {
+  app.post("/api/speed-tests", isAuthenticated, async (req, res) => {
     try {
       console.log("Received speed test data:", JSON.stringify(req.body, null, 2));
       
@@ -280,8 +280,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Batch submission endpoint for multiple test results
-  app.post("/api/speed-tests/batch", async (req, res) => {
+  // Batch submission endpoint for multiple test results - requires authentication
+  app.post("/api/speed-tests/batch", isAuthenticated, async (req, res) => {
     try {
       if (!Array.isArray(req.body)) {
         return res.status(400).json({ 
@@ -338,7 +338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Packet loss measurement endpoint (legacy - now uses WebSockets for more accurate measurement)
-  app.post("/api/measure-packet-loss", async (req, res) => {
+  app.post("/api/measure-packet-loss", isAuthenticated, async (req, res) => {
     try {
       // This endpoint is kept for backwards compatibility
       // The WebSocket-based packet loss test is more accurate and should be used instead

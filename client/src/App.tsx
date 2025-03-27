@@ -6,19 +6,22 @@ import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminLogin from "@/pages/AdminLogin";
-import AuthPage from "@/pages/auth-page";
+import UserLogin from "@/pages/UserLogin";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { AuthProvider } from "@/hooks/use-auth";
-import { ProtectedRoute as UserProtectedRoute } from "@/lib/protected-route";
+import { UserProtectedRoute } from "@/lib/user-protected-route";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/auth" component={AuthPage} />
-      <UserProtectedRoute path="/dashboard" component={Home} />
+      {/* Protected main route - only authenticated users can access */}
+      <UserProtectedRoute path="/" component={Home} />
+      
+      {/* Login routes */}
+      <Route path="/login" component={UserLogin} />
       <Route path="/admin/login" component={AdminLogin} />
-      {/* Use a nested route pattern for the admin dashboard with the ProtectedRoute wrapper */}
+      
+      {/* Admin dashboard with protected route */}
       <Route path="/admin">
         {(params) => (
           <ProtectedRoute>
@@ -26,6 +29,7 @@ function Router() {
           </ProtectedRoute>
         )}
       </Route>
+      
       <Route component={NotFound} />
     </Switch>
   );
