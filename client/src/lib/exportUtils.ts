@@ -71,8 +71,11 @@ export function formatSpeedTestDataForReport(tests: SpeedTest[], customerId?: st
   const calculatePercentile = (values: number[], percentile: number) => {
     if (values.length === 0) return 0;
     const sorted = [...values].sort((a, b) => a - b);
-    const index = Math.floor(sorted.length * (percentile / 100));
-    return sorted[index];
+    // For Nth percentile, we want the value at which N% of values fall below
+    const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
+    // Make sure index is within bounds
+    const safeIndex = Math.min(Math.max(0, index), sorted.length - 1);
+    return sorted[safeIndex];
   };
   
   // Find min/max dates
@@ -95,10 +98,15 @@ export function formatSpeedTestDataForReport(tests: SpeedTest[], customerId?: st
       packetLoss: calculateAverage(packetLosses)
     },
     percentiles: {
+      download80: calculatePercentile(downloadSpeeds, 80),
+      upload80: calculatePercentile(uploadSpeeds, 80),
       download90: calculatePercentile(downloadSpeeds, 90),
       upload90: calculatePercentile(uploadSpeeds, 90),
+      ping80: calculatePercentile(pings, 80),
       ping90: calculatePercentile(pings, 90),
+      jitter80: calculatePercentile(jitters, 80),
       jitter90: calculatePercentile(jitters, 90),
+      packetLoss80: calculatePercentile(packetLosses, 80),
       packetLoss90: calculatePercentile(packetLosses, 90)
     },
     tests: tests.map(test => ({
@@ -166,4 +174,133 @@ export function getPerformanceGrade(score: number): string {
   if (score >= 63) return "D";
   if (score >= 60) return "D-";
   return "F";
+}
+
+/**
+ * Converts an array of speed tests to a monthly report with percentiles
+ * @param tests Array of SpeedTest objects
+ * @returns CSV formatted string with monthly report including 80th percentile values
+ */
+export function generateMonthlyPercentileReport(tests: SpeedTest[]): string {
+  if (!tests || tests.length === 0) {
+    return "No data to export";
+  }
+  
+  // Group tests by month
+  const testsByMonth = new Map<string, SpeedTest[]>();
+  
+  tests.forEach(test => {
+    const testDate = new Date(test.timestamp);
+    const monthKey = format(testDate, "yyyy-MM"); // Format: 2023-01 for January 2023
+    
+    if (!testsByMonth.has(monthKey)) {
+      testsByMonth.set(monthKey, []);
+    }
+    
+    testsByMonth.get(monthKey)?.push(test);
+  });
+  
+  // Calculate statistics for each month
+  const monthlyStats = Array.from(testsByMonth.entries()).map(([month, monthTests]) => {
+    const downloadSpeeds = monthTests.map(test => test.downloadSpeed);
+    const uploadSpeeds = monthTests.map(test => test.uploadSpeed);
+    const pings = monthTests.map(test => test.ping);
+    const jitters = monthTests.map(test => test.jitter);
+    const packetLosses = monthTests.map(test => test.packetLoss);
+    
+    const calculateAverage = (values: number[]) => {
+      return values.length > 0 
+        ? values.reduce((sum, value) => sum + value, 0) / values.length
+        : 0;
+    };
+    
+    const calculatePercentile = (values: number[], percentile: number) => {
+      if (values.length === 0) return 0;
+      const sorted = [...values].sort((a, b) => a - b);
+      // For Nth percentile, calculate correctly
+      const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
+      const safeIndex = Math.min(Math.max(0, index), sorted.length - 1);
+      return sorted[safeIndex];
+    };
+    
+    // Format the month for display (e.g., "January 2023")
+    const [year, monthNum] = month.split('-');
+    const monthDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
+    const monthDisplay = format(monthDate, "MMMM yyyy");
+    
+    return {
+      month: monthDisplay,
+      testCount: monthTests.length,
+      // Calculate averages
+      downloadAvg: calculateAverage(downloadSpeeds),
+      uploadAvg: calculateAverage(uploadSpeeds),
+      pingAvg: calculateAverage(pings),
+      jitterAvg: calculateAverage(jitters),
+      packetLossAvg: calculateAverage(packetLosses),
+      // Calculate 80th percentiles
+      download80: calculatePercentile(downloadSpeeds, 80),
+      upload80: calculatePercentile(uploadSpeeds, 80),
+      ping80: calculatePercentile(pings, 80),
+      jitter80: calculatePercentile(jitters, 80),
+      packetLoss80: calculatePercentile(packetLosses, 80),
+      // Calculate 90th percentiles
+      download90: calculatePercentile(downloadSpeeds, 90),
+      upload90: calculatePercentile(uploadSpeeds, 90),
+      ping90: calculatePercentile(pings, 90),
+      jitter90: calculatePercentile(jitters, 90),
+      packetLoss90: calculatePercentile(packetLosses, 90)
+    };
+  });
+  
+  // Sort by month chronologically
+  monthlyStats.sort((a, b) => {
+    return new Date(a.month).getTime() - new Date(b.month).getTime();
+  });
+  
+  // Define CSV headers
+  const headers = [
+    "Month",
+    "Test Count",
+    "Download Avg (Mbps)",
+    "Download 80th (Mbps)",
+    "Download 90th (Mbps)",
+    "Upload Avg (Mbps)",
+    "Upload 80th (Mbps)",
+    "Upload 90th (Mbps)",
+    "Ping Avg (ms)",
+    "Ping 80th (ms)",
+    "Ping 90th (ms)",
+    "Jitter Avg (ms)",
+    "Jitter 80th (ms)",
+    "Jitter 90th (ms)",
+    "Packet Loss Avg (%)",
+    "Packet Loss 80th (%)",
+    "Packet Loss 90th (%)"
+  ].join(",");
+  
+  // Format each row
+  const rows = monthlyStats.map(stat => {
+    return [
+      stat.month,
+      stat.testCount,
+      stat.downloadAvg.toFixed(2),
+      stat.download80.toFixed(2),
+      stat.download90.toFixed(2),
+      stat.uploadAvg.toFixed(2),
+      stat.upload80.toFixed(2),
+      stat.upload90.toFixed(2),
+      stat.pingAvg.toFixed(2),
+      stat.ping80.toFixed(2),
+      stat.ping90.toFixed(2),
+      stat.jitterAvg.toFixed(2),
+      stat.jitter80.toFixed(2),
+      stat.jitter90.toFixed(2),
+      stat.packetLossAvg.toFixed(2),
+      stat.packetLoss80.toFixed(2),
+      stat.packetLoss90.toFixed(2)
+    ].join(",");
+  });
+  
+  // Combine headers and rows
+  return [headers, ...rows].join("\n");
 }

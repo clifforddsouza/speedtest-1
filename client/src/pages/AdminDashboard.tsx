@@ -38,7 +38,7 @@ import {
   ReferenceLine,
   ComposedChart,
 } from "recharts";
-import { convertSpeedTestsToCSV } from "@/lib/exportUtils";
+import { convertSpeedTestsToCSV, generateMonthlyPercentileReport } from "@/lib/exportUtils";
 import type { SpeedTest } from "@shared/schema";
 import { format, startOfMonth, endOfMonth, sub, add, isWithinInterval, startOfQuarter, endOfQuarter, isAfter, isBefore, isSameMonth } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -729,6 +729,50 @@ export default function AdminDashboard() {
                       </TabsList>
                       
                       <TabsContent value="monthly">
+                        <div className="flex justify-end mb-4">
+                          <Button 
+                            variant="secondary" 
+                            className="flex items-center gap-2"
+                            onClick={() => {
+                              // Export monthly percentile report with 80th percentiles
+                              if (filteredTests.length > 0) {
+                                const csvContent = generateMonthlyPercentileReport(filteredTests);
+                                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                
+                                // Create a descriptive filename with date range
+                                const customerId_ = selectedCustomerId || 'all-customers';
+                                const startPeriod = useDatePicker && startDate 
+                                  ? format(startDate, 'yyyy-MM-dd') 
+                                  : 'last-' + dateRange + '-months';
+                                const endPeriod = useDatePicker && endDate 
+                                  ? format(endDate, 'yyyy-MM-dd') 
+                                  : 'now';
+                                
+                                link.setAttribute('href', url);
+                                link.setAttribute('download', `${customerId_}-monthly-percentiles-${startPeriod}-to-${endPeriod}.csv`);
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                
+                                toast({
+                                  title: "Export Successful",
+                                  description: `Monthly report with 80th percentiles exported to CSV`,
+                                });
+                              } else {
+                                toast({
+                                  title: "Export Failed",
+                                  description: "No data to export",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}
+                          >
+                            <FileDown className="h-4 w-4" />
+                            Export Monthly Report with 80th Percentiles
+                          </Button>
+                        </div>
                         <div className="overflow-x-auto">
                           <table className="min-w-full divide-y divide-gray-200">
                             <thead>
