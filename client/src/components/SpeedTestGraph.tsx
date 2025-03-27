@@ -67,8 +67,12 @@ export default function SpeedTestGraph({ customerId }: SpeedTestGraphProps) {
   const calcPercentile = (values: number[], percentile: number) => {
     if (values.length === 0) return 0;
     const sorted = [...values].sort((a, b) => a - b);
-    const index = Math.floor(sorted.length * (percentile / 100));
-    return sorted[index];
+    // For 90th percentile, we want the value at which 90% of values fall below
+    // So we need to use ceiling or a different formula to get the correct index
+    const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
+    // Make sure index is within bounds
+    const safeIndex = Math.min(Math.max(0, index), sorted.length - 1);
+    return sorted[safeIndex];
   };
 
   const downloadSpeeds = chartData.map(test => test.downloadSpeed);
