@@ -32,16 +32,6 @@ export function UserProtectedRoute({
     );
   }
 
-  // Check if user has the necessary role to access the page
   // For the main page, any authenticated user can access it
-  if (user.role === "user" || user.role === "admin" || user.role === "super_admin" || user.role === "manager") {
-    return <Route path={path} component={Component} />;
-  }
-
-  // If some other role is required, redirect to appropriate login
-  return (
-    <Route path={path}>
-      <Redirect to="/login" />
-    </Route>
-  );
+  return <Route path={path} component={Component} />;
 }

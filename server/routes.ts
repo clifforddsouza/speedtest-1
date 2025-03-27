@@ -146,8 +146,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Internet plan API routes
-  app.get("/api/internet-plans", async (req, res) => {
+  // Internet plan API routes - require authentication
+  app.get("/api/internet-plans", isAuthenticated, async (req, res) => {
     try {
       const plans = await storage.getInternetPlans();
       res.json(plans);
@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/internet-plans/:id", async (req, res) => {
+  app.get("/api/internet-plans/:id", isAuthenticated, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       if (isNaN(id)) {

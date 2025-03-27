@@ -35,8 +35,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
           console.log("Admin session verified");
           setIsAuthorized(true);
         } else {
-          // Not authenticated or not admin, redirect to login
-          console.log("Admin session verification failed", response.status);
+          // Not authenticated or not admin, redirect to login without showing errors
+          console.log("Admin session verification failed - redirecting to login");
           localStorage.removeItem('isAdminAuthenticated');
           // Use relative path without leading slash to avoid double-slash issues
           setLocation("admin/login");

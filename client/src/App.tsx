@@ -8,6 +8,7 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import AdminLogin from "@/pages/AdminLogin";
 import UserLogin from "@/pages/UserLogin";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminAccessDenied from "@/components/AdminAccessDenied";
 import { AuthProvider } from "@/hooks/use-auth";
 import { UserProtectedRoute } from "@/lib/user-protected-route";
 
