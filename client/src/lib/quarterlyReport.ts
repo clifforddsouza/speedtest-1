@@ -12,9 +12,9 @@ export function generateQuarterlyPercentileReport(tests: SpeedTest[], planFilter
     return "No data to export";
   }
   
-  // Apply plan filter if provided
+  // Apply plan filter if provided - handle both camelCase and snake_case
   const filteredTests = planFilter 
-    ? tests.filter(test => test.internetPlan === planFilter)
+    ? tests.filter(test => (test.internetPlan || test.internet_plan) === planFilter)
     : tests;
     
   if (filteredTests.length === 0) {
@@ -39,11 +39,12 @@ export function generateQuarterlyPercentileReport(tests: SpeedTest[], planFilter
   
   // Calculate statistics for each quarter
   const quarterlyStats = Array.from(testsByQuarter.entries()).map(([quarter, quarterTests]) => {
-    const downloadSpeeds = quarterTests.map(test => test.downloadSpeed);
-    const uploadSpeeds = quarterTests.map(test => test.uploadSpeed);
-    const pings = quarterTests.map(test => test.ping);
-    const jitters = quarterTests.map(test => test.jitter);
-    const packetLosses = quarterTests.map(test => test.packetLoss);
+    // Handle both camelCase and snake_case field names
+    const downloadSpeeds = quarterTests.map(test => test.downloadSpeed || test.download_speed || 0);
+    const uploadSpeeds = quarterTests.map(test => test.uploadSpeed || test.upload_speed || 0);
+    const pings = quarterTests.map(test => test.ping || 0);
+    const jitters = quarterTests.map(test => test.jitter || 0);
+    const packetLosses = quarterTests.map(test => test.packetLoss || test.packet_loss || 0);
     
     const calculateAverage = (values: number[]) => {
       return values.length > 0 

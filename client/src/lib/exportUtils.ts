@@ -28,20 +28,30 @@ export function convertSpeedTestsToCSV(tests: SpeedTest[]): string {
   
   // Format each row of data
   const rows = tests.map(test => {
-    const timestamp = new Date(test.timestamp);
+    const timestamp = new Date(test.timestamp || test.timestamp);
+    
+    // Handle both camelCase and snake_case field names
+    const customerId = test.customerId || test.customer_id || "-";
+    const internetPlan = test.internetPlan || test.internet_plan || "-";
+    const username = test.username || "-";
+    const ping = test.ping || 0;
+    const packetLoss = test.packetLoss || test.packet_loss || 0;
+    const downloadSpeed = test.downloadSpeed || test.download_speed || 0;
+    const uploadSpeed = test.uploadSpeed || test.upload_speed || 0;
+    const jitter = test.jitter || 0;
     
     return [
       test.id,
-      test.customerId,
-      test.internetPlan || "-",
+      customerId,
+      internetPlan,
       format(timestamp, "yyyy-MM-dd"),
       format(timestamp, "HH:mm:ss"),
-      test.username || "-",
-      `${test.ping} ms`,
-      `${test.packetLoss}%`,
-      `${test.downloadSpeed} Mbps`,
-      `${test.uploadSpeed} Mbps`,
-      `${test.jitter} ms`
+      username,
+      `${ping} ms`,
+      `${packetLoss}%`,
+      `${downloadSpeed} Mbps`,
+      `${uploadSpeed} Mbps`,
+      `${jitter} ms`
     ].join(",");
   });
   
@@ -55,12 +65,12 @@ export function convertSpeedTestsToCSV(tests: SpeedTest[]): string {
  * @returns Formatted data object for PDF generation
  */
 export function formatSpeedTestDataForReport(tests: SpeedTest[], customerId?: string) {
-  // Calculate averages
-  const downloadSpeeds = tests.map(test => test.downloadSpeed);
-  const uploadSpeeds = tests.map(test => test.uploadSpeed);
-  const pings = tests.map(test => test.ping);
-  const jitters = tests.map(test => test.jitter);
-  const packetLosses = tests.map(test => test.packetLoss);
+  // Calculate averages - handle both camelCase and snake_case field names
+  const downloadSpeeds = tests.map(test => test.downloadSpeed || test.download_speed || 0);
+  const uploadSpeeds = tests.map(test => test.uploadSpeed || test.upload_speed || 0);
+  const pings = tests.map(test => test.ping || 0);
+  const jitters = tests.map(test => test.jitter || 0);
+  const packetLosses = tests.map(test => test.packetLoss || test.packet_loss || 0);
   
   const calculateAverage = (values: number[]) => {
     return values.length > 0 
@@ -130,19 +140,26 @@ export function calculatePerformanceScore(test: SpeedTest): number {
   const jitterWeight = 0.10;
   const packetLossWeight = 0.10;
   
+  // Handle both camelCase and snake_case field names
+  const downloadSpeed = test.downloadSpeed || test.download_speed || 0;
+  const uploadSpeed = test.uploadSpeed || test.upload_speed || 0;
+  const ping = test.ping || 0;
+  const jitter = test.jitter || 0;
+  const packetLoss = test.packetLoss || test.packet_loss || 0;
+  
   // Normalize each value (higher is better, except for ping/jitter/packet loss where lower is better)
   // These thresholds can be adjusted based on your specific needs
-  const downloadScore = Math.min(100, (test.downloadSpeed / 100) * 100);
-  const uploadScore = Math.min(100, (test.uploadSpeed / 20) * 100);
+  const downloadScore = Math.min(100, (downloadSpeed / 100) * 100);
+  const uploadScore = Math.min(100, (uploadSpeed / 20) * 100);
   
   // For ping, less is better (assume 20ms is perfect, 200ms is terrible)
-  const pingScore = Math.max(0, 100 - (test.ping / 2));
+  const pingScore = Math.max(0, 100 - (ping / 2));
   
   // For jitter, less is better (assume 5ms is perfect, 50ms is terrible)
-  const jitterScore = Math.max(0, 100 - (test.jitter * 2));
+  const jitterScore = Math.max(0, 100 - (jitter * 2));
   
   // For packet loss, less is better (0% is perfect, 5% is terrible)
-  const packetLossScore = Math.max(0, 100 - (test.packetLoss * 20));
+  const packetLossScore = Math.max(0, 100 - (packetLoss * 20));
   
   // Calculate weighted average
   const weightedScore = 
@@ -187,9 +204,9 @@ export function generateMonthlyPercentileReport(tests: SpeedTest[], planFilter?:
     return "No data to export";
   }
   
-  // Apply plan filter if provided
+  // Apply plan filter if provided - handle both camelCase and snake_case
   const filteredTests = planFilter 
-    ? tests.filter(test => test.internetPlan === planFilter)
+    ? tests.filter(test => (test.internetPlan || test.internet_plan) === planFilter)
     : tests;
     
   if (filteredTests.length === 0) {
@@ -212,11 +229,12 @@ export function generateMonthlyPercentileReport(tests: SpeedTest[], planFilter?:
   
   // Calculate statistics for each month
   const monthlyStats = Array.from(testsByMonth.entries()).map(([month, monthTests]) => {
-    const downloadSpeeds = monthTests.map(test => test.downloadSpeed);
-    const uploadSpeeds = monthTests.map(test => test.uploadSpeed);
-    const pings = monthTests.map(test => test.ping);
-    const jitters = monthTests.map(test => test.jitter);
-    const packetLosses = monthTests.map(test => test.packetLoss);
+    // Handle both camelCase and snake_case field names
+    const downloadSpeeds = monthTests.map(test => test.downloadSpeed || test.download_speed || 0);
+    const uploadSpeeds = monthTests.map(test => test.uploadSpeed || test.upload_speed || 0);
+    const pings = monthTests.map(test => test.ping || 0);
+    const jitters = monthTests.map(test => test.jitter || 0);
+    const packetLosses = monthTests.map(test => test.packetLoss || test.packet_loss || 0);
     
     const calculateAverage = (values: number[]) => {
       return values.length > 0 
