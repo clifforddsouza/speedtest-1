@@ -237,7 +237,7 @@ export function getPerformanceGrade(score: number): string {
 }
 
 /**
- * Converts an array of speed tests to a monthly report with percentiles
+ * Converts an array of speed tests to a monthly report with detailed test data
  * @param tests Array of SpeedTest objects
  * @param planFilter Optional internet plan name to filter by
  * @returns CSV formatted string with monthly report including 80th percentile values
@@ -256,113 +256,61 @@ export function generateMonthlyPercentileReport(tests: SpeedTestWithSnakeCase[],
     return `No data found for the specified plan: ${planFilter}`;
   }
   
-  // Group tests by month
-  const testsByMonth = new Map<string, SpeedTestWithSnakeCase[]>();
-  
-  filteredTests.forEach(test => {
-    const testDate = new Date(test.timestamp);
-    const monthKey = format(testDate, "yyyy-MM"); // Format: 2023-01 for January 2023
-    
-    if (!testsByMonth.has(monthKey)) {
-      testsByMonth.set(monthKey, []);
-    }
-    
-    testsByMonth.get(monthKey)?.push(test);
+  // Sort tests by timestamp (newest first)
+  const sortedTests = [...filteredTests].sort((a, b) => {
+    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
   });
   
-  // Calculate statistics for each month
-  const monthlyStats = Array.from(testsByMonth.entries()).map(([month, monthTests]) => {
-    // Handle both camelCase and snake_case field names
-    const downloadSpeeds = monthTests.map(test => test.downloadSpeed || test.download_speed || 0);
-    const uploadSpeeds = monthTests.map(test => test.uploadSpeed || test.upload_speed || 0);
-    const pings = monthTests.map(test => test.ping || 0);
-    const jitters = monthTests.map(test => test.jitter || 0);
-    const packetLosses = monthTests.map(test => test.packetLoss || test.packet_loss || 0);
-    
-    const calculateAverage = (values: number[]) => {
-      return values.length > 0 
-        ? values.reduce((sum, value) => sum + value, 0) / values.length
-        : 0;
-    };
-    
-    const calculatePercentile = (values: number[], percentile: number) => {
-      if (values.length === 0) return 0;
-      const sorted = [...values].sort((a, b) => a - b);
-      // For Nth percentile, calculate correctly
-      const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
-      const safeIndex = Math.min(Math.max(0, index), sorted.length - 1);
-      return sorted[safeIndex];
-    };
-    
-    // Format the month for display (e.g., "January 2023")
-    const [year, monthNum] = month.split('-');
-    const monthDate = new Date(parseInt(year), parseInt(monthNum) - 1, 1);
-    const monthDisplay = format(monthDate, "MMMM yyyy");
-    
-    return {
-      month: monthDisplay,
-      testCount: monthTests.length,
-      // Calculate averages
-      downloadAvg: calculateAverage(downloadSpeeds),
-      uploadAvg: calculateAverage(uploadSpeeds),
-      pingAvg: calculateAverage(pings),
-      jitterAvg: calculateAverage(jitters),
-      packetLossAvg: calculateAverage(packetLosses),
-      // Calculate 80th percentiles only
-      download80: calculatePercentile(downloadSpeeds, 80),
-      upload80: calculatePercentile(uploadSpeeds, 80),
-      ping80: calculatePercentile(pings, 80),
-      jitter80: calculatePercentile(jitters, 80),
-      packetLoss80: calculatePercentile(packetLosses, 80)
-    };
-  });
-  
-  // Sort by month chronologically
-  monthlyStats.sort((a, b) => {
-    return new Date(a.month).getTime() - new Date(b.month).getTime();
-  });
-  
-  // Define CSV headers
+  // Define CSV headers based on the format in the image
   const headers = [
-    "Month",
-    "Test Count",
-    "Download Avg (Mbps)",
-    "Download 80th (Mbps)",
-    "Upload Avg (Mbps)",
-    "Upload 80th (Mbps)",
-    "Ping Avg (ms)",
-    "Ping 80th (ms)",
-    "Jitter Avg (ms)",
-    "Jitter 80th (ms)",
-    "Packet Loss Avg (%)",
-    "Packet Loss 80th (%)"
+    "Test ID",
+    "Customer ID",
+    "Internet Plan",
+    "Date",
+    "Time",
+    "Username",
+    "Ping Latency",
+    "Packetdrop",
+    "Download Speed",
+    "Upload Speed",
+    "Jitter"
   ].join(",");
   
-  // Format each row
-  const rows = monthlyStats.map(stat => {
-    // Helper function to safely format numbers and handle NaN values
-    const safeFormat = (value: number, decimals: number = 2): string => {
-      return isNaN(value) ? "0.00" : value.toFixed(decimals);
-    };
+  // Format each test as a row
+  const rows = sortedTests.map(test => {
+    const testDate = new Date(test.timestamp);
+    
+    // Format date and time
+    const date = format(testDate, "yy-MM-dd");
+    const time = format(testDate, "HH:mm:ss");
+    
+    // Handle both camelCase and snake_case field names
+    const customerId = test.customerId || test.customer_id || "-";
+    const internetPlan = test.internetPlan || test.internet_plan || "-";
+    const username = test.username || "-";
+    const ping = test.ping || 0;
+    const packetLoss = test.packetLoss || test.packet_loss || 0;
+    const downloadSpeed = test.downloadSpeed || test.download_speed || 0;
+    const uploadSpeed = test.uploadSpeed || test.upload_speed || 0;
+    const jitter = test.jitter || 0;
     
     return [
-      stat.month,
-      stat.testCount,
-      safeFormat(stat.downloadAvg),
-      safeFormat(stat.download80),
-      safeFormat(stat.uploadAvg),
-      safeFormat(stat.upload80),
-      safeFormat(stat.pingAvg),
-      safeFormat(stat.ping80),
-      safeFormat(stat.jitterAvg),
-      safeFormat(stat.jitter80),
-      safeFormat(stat.packetLossAvg),
-      safeFormat(stat.packetLoss80)
+      test.id,
+      customerId,
+      internetPlan,
+      date,
+      time,
+      username,
+      `${ping} ms`,
+      `${packetLoss}%`,
+      `${downloadSpeed} Mbps`,
+      `${uploadSpeed} Mbps`,
+      `${jitter} ms`
     ].join(",");
   });
   
-  // Calculate 80th percentile for all data
-  const calculateOverallPercentile = (values: number[], percentile: number): number => {
+  // Calculate 80th percentile for all metrics
+  const calculatePercentile = (values: number[], percentile: number): number => {
     if (values.length === 0) return 0;
     const sorted = [...values].sort((a, b) => a - b);
     const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
@@ -370,41 +318,36 @@ export function generateMonthlyPercentileReport(tests: SpeedTestWithSnakeCase[],
     return sorted[safeIndex];
   };
   
-  // Gather all metrics from all tests for overall percentile calculation
-  const allDownloadSpeeds = filteredTests.map(test => test.downloadSpeed || test.download_speed || 0);
-  const allUploadSpeeds = filteredTests.map(test => test.uploadSpeed || test.upload_speed || 0);
-  const allPings = filteredTests.map(test => test.ping || 0);
-  const allJitters = filteredTests.map(test => test.jitter || 0);
-  const allPacketLosses = filteredTests.map(test => test.packetLoss || test.packet_loss || 0);
+  // Extract metric values
+  const pingValues = sortedTests.map(test => test.ping || 0);
+  const packetLossValues = sortedTests.map(test => test.packetLoss || test.packet_loss || 0);
+  const downloadValues = sortedTests.map(test => test.downloadSpeed || test.download_speed || 0);
+  const uploadValues = sortedTests.map(test => test.uploadSpeed || test.upload_speed || 0);
+  const jitterValues = sortedTests.map(test => test.jitter || 0);
   
-  // Calculate 80th percentile values for all data
-  const download80 = calculateOverallPercentile(allDownloadSpeeds, 80);
-  const upload80 = calculateOverallPercentile(allUploadSpeeds, 80);
-  const ping80 = calculateOverallPercentile(allPings, 80);
-  const jitter80 = calculateOverallPercentile(allJitters, 80);
-  const packetLoss80 = calculateOverallPercentile(allPacketLosses, 80);
+  // Calculate 80th percentile
+  const ping80 = calculatePercentile(pingValues, 80);
+  const packetLoss80 = calculatePercentile(packetLossValues, 80);
+  const download80 = calculatePercentile(downloadValues, 80);
+  const upload80 = calculatePercentile(uploadValues, 80);
+  const jitter80 = calculatePercentile(jitterValues, 80);
   
-  // Helper function to safely format numbers and handle NaN values
-  const safeFormat = (value: number, decimals: number = 2): string => {
-    return isNaN(value) ? "0.00" : value.toFixed(decimals);
-  };
-  
-  // Add a blank row and then the 80th percentile summary row for all data
-  const summaryRow = [
-    "80th PERCENTILE ALL DATA",
-    filteredTests.length,
+  // Format the 80th percentile summary row
+  // Format matches the order in the headers: Test ID,Customer ID,Internet Plan,Date,Time,Username,Ping Latency,Packetdrop,Download Speed,Upload Speed,Jitter
+  const percentileRow = [
+    "80th PERCENTILE",
     "",
-    safeFormat(download80),
     "",
-    safeFormat(upload80),
     "",
-    safeFormat(ping80),
     "",
-    safeFormat(jitter80),
     "",
-    safeFormat(packetLoss80)
+    `${ping80.toFixed(1)} ms`,
+    `${packetLoss80.toFixed(2)}%`,
+    `${download80.toFixed(2)} Mbps`,
+    `${upload80.toFixed(2)} Mbps`,
+    `${jitter80.toFixed(1)} ms`
   ].join(",");
   
-  // Combine headers, data rows, blank row, and summary row
-  return [headers, ...rows, "", summaryRow].join("\n");
+  // Combine headers, data rows, blank row, and percentile row
+  return [headers, ...rows, "", percentileRow].join("\n");
 }
