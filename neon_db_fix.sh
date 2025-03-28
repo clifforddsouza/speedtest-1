@@ -1,17 +1,35 @@
 #!/bin/bash
 
 # This script fixes Neon Database connection issues in production
+# Updated to use a simpler approach that skips TypeScript compilation
 
 echo "Fixing Neon Database connection issues..."
 
 # Create a backup directory
 mkdir -p /opt/speedtest/backups
 
-# Create a modified db.ts file that uses direct connection instead of WebSockets
-cat > /opt/speedtest/db_fix.ts << 'EOF'
-import { Pool } from 'pg';
+# Install pg package if not already installed
+echo "Installing pg package..."
+cd /opt/speedtest
+npm install pg
+
+# Backup the original db.js file before overwriting
+DB_JS_PATH="/opt/speedtest/dist/server/db.js"
+if [ -f "$DB_JS_PATH" ]; then
+  cp "$DB_JS_PATH" /opt/speedtest/backups/db.js.bak
+  echo "Backed up original db.js file"
+else
+  echo "Warning: Original db.js file not found at $DB_JS_PATH"
+fi
+
+# Create modified db.js file directly (skip TypeScript compilation)
+echo "Creating modified db.js file that uses direct connection instead of WebSockets..."
+cat > "$DB_JS_PATH" << 'EOF'
+import pg from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from "./dist/shared/schema.js";
+import * as schema from '../shared/schema.js';
+
+const { Pool } = pg;
 
 console.log('Initializing PostgreSQL connection with direct connection (without WebSockets)...');
 
@@ -38,24 +56,5 @@ pool.on('error', (err) => {
 export const db = drizzle(pool, { schema });
 EOF
 
-# Install pg package if not already installed
-npm install --prefix /opt/speedtest pg
-
-# Update package.json to include the new dependency
-if ! grep -q '"pg":' /opt/speedtest/package.json; then
-  sed -i 's/"dependencies": {/"dependencies": {\n    "pg": "^8.11.3",/g' /opt/speedtest/package.json
-fi
-
-# Backup the original db.ts file before overwriting
-cp /opt/speedtest/dist/server/db.js /opt/speedtest/backups/db.js.bak
-
-# Compile the new db.ts file
-echo "Compiling the new database connection file..."
-cd /opt/speedtest
-npx tsc db_fix.ts --outDir ./dist/server --target es2022 --module nodenext --esModuleInterop true
-
-# Rename the compiled file to db.js
-mv ./dist/server/db_fix.js ./dist/server/db.js
-
 echo ""
-echo "Fixed database connection. Restart your application with: pm2 restart speedtest"
+echo "Database connection fix applied. Restart your application with: pm2 restart speedtest"
