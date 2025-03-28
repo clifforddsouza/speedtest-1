@@ -605,7 +605,7 @@ export default function AdminDashboard() {
                             <SelectValue placeholder="Select Internet Plan" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">All Plans</SelectItem>
+                            <SelectItem value="all">All Plans</SelectItem>
                             {internetPlans && internetPlans.map((plan: InternetPlan) => (
                               <SelectItem key={plan.id} value={plan.name}>{plan.name}</SelectItem>
                             ))}
