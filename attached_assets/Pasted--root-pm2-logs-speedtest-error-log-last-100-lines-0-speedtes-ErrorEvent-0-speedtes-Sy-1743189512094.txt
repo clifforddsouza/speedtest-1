@@ -1,0 +1,103 @@
+
+/root/.pm2/logs/speedtest-error.log last 100 lines:
+0|speedtes | ErrorEvent {
+0|speedtes |   [Symbol(kTarget)]: WebSocket {
+0|speedtes |     _events: [Object: null prototype] {
+0|speedtes |       error: [Function: onError] {
+0|speedtes |         [Symbol(kIsForOnEventAttribute)]: false,
+0|speedtes |         [Symbol(kListener)]: [Function (anonymous)]
+0|speedtes |       },
+0|speedtes |       message: [Function: onMessage] {
+0|speedtes |         [Symbol(kIsForOnEventAttribute)]: false,
+0|speedtes |         [Symbol(kListener)]: [Function (anonymous)]
+0|speedtes |       },
+0|speedtes |       close: [Function: onClose] {
+0|speedtes |         [Symbol(kIsForOnEventAttribute)]: false,
+0|speedtes |         [Symbol(kListener)]: [Function (anonymous)]
+0|speedtes |       },
+0|speedtes |       open: [Function: onOpen] {
+0|speedtes |         [Symbol(kIsForOnEventAttribute)]: false,
+0|speedtes |         [Symbol(kListener)]: [Function: handleWebSocketOpen]
+0|speedtes |       }
+0|speedtes |     },
+0|speedtes |     _eventsCount: 4,
+0|speedtes |     _maxListeners: undefined,
+0|speedtes |     _binaryType: 'arraybuffer',
+0|speedtes |     _closeCode: 1006,
+0|speedtes |     _closeFrameReceived: false,
+0|speedtes |     _closeFrameSent: false,
+0|speedtes |     _closeMessage: Buffer(0) [Uint8Array] [],
+0|speedtes |     _closeTimer: null,
+0|speedtes |     _errorEmitted: true,
+0|speedtes |     _extensions: {},
+0|speedtes |     _paused: false,
+0|speedtes |     _protocol: '',
+0|speedtes |     _readyState: 3,
+0|speedtes |     _receiver: null,
+0|speedtes |     _sender: null,
+0|speedtes |     _socket: null,
+0|speedtes |     _bufferedAmount: 0,
+0|speedtes |     _isServer: false,
+0|speedtes |     _redirects: 0,
+0|speedtes |     _autoPong: true,
+0|speedtes |     _url: 'wss://localhost/v2',
+0|speedtes |     _req: null,
+0|speedtes |     [Symbol(kCapture)]: false
+0|speedtes |   },
+0|speedtes |   [Symbol(kType)]: 'error',
+0|speedtes |   [Symbol(kError)]: Error: connect ECONNREFUSED 127.0.0.1:443
+0|speedtes |       at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1555:16) {
+0|speedtes |     errno: -111,
+0|speedtes |     code: 'ECONNREFUSED',
+0|speedtes |     syscall: 'connect',
+0|speedtes |     address: '127.0.0.1',
+0|speedtes |     port: 443
+0|speedtes |   },
+0|speedtes |   [Symbol(kMessage)]: 'connect ECONNREFUSED 127.0.0.1:443'
+0|speedtes | }
+0|speedtes |
+0|speedtes | Node.js v18.20.8
+0|speedtes | Error during admin setup: ErrorEvent {
+0|speedtes |   [Symbol(kTarget)]: WebSocket {
+0|speedtes |     _events: [Object: null prototype] {
+0|speedtes |       error: [Function],
+0|speedtes |       message: [Function],
+0|speedtes |       close: [Function],
+0|speedtes |       open: [Function]
+0|speedtes |     },
+0|speedtes |     _eventsCount: 4,
+0|speedtes |     _maxListeners: undefined,
+0|speedtes |     _binaryType: 'arraybuffer',
+0|speedtes |     _closeCode: 1006,
+0|speedtes |     _closeFrameReceived: false,
+0|speedtes |     _closeFrameSent: false,
+0|speedtes |     _closeMessage: <Buffer >,
+0|speedtes |     _closeTimer: null,
+0|speedtes |     _errorEmitted: true,
+0|speedtes |     _extensions: {},
+0|speedtes |     _paused: false,
+0|speedtes |     _protocol: '',
+0|speedtes |     _readyState: 3,
+0|speedtes |     _receiver: null,
+0|speedtes |     _sender: null,
+0|speedtes |     _socket: null,
+0|speedtes |     _bufferedAmount: 0,
+0|speedtes |     _isServer: false,
+0|speedtes |     _redirects: 0,
+0|speedtes |     _autoPong: true,
+0|speedtes |     _url: 'wss://localhost/v2',
+0|speedtes |     _req: null,
+0|speedtes |     [Symbol(kCapture)]: false
+0|speedtes |   },
+0|speedtes |   [Symbol(kType)]: 'error',
+0|speedtes |   [Symbol(kError)]: Error: connect ECONNREFUSED 127.0.0.1:443
+0|speedtes |       at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1555:16) {
+0|speedtes |     errno: -111,
+0|speedtes |     code: 'ECONNREFUSED',
+0|speedtes |     syscall: 'connect',
+0|speedtes |     address: '127.0.0.1',
+0|speedtes |     port: 443
+0|speedtes |   },
+0|speedtes |   [Symbol(kMessage)]: 'connect ECONNREFUSED 127.0.0.1:443'
+0|speedtes | }
+

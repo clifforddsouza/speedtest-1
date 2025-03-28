@@ -1,0 +1,68 @@
+index-DoTwA7hj.js:48 
+            
+            
+           GET http://192.168.8.92/api/user 401 (Unauthorized)
+(anonymous) @ index-DoTwA7hj.js:48
+a @ index-DoTwA7hj.js:48
+y @ index-DoTwA7hj.js:48
+start @ index-DoTwA7hj.js:48
+fetch @ index-DoTwA7hj.js:48
+pd @ index-DoTwA7hj.js:48
+onSubscribe @ index-DoTwA7hj.js:48
+subscribe @ index-DoTwA7hj.js:48
+(anonymous) @ index-DoTwA7hj.js:48
+ZD @ index-DoTwA7hj.js:38
+hy @ index-DoTwA7hj.js:40
+Ul @ index-DoTwA7hj.js:40
+uO @ index-DoTwA7hj.js:40
+Fo @ index-DoTwA7hj.js:38
+p9 @ index-DoTwA7hj.js:40
+es @ index-DoTwA7hj.js:40
+TI @ index-DoTwA7hj.js:40
+S @ index-DoTwA7hj.js:25
+E @ index-DoTwA7hj.js:25Understand this errorAI
+index-DoTwA7hj.js:48 
+            
+            
+           GET http://192.168.8.92/api/user 401 (Unauthorized)
+(anonymous) @ index-DoTwA7hj.js:48
+a @ index-DoTwA7hj.js:48
+y @ index-DoTwA7hj.js:48
+start @ index-DoTwA7hj.js:48
+fetch @ index-DoTwA7hj.js:48
+pd @ index-DoTwA7hj.js:48
+fetch @ index-DoTwA7hj.js:48
+refetch @ index-DoTwA7hj.js:48
+onFocus @ index-DoTwA7hj.js:48
+(anonymous) @ index-DoTwA7hj.js:48
+(anonymous) @ index-DoTwA7hj.js:48
+batch @ index-DoTwA7hj.js:48
+onFocus @ index-DoTwA7hj.js:48
+(anonymous) @ index-DoTwA7hj.js:48Understand this errorAI
+index-DoTwA7hj.js:48 
+            
+            
+           POST http://192.168.8.92/api/login 502 (Bad Gateway)
+$n @ index-DoTwA7hj.js:48
+mutationFn @ index-DoTwA7hj.js:253
+fn @ index-DoTwA7hj.js:48
+y @ index-DoTwA7hj.js:48
+start @ index-DoTwA7hj.js:48
+execute @ index-DoTwA7hj.js:48Understand this errorAI
+index-DoTwA7hj.js:324 Login error: Error: 502: <html>
+<head><title>502 Bad Gateway</title></head>
+<body>
+<center><h1>502 Bad Gateway</h1></center>
+<hr><center>nginx/1.24.0 (Ubuntu)</center>
+</body>
+</html>
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+<!-- a padding to disable MSIE and Chrome friendly error page -->
+
+    at mR (index-DoTwA7hj.js:48:42890)
+    at async $n (index-DoTwA7hj.js:48:43091)
+    at async Object.mutationFn (index-DoTwA7hj.js:253:6334)
