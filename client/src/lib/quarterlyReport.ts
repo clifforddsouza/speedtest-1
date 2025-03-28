@@ -34,16 +34,45 @@ export function generateQuarterlyPercentileReport(tests: SpeedTestWithSnakeCase[
   const testsByQuarter = new Map<string, SpeedTestWithSnakeCase[]>();
   
   filteredTests.forEach(test => {
-    const testDate = new Date(test.timestamp);
-    const year = testDate.getFullYear();
-    const quarter = Math.floor(testDate.getMonth() / 3) + 1;
-    const quarterKey = `${year}-Q${quarter}`; // Format: 2023-Q1
-    
-    if (!testsByQuarter.has(quarterKey)) {
-      testsByQuarter.set(quarterKey, []);
+    try {
+      // Handle various timestamp formats and null values
+      if (!test.timestamp) {
+        console.warn('Test is missing timestamp:', test);
+        return; // Skip tests without timestamps
+      }
+      
+      // Parse timestamp string safely
+      let testDate: Date;
+      
+      if (typeof test.timestamp === 'string') {
+        // Handle ISO format or SQL timestamp format
+        testDate = new Date(test.timestamp);
+      } else if (typeof test.timestamp === 'number') {
+        // Handle unix timestamp (milliseconds)
+        testDate = new Date(test.timestamp);
+      } else {
+        // Handle if timestamp is already a Date
+        testDate = test.timestamp instanceof Date ? test.timestamp : new Date();
+      }
+      
+      // Validate the date is valid
+      if (isNaN(testDate.getTime())) {
+        console.warn('Invalid date from timestamp:', test.timestamp);
+        return; // Skip tests with invalid dates
+      }
+      
+      const year = testDate.getFullYear();
+      const quarter = Math.floor(testDate.getMonth() / 3) + 1;
+      const quarterKey = `${year}-Q${quarter}`; // Format: 2023-Q1
+      
+      if (!testsByQuarter.has(quarterKey)) {
+        testsByQuarter.set(quarterKey, []);
+      }
+      
+      testsByQuarter.get(quarterKey)?.push(test);
+    } catch (error) {
+      console.error('Error processing test timestamp:', error, test);
     }
-    
-    testsByQuarter.get(quarterKey)?.push(test);
   });
   
   // Calculate statistics for each quarter
@@ -127,9 +156,13 @@ export function generateQuarterlyPercentileReport(tests: SpeedTestWithSnakeCase[
   
   // Format each row
   const rows = quarterlyStats.map(stat => {
-    // Helper function to safely format numbers and handle NaN values
-    const safeFormat = (value: number, decimals: number = 2): string => {
-      return isNaN(value) ? "0.00" : value.toFixed(decimals);
+    // Helper function to safely format numbers and handle NaN, null, or undefined values
+    const safeFormat = (value: number | null | undefined, decimals: number = 2): string => {
+      if (value === null || value === undefined || isNaN(value)) {
+        return "0.00";
+      }
+      // Handle edge cases like Infinity
+      return isFinite(value) ? value.toFixed(decimals) : "0.00";
     };
     
     return [
@@ -171,9 +204,13 @@ export function generateQuarterlyPercentileReport(tests: SpeedTestWithSnakeCase[
   const overallJitter80 = calculateOverallPercentile(allJitters, 80);
   const overallPacketLoss80 = calculateOverallPercentile(allPacketLosses, 80);
   
-  // Helper function to safely format numbers and handle NaN values
-  const safeFormat = (value: number, decimals: number = 2): string => {
-    return isNaN(value) ? "0.00" : value.toFixed(decimals);
+  // Helper function to safely format numbers and handle NaN, null, or undefined values
+  const safeFormat = (value: number | null | undefined, decimals: number = 2): string => {
+    if (value === null || value === undefined || isNaN(value)) {
+      return "0.00";
+    }
+    // Handle edge cases like Infinity
+    return isFinite(value) ? value.toFixed(decimals) : "0.00";
   };
   
   // Add a blank row and then the 80th percentile summary row for all data

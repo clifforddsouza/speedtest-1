@@ -256,19 +256,46 @@ export default function AdminDashboard() {
       packetLossTests: [] as number[]
     }));
 
-    // Group tests by period
+    // Group tests by period with enhanced error handling
     data.forEach(test => {
-      const testDate = new Date(test.timestamp);
-      
-      for (let i = 0; i < periods.length; i++) {
-        if (isWithinInterval(testDate, { start: periods[i].start, end: periods[i].end })) {
-          result[i].downloadTests.push(test.downloadSpeed);
-          result[i].uploadTests.push(test.uploadSpeed);
-          result[i].pingTests.push(test.ping);
-          result[i].jitterTests.push(test.jitter);
-          result[i].packetLossTests.push(test.packetLoss);
-          break;
+      try {
+        // Safely parse the timestamp and validate
+        const testDate = new Date(test.timestamp);
+        
+        // Skip invalid dates
+        if (isNaN(testDate.getTime())) {
+          console.warn('Invalid date in test data, skipping:', test);
+          return;
         }
+        
+        // Get numeric values with fallbacks for both camelCase and snake_case fields
+        const downloadSpeed = typeof test.downloadSpeed === 'number' ? test.downloadSpeed : 
+                           (typeof test.download_speed === 'number' ? test.download_speed : 0);
+        
+        const uploadSpeed = typeof test.uploadSpeed === 'number' ? test.uploadSpeed : 
+                         (typeof test.upload_speed === 'number' ? test.upload_speed : 0);
+        
+        const ping = typeof test.ping === 'number' ? test.ping : 0;
+        
+        const jitter = typeof test.jitter === 'number' ? test.jitter : 0;
+        
+        const packetLoss = typeof test.packetLoss === 'number' ? test.packetLoss : 
+                        (typeof test.packet_loss === 'number' ? test.packet_loss : 0);
+        
+        // Find the matching period and add the data
+        for (let i = 0; i < periods.length; i++) {
+          if (isWithinInterval(testDate, { start: periods[i].start, end: periods[i].end })) {
+            // Push only valid numeric values
+            if (!isNaN(downloadSpeed)) result[i].downloadTests.push(downloadSpeed);
+            if (!isNaN(uploadSpeed)) result[i].uploadTests.push(uploadSpeed);
+            if (!isNaN(ping)) result[i].pingTests.push(ping);
+            if (!isNaN(jitter)) result[i].jitterTests.push(jitter);
+            if (!isNaN(packetLoss)) result[i].packetLossTests.push(packetLoss);
+            break;
+          }
+        }
+      } catch (error) {
+        console.error('Error processing test for period grouping:', error, test);
       }
     });
 
@@ -312,10 +339,31 @@ export default function AdminDashboard() {
     }));
   };
 
-  const monthlyData = filteredTests.length > 0 ? groupDataByPeriod(filteredTests, "monthly") : [];
-  const quarterlyData = filteredTests.length > 0 ? groupDataByPeriod(filteredTests, "quarterly") : [];
+  // Ensure we have valid data with safe defaults for empty or null values
+  const safeFilteredTests = filteredTests.filter(test => {
+    try {
+      // Make sure the timestamp is valid and can be converted to a Date
+      const testDate = new Date(test.timestamp);
+      return !isNaN(testDate.getTime());
+    } catch (e) {
+      console.error("Invalid date in test data:", test);
+      return false;
+    }
+  });
   
-  const currentData = activeReportTab === "monthly" ? monthlyData : quarterlyData;
+  // Safely generate monthly and quarterly data
+  const monthlyData = safeFilteredTests.length > 0 ? groupDataByPeriod(safeFilteredTests, "monthly") : [];
+  const quarterlyData = safeFilteredTests.length > 0 ? groupDataByPeriod(safeFilteredTests, "quarterly") : [];
+  
+  // If we don't have data, provide a default structure for charts
+  const emptyPeriodData = [
+    { period: 'No Data', downloadAvg: 0, upload80: 0, uploadAvg: 0, download80: 0, pingAvg: 0, ping80: 0, jitterAvg: 0, jitter80: 0, packetLossAvg: 0, packetLoss80: 0, testCount: 0 }
+  ];
+  
+  // Use data if available, otherwise use empty placeholder
+  const currentData = activeReportTab === "monthly" 
+    ? (monthlyData.length > 0 ? monthlyData : emptyPeriodData)
+    : (quarterlyData.length > 0 ? quarterlyData : emptyPeriodData);
 
   // Filter specific customer data by partial match
   const handleCustomerFilterChange = (value: string) => {
