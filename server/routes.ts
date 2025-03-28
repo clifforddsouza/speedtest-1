@@ -45,11 +45,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
-  // Admin dashboard analytics (get all speed tests)
+  // Admin dashboard analytics (get all speed tests with pagination)
   app.get("/api/admin/speed-tests", isAdmin, async (req, res) => {
     try {
-      const tests = await storage.getSpeedTests();
-      res.json(tests);
+      const page = parseInt(req.query.page as string || '1');
+      const limit = parseInt(req.query.limit as string || '50');
+      const offset = (page - 1) * limit;
+      const customerId = req.query.customerId as string | undefined;
+      
+      if (customerId) {
+        const tests = await storage.getSpeedTestsByCustomerId(customerId, { limit, offset });
+        const totalCount = await storage.getSpeedTestsCountByCustomerId(customerId);
+        res.json({
+          data: tests,
+          pagination: {
+            page,
+            limit,
+            totalCount,
+            totalPages: Math.ceil(totalCount / limit)
+          }
+        });
+      } else {
+        const tests = await storage.getSpeedTests({ limit, offset });
+        const totalCount = await storage.getSpeedTestsCount();
+        res.json({
+          data: tests,
+          pagination: {
+            page,
+            limit,
+            totalCount,
+            totalPages: Math.ceil(totalCount / limit)
+          }
+        });
+      }
     } catch (error) {
       console.error("Error fetching speed tests for admin:", error);
       res.status(500).json({ message: "Failed to fetch speed tests" });
@@ -113,13 +141,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/speed-tests", isAuthenticated, async (req, res) => {
     try {
       const customerId = req.query.customerId as string | undefined;
+      const page = parseInt(req.query.page as string || '1');
+      const limit = parseInt(req.query.limit as string || '50');
+      const offset = (page - 1) * limit;
       
       if (customerId) {
-        const tests = await storage.getSpeedTestsByCustomerId(customerId);
-        res.json(tests);
+        const tests = await storage.getSpeedTestsByCustomerId(customerId, { limit, offset });
+        const totalCount = await storage.getSpeedTestsCountByCustomerId(customerId);
+        res.json({
+          data: tests,
+          pagination: {
+            page,
+            limit,
+            totalCount,
+            totalPages: Math.ceil(totalCount / limit)
+          }
+        });
       } else {
-        const tests = await storage.getSpeedTests();
-        res.json(tests);
+        const tests = await storage.getSpeedTests({ limit, offset });
+        const totalCount = await storage.getSpeedTestsCount();
+        res.json({
+          data: tests,
+          pagination: {
+            page,
+            limit,
+            totalCount,
+            totalPages: Math.ceil(totalCount / limit)
+          }
+        });
       }
     } catch (error) {
       console.error("Error fetching speed tests:", error);

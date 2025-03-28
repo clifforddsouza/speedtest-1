@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, BarChart2, LineChart, RefreshCw } from "lucide-react";
+import { Search, BarChart2, LineChart, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -31,6 +31,15 @@ interface SpeedTestComparisonProps {
 
 type ComparisonView = "metric" | "isp" | "location" | "connection";
 
+// Define pagination response interface
+interface PaginatedResponse {
+  data: SpeedTest[];
+  totalCount: number;
+  totalPages: number;
+  page: number;
+  limit: number;
+}
+
 export default function SpeedTestComparison({ customerId }: SpeedTestComparisonProps) {
   // States for filtering and comparison
   const [comparisonView, setComparisonView] = useState<ComparisonView>("metric");
@@ -39,25 +48,37 @@ export default function SpeedTestComparison({ customerId }: SpeedTestComparisonP
   const [filterField, setFilterField] = useState<"customerId" | "testLocation" | "isp">("testLocation");
   const [timeFrame, setTimeFrame] = useState<"all" | "30days" | "90days">("30days");
   
-  // Fetch test data
-  const { data: speedTests, isLoading } = useQuery({
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
+  
+  // Fetch test data with pagination
+  const { data: paginatedData, isLoading } = useQuery({
     queryKey: customerId 
-      ? ["/api/speed-tests", customerId] 
-      : ["/api/speed-tests"],
+      ? ["/api/speed-tests", customerId, page, limit] 
+      : ["/api/speed-tests", page, limit],
     queryFn: async () => {
-      const response = await fetch(
-        customerId 
-          ? `/api/speed-tests?customerId=${encodeURIComponent(customerId)}` 
-          : "/api/speed-tests"
-      );
+      let url = customerId 
+        ? `/api/speed-tests?customerId=${encodeURIComponent(customerId)}` 
+        : "/api/speed-tests";
+      
+      // Add pagination parameters
+      url += `&page=${page}&limit=${limit}`;
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error("Failed to fetch speed test data");
       }
       
-      return response.json() as Promise<SpeedTest[]>;
+      return response.json() as Promise<PaginatedResponse>;
     }
   });
+  
+  // Extract data from paginated response
+  const speedTests = paginatedData?.data || [];
+  const totalCount = paginatedData?.totalCount || 0;
+  const totalPages = paginatedData?.totalPages || 1;
 
   if (isLoading) {
     return (
@@ -492,6 +513,55 @@ export default function SpeedTestComparison({ customerId }: SpeedTestComparisonP
       <div className="mt-4 text-sm text-gray-500">
         Based on {filteredTests.length} test{filteredTests.length !== 1 ? 's' : ''} 
         {timeFrame !== "all" && ` from the last ${timeFrame === "30days" ? "30 days" : "90 days"}`}
+      </div>
+      {/* Pagination Controls */}
+      <div className="mt-6 flex items-center justify-between">
+        <div className="text-sm text-gray-500">
+          Showing {speedTests.length} of {totalCount} records
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Previous
+          </Button>
+          <span className="flex items-center px-2">
+            Page {page} of {totalPages}
+          </span>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label htmlFor="recordsPerPage" className="text-sm">Per page:</Label>
+          <Select
+            value={limit.toString()}
+            onValueChange={(value) => {
+              setLimit(Number(value));
+              setPage(1); // Reset to first page when changing limit
+            }}
+          >
+            <SelectTrigger id="recordsPerPage" className="w-[80px]">
+              <SelectValue placeholder="50" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="25">25</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+              <SelectItem value="250">250</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </Card>
   );

@@ -60,21 +60,40 @@ export default function HistoricalDataViewer({ customerId, adminView = false }: 
   
   const { toast } = useToast();
 
-  // Fetch test data
-  const { data: speedTests, isLoading } = useQuery({
-    queryKey: ["/api/speed-tests", customerId],
+  // States for pagination
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(100);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Fetch test data with pagination
+  const { data: speedTestsResponse, isLoading } = useQuery({
+    queryKey: ["/api/speed-tests", customerId, page, limit],
     queryFn: async () => {
       const endpoint = customerId 
-        ? `/api/speed-tests/customer/${customerId}`
-        : "/api/speed-tests";
+        ? `/api/speed-tests?customerId=${encodeURIComponent(customerId)}&page=${page}&limit=${limit}`
+        : `/api/speed-tests?page=${page}&limit=${limit}`;
       
       const response = await fetch(endpoint);
       if (!response.ok) {
         throw new Error("Failed to fetch speed test data");
       }
-      return response.json() as Promise<SpeedTest[]>;
+      
+      const data = await response.json();
+      return data;
     }
   });
+  
+  // Extract the data and pagination info
+  const speedTests = speedTestsResponse?.data || [];
+  
+  // Update pagination state from the response
+  useEffect(() => {
+    if (speedTestsResponse) {
+      setTotalPages(speedTestsResponse.totalPages || 1);
+      setTotalCount(speedTestsResponse.totalCount || 0);
+    }
+  }, [speedTestsResponse]);
 
   // Update date range when time range changes
   useEffect(() => {
@@ -162,7 +181,6 @@ export default function HistoricalDataViewer({ customerId, adminView = false }: 
         jitter: test.jitter,
         packetLoss: test.packetLoss,
         location: test.testLocation,
-        notes: test.notes,
         customerId: test.customerId,
       };
     });
@@ -906,6 +924,54 @@ export default function HistoricalDataViewer({ customerId, adminView = false }: 
               ))}
             </tbody>
           </table>
+        </div>
+        
+        {/* Pagination Controls */}
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-gray-500">
+            Showing {speedTests.length} of {totalCount} records
+          </div>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <span className="flex items-center px-2">
+              Page {page} of {totalPages}
+            </span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="limit" className="text-sm">Records per page:</Label>
+            <Select
+              value={limit.toString()}
+              onValueChange={(value) => {
+                setLimit(Number(value));
+                setPage(1); // Reset to first page when changing limit
+              }}
+            >
+              <SelectTrigger id="limit" className="w-[80px]">
+                <SelectValue placeholder="50" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="250">250</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
     </div>

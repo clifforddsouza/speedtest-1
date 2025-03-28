@@ -7,6 +7,7 @@ import {
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { eq, desc } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { db, pool } from "./db";
 
 // Storage interface definition
@@ -22,8 +23,10 @@ export interface IStorage {
   // Speed test operations
   createSpeedTest(test: InsertSpeedTest): Promise<SpeedTest>;
   createSpeedTestsBatch(tests: InsertSpeedTest[]): Promise<SpeedTest[]>; // Batch insert
-  getSpeedTests(): Promise<SpeedTest[]>;
-  getSpeedTestsByCustomerId(customerId: string): Promise<SpeedTest[]>;
+  getSpeedTests(options?: { limit?: number; offset?: number }): Promise<SpeedTest[]>;
+  getSpeedTestsCount(): Promise<number>;
+  getSpeedTestsByCustomerId(customerId: string, options?: { limit?: number; offset?: number }): Promise<SpeedTest[]>;
+  getSpeedTestsCountByCustomerId(customerId: string): Promise<number>;
   getSpeedTest(id: number): Promise<SpeedTest | undefined>;
   
   // Internet plan operations
@@ -119,15 +122,48 @@ export class DatabaseStorage implements IStorage {
     return tests;
   }
 
-  async getSpeedTests(): Promise<SpeedTest[]> {
-    return db.select().from(speedTests).orderBy(desc(speedTests.timestamp));
+  async getSpeedTests(options?: { limit?: number; offset?: number }): Promise<SpeedTest[]> {
+    // Build SQL query with manual limit and offset
+    let query = sql`SELECT * FROM ${speedTests} ORDER BY timestamp DESC`;
+    
+    if (options?.limit && options?.offset) {
+      query = sql`${query} LIMIT ${options.limit} OFFSET ${options.offset}`;
+    } else if (options?.limit) {
+      query = sql`${query} LIMIT ${options.limit}`;
+    } else if (options?.offset) {
+      query = sql`${query} OFFSET ${options.offset}`;
+    }
+    
+    const result = await db.execute(query);
+    return result.rows as SpeedTest[];
+  }
+  
+  async getSpeedTestsCount(): Promise<number> {
+    const result = await db.execute(sql`SELECT COUNT(*) as count FROM ${speedTests}`);
+    return Number(result.rows[0]?.count || 0);
   }
 
-  async getSpeedTestsByCustomerId(customerId: string): Promise<SpeedTest[]> {
-    return db.select()
-      .from(speedTests)
-      .where(eq(speedTests.customerId, customerId))
-      .orderBy(desc(speedTests.timestamp));
+  async getSpeedTestsByCustomerId(customerId: string, options?: { limit?: number; offset?: number }): Promise<SpeedTest[]> {
+    // Build SQL query with manual limit and offset for customer ID filtering
+    let query = sql`SELECT * FROM ${speedTests} WHERE customer_id = ${customerId} ORDER BY timestamp DESC`;
+    
+    if (options?.limit && options?.offset) {
+      query = sql`${query} LIMIT ${options.limit} OFFSET ${options.offset}`;
+    } else if (options?.limit) {
+      query = sql`${query} LIMIT ${options.limit}`;
+    } else if (options?.offset) {
+      query = sql`${query} OFFSET ${options.offset}`;
+    }
+    
+    const result = await db.execute(query);
+    return result.rows as SpeedTest[];
+  }
+  
+  async getSpeedTestsCountByCustomerId(customerId: string): Promise<number> {
+    const result = await db.execute(
+      sql`SELECT COUNT(*) as count FROM ${speedTests} WHERE customer_id = ${customerId}`
+    );
+    return Number(result.rows[0]?.count || 0);
   }
 
   async getSpeedTest(id: number): Promise<SpeedTest | undefined> {

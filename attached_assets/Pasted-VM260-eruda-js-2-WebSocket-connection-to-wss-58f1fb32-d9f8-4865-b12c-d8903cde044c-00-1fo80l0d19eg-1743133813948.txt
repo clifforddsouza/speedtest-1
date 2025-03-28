@@ -1,0 +1,144 @@
+VM260 eruda.js:2 WebSocket connection to 'wss://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/?token=FVQnoeBz1kG1' failed: 
+t @ VM260 eruda.js:2
+setupWebSocket @ VM282 client:536
+(anonymous) @ VM282 client:531Understand this errorAI
+VM260 eruda.js:2 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=FVQnoeBz1kG1' is invalid.
+    at new t (VM260 eruda.js:2:218737)
+    at setupWebSocket (VM282 client:536:19)
+    at fallback (VM282 client:509:16)
+    at WebSocket.<anonymous> (VM282 client:555:7)
+t @ VM260 eruda.js:2
+setupWebSocket @ VM282 client:536
+fallback @ VM282 client:509
+(anonymous) @ VM282 client:555Understand this errorAI
+VM260 eruda.js:2 UserProtectedRoute - Auth state: {user: null, isLoading: true, path: '/'}
+_app-97fbe78bf643613f.js:13 Invalid href 'https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev//' passed to next/router in page: '/replEnvironmentDesktop'. Repeated forward-slashes (//) or backslashes \ are not valid in the href.
+(anonymous) @ _app-97fbe78bf643613f.js:13
+d @ main-0ef0b7efad084a83.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+lU @ framework-3d21cc282a6df533.js:1
+t.useMemo @ framework-3d21cc282a6df533.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+ld @ framework-3d21cc282a6df533.js:1
+ou @ framework-3d21cc282a6df533.js:1
+i @ framework-3d21cc282a6df533.js:1
+uI @ framework-3d21cc282a6df533.js:1
+(anonymous) @ framework-3d21cc282a6df533.js:1
+uM @ framework-3d21cc282a6df533.js:1
+uS @ framework-3d21cc282a6df533.js:1
+C @ framework-3d21cc282a6df533.js:1
+z @ framework-3d21cc282a6df533.js:1Understand this errorAI
+VM260 eruda.js:2 
+            
+            
+           GET https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/api/user 401 (Unauthorized)
+window.fetch @ VM260 eruda.js:2
+(anonymous) @ VM290 queryClient.ts:19
+fetchFn @ VM293 @tanstack_react-query.js:840
+run @ VM293 @tanstack_react-query.js:494
+start @ VM293 @tanstack_react-query.js:536
+fetch @ VM293 @tanstack_react-query.js:926
+executeFetch_fn @ VM293 @tanstack_react-query.js:2211
+onSubscribe @ VM293 @tanstack_react-query.js:1898
+subscribe @ VM293 @tanstack_react-query.js:24
+(anonymous) @ VM293 @tanstack_react-query.js:3022
+subscribeToStore @ VM304 chunk-RPCDYKBN.js:11984
+commitHookEffectListMount @ VM304 chunk-RPCDYKBN.js:16915
+commitPassiveMountOnFiber @ VM304 chunk-RPCDYKBN.js:18156
+commitPassiveMountEffects_complete @ VM304 chunk-RPCDYKBN.js:18129
+commitPassiveMountEffects_begin @ VM304 chunk-RPCDYKBN.js:18119
+commitPassiveMountEffects @ VM304 chunk-RPCDYKBN.js:18109
+flushPassiveEffectsImpl @ VM304 chunk-RPCDYKBN.js:19490
+flushPassiveEffects @ VM304 chunk-RPCDYKBN.js:19447
+performSyncWorkOnRoot @ VM304 chunk-RPCDYKBN.js:18868
+flushSyncCallbacks @ VM304 chunk-RPCDYKBN.js:9119
+commitRootImpl @ VM304 chunk-RPCDYKBN.js:19432
+commitRoot @ VM304 chunk-RPCDYKBN.js:19277
+finishConcurrentRender @ VM304 chunk-RPCDYKBN.js:18805
+performConcurrentWorkOnRoot @ VM304 chunk-RPCDYKBN.js:18718
+workLoop @ VM304 chunk-RPCDYKBN.js:197
+flushWork @ VM304 chunk-RPCDYKBN.js:176
+performWorkUntilDeadline @ VM304 chunk-RPCDYKBN.js:384Understand this errorAI
+VM260 eruda.js:2 UserProtectedRoute - Auth state: {user: null, isLoading: false, path: '/'}
+VM260 eruda.js:2 User not authenticated, redirecting to login
+_app-97fbe78bf643613f.js:13 Invalid href 'https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev//login' passed to next/router in page: '/replEnvironmentDesktop'. Repeated forward-slashes (//) or backslashes \ are not valid in the href.
+(anonymous) @ _app-97fbe78bf643613f.js:13
+d @ main-0ef0b7efad084a83.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+lU @ framework-3d21cc282a6df533.js:1
+t.useMemo @ framework-3d21cc282a6df533.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+ld @ framework-3d21cc282a6df533.js:1
+ou @ framework-3d21cc282a6df533.js:1
+i @ framework-3d21cc282a6df533.js:1
+uI @ framework-3d21cc282a6df533.js:1
+(anonymous) @ framework-3d21cc282a6df533.js:1
+uM @ framework-3d21cc282a6df533.js:1
+uS @ framework-3d21cc282a6df533.js:1
+C @ framework-3d21cc282a6df533.js:1
+z @ framework-3d21cc282a6df533.js:1Understand this errorAI
+_app-97fbe78bf643613f.js:13 Invalid href 'https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev//admin/login' passed to next/router in page: '/replEnvironmentDesktop'. Repeated forward-slashes (//) or backslashes \ are not valid in the href.
+(anonymous) @ _app-97fbe78bf643613f.js:13
+d @ main-0ef0b7efad084a83.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+lU @ framework-3d21cc282a6df533.js:1
+t.useMemo @ framework-3d21cc282a6df533.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+ld @ framework-3d21cc282a6df533.js:1
+ou @ framework-3d21cc282a6df533.js:1
+i @ framework-3d21cc282a6df533.js:1
+uI @ framework-3d21cc282a6df533.js:1
+(anonymous) @ framework-3d21cc282a6df533.js:1
+uM @ framework-3d21cc282a6df533.js:1
+uS @ framework-3d21cc282a6df533.js:1
+C @ framework-3d21cc282a6df533.js:1
+z @ framework-3d21cc282a6df533.js:1Understand this errorAI
+VM260 eruda.js:2 
+            
+            
+           GET https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/api/admin/session 401 (Unauthorized)
+window.fetch @ VM260 eruda.js:2
+checkSession @ VM297 AdminLogin.tsx:35
+(anonymous) @ VM297 AdminLogin.tsx:46
+commitHookEffectListMount @ VM304 chunk-RPCDYKBN.js:16915
+commitPassiveMountOnFiber @ VM304 chunk-RPCDYKBN.js:18156
+commitPassiveMountEffects_complete @ VM304 chunk-RPCDYKBN.js:18129
+commitPassiveMountEffects_begin @ VM304 chunk-RPCDYKBN.js:18119
+commitPassiveMountEffects @ VM304 chunk-RPCDYKBN.js:18109
+flushPassiveEffectsImpl @ VM304 chunk-RPCDYKBN.js:19490
+flushPassiveEffects @ VM304 chunk-RPCDYKBN.js:19447
+commitRootImpl @ VM304 chunk-RPCDYKBN.js:19416
+commitRoot @ VM304 chunk-RPCDYKBN.js:19277
+performSyncWorkOnRoot @ VM304 chunk-RPCDYKBN.js:18895
+flushSyncCallbacks @ VM304 chunk-RPCDYKBN.js:9119
+(anonymous) @ VM304 chunk-RPCDYKBN.js:18627Understand this errorAI
+client:536 WebSocket connection to 'wss://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/?token=FVQnoeBz1kG1' failed: 
+t @ Network.js:227
+setupWebSocket @ client:536
+(anonymous) @ client:531Understand this errorAI
+Network.js:227 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=FVQnoeBz1kG1' is invalid.
+    at new t (Network.js:227:18)
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+t @ Network.js:227
+setupWebSocket @ client:536
+fallback @ client:509
+(anonymous) @ client:555Understand this errorAI
+_app-97fbe78bf643613f.js:13 Invalid href 'https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev//admin' passed to next/router in page: '/replEnvironmentDesktop'. Repeated forward-slashes (//) or backslashes \ are not valid in the href.
+(anonymous) @ _app-97fbe78bf643613f.js:13
+d @ main-0ef0b7efad084a83.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+lU @ framework-3d21cc282a6df533.js:1
+t.useMemo @ framework-3d21cc282a6df533.js:1
+(anonymous) @ _app-97fbe78bf643613f.js:29
+ld @ framework-3d21cc282a6df533.js:1
+ou @ framework-3d21cc282a6df533.js:1
+i @ framework-3d21cc282a6df533.js:1
+uI @ framework-3d21cc282a6df533.js:1
+(anonymous) @ framework-3d21cc282a6df533.js:1
+uM @ framework-3d21cc282a6df533.js:1
+uS @ framework-3d21cc282a6df533.js:1
+C @ framework-3d21cc282a6df533.js:1
+z @ framework-3d21cc282a6df533.js:1Understand this errorAI
+Console.js:61 Admin session verified
