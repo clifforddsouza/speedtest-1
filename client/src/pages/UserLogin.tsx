@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,9 @@ export default function UserLogin() {
   useEffect(() => {
     // If user is already logged in, redirect to home
     if (user) {
-      setLocation("");
+      window.location.href = window.location.origin;
     }
-  }, [user, setLocation]);
+  }, [user]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,9 +94,11 @@ export default function UserLogin() {
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-500">
                 Admin access? 
-                <Button variant="link" className="p-0 ml-1" onClick={() => setLocation("admin/login")}>
-                  Login with Admin Access
-                </Button>
+                <Link href="admin/login">
+                  <Button variant="link" className="p-0 ml-1">
+                    Login with Admin Access
+                  </Button>
+                </Link>
               </p>
             </div>
           </div>

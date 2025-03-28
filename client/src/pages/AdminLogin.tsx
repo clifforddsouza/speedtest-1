@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,7 +21,7 @@ export default function AdminLogin() {
         if (response.status === 200) {
           // User is already authenticated and has admin privileges
           localStorage.setItem('isAdminAuthenticated', 'true');
-          setLocation('admin');
+          window.location.href = `${window.location.origin}/admin`;
         } else {
           // User not authenticated or not admin
           localStorage.removeItem('isAdminAuthenticated');
@@ -32,7 +32,7 @@ export default function AdminLogin() {
     };
     
     checkSession();
-  }, [setLocation]);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +75,7 @@ export default function AdminLogin() {
           localStorage.setItem('isAdminAuthenticated', 'true');
           
           // Redirect to admin dashboard with the proper path format
-          setLocation('admin');
+          window.location.href = `${window.location.origin}/admin`;
         } else {
           // User logged in but doesn't have admin privileges
           toast({
@@ -152,6 +152,17 @@ export default function AdminLogin() {
             >
               {isLoading ? "Logging in..." : "Login"}
             </Button>
+            
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-500">
+                Regular user? 
+                <Link href="login">
+                  <Button variant="link" className="p-0 ml-1">
+                    Login with User Access
+                  </Button>
+                </Link>
+              </p>
+            </div>
           </div>
         </form>
       </Card>
