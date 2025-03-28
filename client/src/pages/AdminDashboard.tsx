@@ -65,11 +65,19 @@ export default function AdminDashboard() {
   
   // Handle logout
   const handleLogout = () => {
-    // Immediately redirect to login
-    setLocation('/admin/login');
+    // Show a loading toast
+    toast({
+      title: "Logging out...",
+      description: "Please wait a moment"
+    });
     
-    // Then perform the actual logout mutation
-    logoutMutation.mutate();
+    // Perform the logout mutation and redirect after it's successful
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        // Redirect to login page after logout is successful
+        setLocation('/admin/login');
+      }
+    });
   };
 
   // Fetch all test data with pagination
@@ -321,9 +329,19 @@ export default function AdminDashboard() {
               size="sm" 
               onClick={handleLogout}
               className="flex items-center"
+              disabled={logoutMutation.isPending}
             >
-              <LogOut className="h-4 w-4 mr-1" />
-              Logout
+              {logoutMutation.isPending ? (
+                <>
+                  <div className="h-4 w-4 mr-1 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Logging out...
+                </>
+              ) : (
+                <>
+                  <LogOut className="h-4 w-4 mr-1" />
+                  Logout
+                </>
+              )}
             </Button>
             <Link href="/">
               <Button variant="outline">Back to Speed Test</Button>

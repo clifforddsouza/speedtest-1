@@ -85,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
+        duration: 3000,
       });
     },
     onError: (error: Error) => {
