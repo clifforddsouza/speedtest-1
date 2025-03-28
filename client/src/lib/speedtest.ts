@@ -425,37 +425,47 @@ export const measureSpeed = async (
         const chunk = generateRandomData(UPLOAD_CHUNK_SIZE);
         
         // Track concurrent uploads
+        const uploadComplete = { value: false };
+        const shouldStop = () => {
+          return Date.now() - startTime >= TEST_DURATION_MS || uploadComplete.value;
+        };
+        
+        // Create an array to track upload promises
         const uploads = [];
         
         // Start multiple concurrent uploads
         for (let i = 0; i < MAX_CHUNKS; i++) {
           const uploadPromise = (async () => {
-            const startChunkTime = Date.now();
-            
-            // Continue uploading chunks until the test duration is reached
-            while (Date.now() - startTime < TEST_DURATION_MS) {
-              const response = await fetch('/api/speedtest/upload', {
-                method: 'POST',
-                body: chunk,
-                headers: {
-                  'Content-Type': 'application/octet-stream',
+            try {
+              // Continue uploading chunks until the test duration is reached
+              while (!shouldStop()) {
+                const response = await fetch('/api/speedtest/upload', {
+                  method: 'POST',
+                  body: chunk,
+                  headers: {
+                    'Content-Type': 'application/octet-stream',
+                  }
+                });
+                
+                if (!response.ok) {
+                  throw new Error(`HTTP error! status: ${response.status}`);
                 }
-              });
-              
-              if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                
+                // Important: Track the uploaded bytes
+                bytesTransferred += chunk.byteLength;
               }
-              
-              bytesTransferred += chunk.byteLength;
+            } catch (error) {
+              console.error('Error in upload chunk:', error);
             }
           })();
           
           uploads.push(uploadPromise);
         }
         
-        // Wait for all uploads to finish or timeout
-        const timeoutPromise = new Promise(resolve => setTimeout(resolve, TEST_DURATION_MS));
-        await Promise.race([Promise.all(uploads), timeoutPromise]);
+        // Wait for the test duration to complete
+        await new Promise(resolve => setTimeout(resolve, TEST_DURATION_MS));
+        // Signal all upload tasks to stop
+        uploadComplete.value = true;
       }
     } catch (error) {
       console.error(`Error during ${type} speed test:`, error);
