@@ -19,8 +19,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         
         if (!isStoredAuthenticated) {
           console.log("No stored authentication, redirecting to login");
-          // Use relative path without leading slash to avoid double-slash issues
-          setLocation("admin/login");
+          // Use absolute path with leading slash to ensure correct routing
+          setLocation("/admin/login");
           setIsLoading(false);
           return;
         }
@@ -38,14 +38,14 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
           // Not authenticated or not admin, redirect to login without showing errors
           console.log("Admin session verification failed - redirecting to login");
           localStorage.removeItem('isAdminAuthenticated');
-          // Use relative path without leading slash to avoid double-slash issues
-          setLocation("admin/login");
+          // Use absolute path with leading slash to ensure correct routing
+          setLocation("/admin/login");
         }
       } catch (error) {
         console.error("Admin session verification error:", error);
         localStorage.removeItem('isAdminAuthenticated');
-        // Use relative path without leading slash to avoid double-slash issues
-        setLocation("admin/login");
+        // Use absolute path with leading slash to ensure correct routing
+        setLocation("/admin/login");
       } finally {
         setIsLoading(false);
       }

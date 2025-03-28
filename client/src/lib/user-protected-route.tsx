@@ -25,9 +25,11 @@ export function UserProtectedRoute({
 
   if (!user) {
     console.log("User not authenticated, redirecting to login");
+    // Ensure the path doesn't start with a slash to avoid double slashes
+    const loginPath = "login";
     return (
       <Route path={path}>
-        <Redirect to="/login" />
+        <Redirect to={loginPath} />
       </Route>
     );
   }
