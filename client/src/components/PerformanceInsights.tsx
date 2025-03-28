@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SpeedTest } from "@shared/schema";
 import { format, startOfMonth, endOfMonth, subMonths, subDays } from "date-fns";
@@ -42,6 +42,13 @@ export default function PerformanceInsights({ customerId }: PerformanceInsightsP
   
   // Extract the actual tests array from the response
   const speedTests = speedTestsResponse?.data || [];
+  
+  // When response has pagination structure, ensure we're handling it correctly
+  useEffect(() => {
+    if (speedTestsResponse?.pagination) {
+      console.log('Pagination info received:', speedTestsResponse.pagination);
+    }
+  }, [speedTestsResponse]);
 
   if (isLoading) {
     return (
@@ -73,6 +80,12 @@ export default function PerformanceInsights({ customerId }: PerformanceInsightsP
 
   // Filter tests based on selected period
   const filterTestsByPeriod = (tests: SpeedTest[], selectedPeriod: InsightPeriod): SpeedTest[] => {
+    // Make sure we have an array to work with
+    if (!Array.isArray(tests)) {
+      console.error('Tests data is not an array:', tests);
+      return [];
+    }
+    
     const now = new Date();
     let startDate: Date;
     
@@ -88,16 +101,29 @@ export default function PerformanceInsights({ customerId }: PerformanceInsightsP
         break;
       case "all":
         return tests;
+      default:
+        startDate = subDays(now, 30); // Default to 30 days if somehow we get an invalid value
     }
     
-    return tests.filter(test => new Date(test.timestamp) >= startDate);
+    try {
+      // Add defensive coding to make sure we handle invalid dates
+      return tests.filter(test => {
+        if (!test || !test.timestamp) return false;
+        const testDate = new Date(test.timestamp);
+        return !isNaN(testDate.getTime()) && testDate >= startDate;
+      });
+    } catch (error) {
+      console.error('Error filtering tests by period:', error);
+      return [];
+    }
   };
   
   const filteredTests = filterTestsByPeriod(speedTests, period);
   
   // Calculate key performance metrics
   const calculateMetrics = (tests: SpeedTest[]) => {
-    if (!tests || tests.length === 0) {
+    // Check for valid tests array
+    if (!tests || !Array.isArray(tests) || tests.length === 0) {
       return {
         downloadAvg: 0,
         uploadAvg: 0,
@@ -113,43 +139,90 @@ export default function PerformanceInsights({ customerId }: PerformanceInsightsP
       };
     }
     
-    const downloadSpeeds = tests.map(test => test.downloadSpeed);
-    const uploadSpeeds = tests.map(test => test.uploadSpeed);
-    const pings = tests.map(test => test.ping);
-    const jitters = tests.map(test => test.jitter);
-    const packetLosses = tests.map(test => test.packetLoss);
-    
-    const downloadAvg = downloadSpeeds.reduce((sum, speed) => sum + speed, 0) / tests.length;
-    const uploadAvg = uploadSpeeds.reduce((sum, speed) => sum + speed, 0) / tests.length;
-    const pingAvg = pings.reduce((sum, ping) => sum + ping, 0) / tests.length;
-    const jitterAvg = jitters.reduce((sum, jitter) => sum + jitter, 0) / tests.length;
-    const packetLossAvg = packetLosses.reduce((sum, loss) => sum + loss, 0) / tests.length;
-    
-    const downloadMax = Math.max(...downloadSpeeds);
-    const uploadMax = Math.max(...uploadSpeeds);
-    const pingMin = Math.min(...pings);
-    
-    // Calculate average performance score across all tests
-    const avgScore = tests.reduce((sum, test) => sum + calculatePerformanceScore(test), 0) / tests.length;
-    
-    return {
-      downloadAvg,
-      uploadAvg,
-      pingAvg,
-      jitterAvg,
-      packetLossAvg,
-      downloadMax,
-      uploadMax,
-      pingMin,
-      performanceScore: Math.round(avgScore),
-      grade: getPerformanceGrade(avgScore),
-      testCount: tests.length
-    };
+    try {
+      // Filter out any null or invalid tests
+      const validTests = tests.filter(test => 
+        test && 
+        typeof test.downloadSpeed === 'number' && 
+        typeof test.uploadSpeed === 'number' && 
+        typeof test.ping === 'number' && 
+        typeof test.jitter === 'number' && 
+        typeof test.packetLoss === 'number'
+      );
+      
+      if (validTests.length === 0) {
+        console.error('No valid tests with required metrics found');
+        return {
+          downloadAvg: 0,
+          uploadAvg: 0,
+          pingAvg: 0,
+          jitterAvg: 0,
+          packetLossAvg: 0,
+          downloadMax: 0,
+          uploadMax: 0,
+          pingMin: 0,
+          performanceScore: 0,
+          grade: 'N/A',
+          testCount: 0
+        };
+      }
+      
+      const downloadSpeeds = validTests.map(test => test.downloadSpeed);
+      const uploadSpeeds = validTests.map(test => test.uploadSpeed);
+      const pings = validTests.map(test => test.ping);
+      const jitters = validTests.map(test => test.jitter);
+      const packetLosses = validTests.map(test => test.packetLoss);
+      
+      const downloadAvg = downloadSpeeds.reduce((sum, speed) => sum + speed, 0) / validTests.length;
+      const uploadAvg = uploadSpeeds.reduce((sum, speed) => sum + speed, 0) / validTests.length;
+      const pingAvg = pings.reduce((sum, ping) => sum + ping, 0) / validTests.length;
+      const jitterAvg = jitters.reduce((sum, jitter) => sum + jitter, 0) / validTests.length;
+      const packetLossAvg = packetLosses.reduce((sum, loss) => sum + loss, 0) / validTests.length;
+      
+      const downloadMax = Math.max(...downloadSpeeds);
+      const uploadMax = Math.max(...uploadSpeeds);
+      const pingMin = Math.min(...pings);
+      
+      // Calculate average performance score across all tests
+      const avgScore = validTests.reduce((sum, test) => {
+        const score = calculatePerformanceScore(test);
+        return sum + (isNaN(score) ? 0 : score);
+      }, 0) / validTests.length;
+      
+      return {
+        downloadAvg: isNaN(downloadAvg) ? 0 : downloadAvg,
+        uploadAvg: isNaN(uploadAvg) ? 0 : uploadAvg,
+        pingAvg: isNaN(pingAvg) ? 0 : pingAvg,
+        jitterAvg: isNaN(jitterAvg) ? 0 : jitterAvg,
+        packetLossAvg: isNaN(packetLossAvg) ? 0 : packetLossAvg,
+        downloadMax: isNaN(downloadMax) || !isFinite(downloadMax) ? 0 : downloadMax,
+        uploadMax: isNaN(uploadMax) || !isFinite(uploadMax) ? 0 : uploadMax,
+        pingMin: isNaN(pingMin) || !isFinite(pingMin) ? 0 : pingMin,
+        performanceScore: isNaN(avgScore) ? 0 : Math.round(avgScore),
+        grade: isNaN(avgScore) ? 'N/A' : getPerformanceGrade(avgScore),
+        testCount: validTests.length
+      };
+    } catch (error) {
+      console.error('Error calculating metrics:', error);
+      return {
+        downloadAvg: 0,
+        uploadAvg: 0,
+        pingAvg: 0,
+        jitterAvg: 0,
+        packetLossAvg: 0,
+        downloadMax: 0,
+        uploadMax: 0,
+        pingMin: 0,
+        performanceScore: 0,
+        grade: 'N/A',
+        testCount: 0
+      };
+    }
   };
   
   // Generate performance insights
   const generateInsights = (tests: SpeedTest[]) => {
-    if (!tests || tests.length < 2) {
+    if (!tests || !Array.isArray(tests) || tests.length < 2) {
       return [{
         type: 'info',
         title: 'Not Enough Data',
@@ -157,129 +230,193 @@ export default function PerformanceInsights({ customerId }: PerformanceInsightsP
       }];
     }
     
-    const insights = [];
-    const metrics = calculateMetrics(tests);
-    
-    // Sort tests by date
-    const sortedTests = [...tests].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-    
-    // Split into two halves to compare trends
-    const midpoint = Math.floor(sortedTests.length / 2);
-    const firstHalf = sortedTests.slice(0, midpoint);
-    const secondHalf = sortedTests.slice(midpoint);
-    
-    const firstHalfMetrics = calculateMetrics(firstHalf);
-    const secondHalfMetrics = calculateMetrics(secondHalf);
-    
-    // Download speed trend
-    const downloadChange = ((secondHalfMetrics.downloadAvg - firstHalfMetrics.downloadAvg) / firstHalfMetrics.downloadAvg) * 100;
-    if (Math.abs(downloadChange) > 10) {
-      insights.push({
-        type: downloadChange > 0 ? 'positive' : 'negative',
-        title: downloadChange > 0 ? 'Download Speed Improving' : 'Download Speed Declining',
-        message: `Download speeds have ${downloadChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(downloadChange).toFixed(1)}% recently.`,
-        icon: downloadChange > 0 ? TrendingUp : TrendingDown
+    try {
+      const insights = [];
+      const metrics = calculateMetrics(tests);
+      
+      // Sort tests by date with error handling
+      const sortedTests = [...tests].sort((a, b) => {
+        try {
+          const dateA = new Date(a.timestamp);
+          const dateB = new Date(b.timestamp);
+          
+          if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+            return 0; // Skip invalid dates
+          }
+          
+          return dateA.getTime() - dateB.getTime();
+        } catch (error) {
+          console.error('Error sorting tests by date:', error);
+          return 0;
+        }
       });
+      
+      if (sortedTests.length < 2) {
+        return [{
+          type: 'info',
+          title: 'Not Enough Valid Data',
+          message: 'Run more speed tests to get performance insights.'
+        }];
+      }
+      
+      // Split into two halves to compare trends
+      const midpoint = Math.floor(sortedTests.length / 2);
+      const firstHalf = sortedTests.slice(0, midpoint);
+      const secondHalf = sortedTests.slice(midpoint);
+      
+      if (firstHalf.length === 0 || secondHalf.length === 0) {
+        return [{
+          type: 'info',
+          title: 'Insufficient Data for Trend Analysis',
+          message: 'Need more test data to show trends over time.'
+        }];
+      }
+      
+      const firstHalfMetrics = calculateMetrics(firstHalf);
+      const secondHalfMetrics = calculateMetrics(secondHalf);
+      
+      // Download speed trend - with safe division
+      if (firstHalfMetrics.downloadAvg > 0) {
+        const downloadChange = ((secondHalfMetrics.downloadAvg - firstHalfMetrics.downloadAvg) / firstHalfMetrics.downloadAvg) * 100;
+        if (!isNaN(downloadChange) && isFinite(downloadChange) && Math.abs(downloadChange) > 10) {
+          insights.push({
+            type: downloadChange > 0 ? 'positive' : 'negative',
+            title: downloadChange > 0 ? 'Download Speed Improving' : 'Download Speed Declining',
+            message: `Download speeds have ${downloadChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(downloadChange).toFixed(1)}% recently.`,
+            icon: downloadChange > 0 ? TrendingUp : TrendingDown
+          });
+        }
+      }
+      
+      // Upload speed trend - with safe division
+      if (firstHalfMetrics.uploadAvg > 0) {
+        const uploadChange = ((secondHalfMetrics.uploadAvg - firstHalfMetrics.uploadAvg) / firstHalfMetrics.uploadAvg) * 100;
+        if (!isNaN(uploadChange) && isFinite(uploadChange) && Math.abs(uploadChange) > 10) {
+          insights.push({
+            type: uploadChange > 0 ? 'positive' : 'negative',
+            title: uploadChange > 0 ? 'Upload Speed Improving' : 'Upload Speed Declining',
+            message: `Upload speeds have ${uploadChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(uploadChange).toFixed(1)}% recently.`,
+            icon: uploadChange > 0 ? TrendingUp : TrendingDown
+          });
+        }
+      }
+      
+      // Ping trend - with safe division
+      if (firstHalfMetrics.pingAvg > 0) {
+        const pingChange = ((secondHalfMetrics.pingAvg - firstHalfMetrics.pingAvg) / firstHalfMetrics.pingAvg) * 100;
+        if (!isNaN(pingChange) && isFinite(pingChange) && Math.abs(pingChange) > 10) {
+          insights.push({
+            type: pingChange < 0 ? 'positive' : 'negative', // For ping, lower is better
+            title: pingChange < 0 ? 'Ping Times Improving' : 'Ping Times Increasing',
+            message: `Ping times have ${pingChange < 0 ? 'decreased' : 'increased'} by ${Math.abs(pingChange).toFixed(1)}% recently.`,
+            icon: pingChange < 0 ? TrendingDown : TrendingUp
+          });
+        }
+      }
+      
+      // Packet loss issues
+      if (metrics.packetLossAvg > 1) {
+        insights.push({
+          type: 'warning',
+          title: 'Packet Loss Detected',
+          message: `Average packet loss of ${metrics.packetLossAvg.toFixed(2)}% may indicate network reliability issues.`,
+          icon: AlertTriangle
+        });
+      } else {
+        insights.push({
+          type: 'positive',
+          title: 'Excellent Network Reliability',
+          message: 'Packet loss is minimal, indicating a stable connection.',
+          icon: Check
+        });
+      }
+      
+      // General performance assessment
+      if (metrics.performanceScore >= 85) {
+        insights.push({
+          type: 'positive',
+          title: 'High Performance Connection',
+          message: `Your network scores ${metrics.grade} (${metrics.performanceScore}/100), suitable for demanding applications.`,
+          icon: Check
+        });
+      } else if (metrics.performanceScore >= 70) {
+        insights.push({
+          type: 'neutral',
+          title: 'Average Performance Connection',
+          message: `Your network scores ${metrics.grade} (${metrics.performanceScore}/100), adequate for most applications.`,
+          icon: Minus
+        });
+      } else {
+        insights.push({
+          type: 'negative',
+          title: 'Performance Issues Detected',
+          message: `Your network scores ${metrics.grade} (${metrics.performanceScore}/100), which may impact online activities.`,
+          icon: AlertTriangle
+        });
+      }
+      
+      // Add a tip based on the most significant issue
+      if (metrics.pingAvg > 100) {
+        insights.push({
+          type: 'tip',
+          title: 'High Latency Tip',
+          message: 'Consider using a wired connection instead of Wi-Fi to reduce ping times.',
+          icon: Lightbulb
+        });
+      } else if (metrics.downloadAvg < 25) {
+        insights.push({
+          type: 'tip',
+          title: 'Low Download Speed Tip',
+          message: 'Check for other devices using bandwidth on your network and limit their usage during important tasks.',
+          icon: Lightbulb
+        });
+      } else if (metrics.uploadAvg < 5) {
+        insights.push({
+          type: 'tip',
+          title: 'Low Upload Speed Tip',
+          message: 'For video conferencing, close other applications that might be uploading data in the background.',
+          icon: Lightbulb
+        });
+      }
+      
+      return insights;
+    } catch (error) {
+      console.error('Error generating insights:', error);
+      return [{
+        type: 'info',
+        title: 'Unable to Generate Insights',
+        message: 'There was an error analyzing your speed test data.'
+      }];
     }
-    
-    // Upload speed trend
-    const uploadChange = ((secondHalfMetrics.uploadAvg - firstHalfMetrics.uploadAvg) / firstHalfMetrics.uploadAvg) * 100;
-    if (Math.abs(uploadChange) > 10) {
-      insights.push({
-        type: uploadChange > 0 ? 'positive' : 'negative',
-        title: uploadChange > 0 ? 'Upload Speed Improving' : 'Upload Speed Declining',
-        message: `Upload speeds have ${uploadChange > 0 ? 'increased' : 'decreased'} by ${Math.abs(uploadChange).toFixed(1)}% recently.`,
-        icon: uploadChange > 0 ? TrendingUp : TrendingDown
-      });
-    }
-    
-    // Ping trend
-    const pingChange = ((secondHalfMetrics.pingAvg - firstHalfMetrics.pingAvg) / firstHalfMetrics.pingAvg) * 100;
-    if (Math.abs(pingChange) > 10) {
-      insights.push({
-        type: pingChange < 0 ? 'positive' : 'negative', // For ping, lower is better
-        title: pingChange < 0 ? 'Ping Times Improving' : 'Ping Times Increasing',
-        message: `Ping times have ${pingChange < 0 ? 'decreased' : 'increased'} by ${Math.abs(pingChange).toFixed(1)}% recently.`,
-        icon: pingChange < 0 ? TrendingDown : TrendingUp
-      });
-    }
-    
-    // Packet loss issues
-    if (metrics.packetLossAvg > 1) {
-      insights.push({
-        type: 'warning',
-        title: 'Packet Loss Detected',
-        message: `Average packet loss of ${metrics.packetLossAvg.toFixed(2)}% may indicate network reliability issues.`,
-        icon: AlertTriangle
-      });
-    } else {
-      insights.push({
-        type: 'positive',
-        title: 'Excellent Network Reliability',
-        message: 'Packet loss is minimal, indicating a stable connection.',
-        icon: Check
-      });
-    }
-    
-    // General performance assessment
-    if (metrics.performanceScore >= 85) {
-      insights.push({
-        type: 'positive',
-        title: 'High Performance Connection',
-        message: `Your network scores ${metrics.grade} (${metrics.performanceScore}/100), suitable for demanding applications.`,
-        icon: Check
-      });
-    } else if (metrics.performanceScore >= 70) {
-      insights.push({
-        type: 'neutral',
-        title: 'Average Performance Connection',
-        message: `Your network scores ${metrics.grade} (${metrics.performanceScore}/100), adequate for most applications.`,
-        icon: Minus
-      });
-    } else {
-      insights.push({
-        type: 'negative',
-        title: 'Performance Issues Detected',
-        message: `Your network scores ${metrics.grade} (${metrics.performanceScore}/100), which may impact online activities.`,
-        icon: AlertTriangle
-      });
-    }
-    
-    // Add a tip based on the most significant issue
-    if (metrics.pingAvg > 100) {
-      insights.push({
-        type: 'tip',
-        title: 'High Latency Tip',
-        message: 'Consider using a wired connection instead of Wi-Fi to reduce ping times.',
-        icon: Lightbulb
-      });
-    } else if (metrics.downloadAvg < 25) {
-      insights.push({
-        type: 'tip',
-        title: 'Low Download Speed Tip',
-        message: 'Check for other devices using bandwidth on your network and limit their usage during important tasks.',
-        icon: Lightbulb
-      });
-    } else if (metrics.uploadAvg < 5) {
-      insights.push({
-        type: 'tip',
-        title: 'Low Upload Speed Tip',
-        message: 'For video conferencing, close other applications that might be uploading data in the background.',
-        icon: Lightbulb
-      });
-    }
-    
-    return insights;
   };
 
   const metrics = calculateMetrics(filteredTests);
   const insights = generateInsights(filteredTests);
   
   // Prepare data for performance score chart
-  const scoreDistribution = filteredTests.map(test => ({
-    timestamp: format(new Date(test.timestamp), 'MMM d'),
-    score: calculatePerformanceScore(test)
-  }));
+  const scoreDistribution = Array.isArray(filteredTests) ? filteredTests.filter(test => test && test.timestamp).map(test => {
+    try {
+      const date = new Date(test.timestamp);
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date found in test data:', test.timestamp);
+        return null;
+      }
+      
+      const score = calculatePerformanceScore(test);
+      if (isNaN(score)) {
+        console.warn('Invalid score calculated for test:', test);
+        return null;
+      }
+      
+      return {
+        timestamp: format(date, 'MMM d'),
+        score
+      };
+    } catch (error) {
+      console.error('Error processing test for score distribution:', error);
+      return null;
+    }
+  }).filter(Boolean) : [];
   
   // Group scores into ranges for pie chart
   const scoreRanges = [
@@ -291,16 +428,31 @@ export default function PerformanceInsights({ customerId }: PerformanceInsightsP
   ];
   
   const scorePieData = scoreRanges.map(range => {
-    const count = filteredTests.filter(test => {
-      const score = calculatePerformanceScore(test);
-      return score >= range.range[0] && score <= range.range[1];
-    }).length;
-    
-    return {
-      name: range.name,
-      value: count,
-      color: range.color
-    };
+    try {
+      const count = Array.isArray(filteredTests) ? filteredTests.filter(test => {
+        try {
+          if (!test) return false;
+          const score = calculatePerformanceScore(test);
+          return !isNaN(score) && score >= range.range[0] && score <= range.range[1];
+        } catch (error) {
+          console.error('Error filtering test for pie chart data:', error);
+          return false;
+        }
+      }).length : 0;
+      
+      return {
+        name: range.name,
+        value: count,
+        color: range.color
+      };
+    } catch (error) {
+      console.error('Error generating pie chart data for range:', range, error);
+      return {
+        name: range.name,
+        value: 0,
+        color: range.color
+      };
+    }
   }).filter(item => item.value > 0);
   
   return (

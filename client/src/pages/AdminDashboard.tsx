@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -100,6 +100,14 @@ export default function AdminDashboard() {
   // Extract the data and pagination info
   const speedTests = speedTestsResponse?.data || [];
   
+  // Update pagination info when response changes
+  useEffect(() => {
+    if (speedTestsResponse?.pagination) {
+      setTotalPages(speedTestsResponse.pagination.totalPages);
+      setTotalCount(speedTestsResponse.pagination.totalCount);
+    }
+  }, [speedTestsResponse]);
+  
   // Fetch internet plans
   const { data: internetPlans, isLoading: isLoadingPlans } = useQuery({
     queryKey: ["/api/internet-plans"],
@@ -123,7 +131,7 @@ export default function AdminDashboard() {
   }
 
   // Filter tests by customer ID, internet plan, and date range if selected
-  const filteredTests = speedTests ? speedTests.filter(test => {
+  const filteredTests = speedTests ? speedTests.filter((test: SpeedTest) => {
     // Filter by customer ID if selected (but not "all")
     if (selectedCustomerId && selectedCustomerId !== "all" && test.customerId !== selectedCustomerId) {
       return false;
@@ -158,7 +166,7 @@ export default function AdminDashboard() {
   };
 
   // Extract unique customer IDs
-  const customerIds = speedTests ? Array.from(new Set(speedTests.map((test: SpeedTest) => test.customerId))) : [];
+  const customerIds: string[] = speedTests ? Array.from(new Set(speedTests.map((test: SpeedTest) => test.customerId))) : [];
 
   // Group data by period (month or quarter)
   interface Period {
@@ -314,7 +322,7 @@ export default function AdminDashboard() {
   };
 
   const filteredCustomerIds = filterCustomerId
-    ? customerIds.filter((id: string) => id.toLowerCase().includes(filterCustomerId.toLowerCase()))
+    ? customerIds.filter((id) => id.toLowerCase().includes(filterCustomerId.toLowerCase()))
     : customerIds;
 
   // Common header for both data present and no data views
@@ -589,7 +597,7 @@ export default function AdminDashboard() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Customers</SelectItem>
-                            {filteredCustomerIds.map((id: string) => (
+                            {filteredCustomerIds.map((id) => (
                               <SelectItem key={`customer-${id}`} value={id}>{id}</SelectItem>
                             ))}
                           </SelectContent>

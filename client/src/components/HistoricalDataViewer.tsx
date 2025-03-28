@@ -188,16 +188,32 @@ export default function HistoricalDataViewer({ customerId, adminView = false }: 
 
   // Calculate average, min, max values for the selected metric
   const calculateStats = (data: any[], metricName: string) => {
-    if (!data.length) return { avg: 0, min: 0, max: 0 };
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return { avg: 0, min: 0, max: 0 };
+    }
     
-    const values = data.map(d => d[metricName]);
-    const sum = values.reduce((acc, val) => acc + val, 0);
-    
-    return {
-      avg: sum / values.length,
-      min: Math.min(...values),
-      max: Math.max(...values)
-    };
+    try {
+      // Filter out entries where the metric is undefined or not a number
+      const filteredData = data.filter(d => 
+        d && typeof d[metricName] === 'number' && !isNaN(d[metricName])
+      );
+      
+      if (filteredData.length === 0) {
+        return { avg: 0, min: 0, max: 0 };
+      }
+      
+      const values = filteredData.map(d => d[metricName]);
+      const sum = values.reduce((acc, val) => acc + val, 0);
+      
+      return {
+        avg: sum / values.length,
+        min: Math.min(...values),
+        max: Math.max(...values)
+      };
+    } catch (error) {
+      console.error('Error calculating stats:', error);
+      return { avg: 0, min: 0, max: 0 };
+    }
   };
 
   // Calculate trendline

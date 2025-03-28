@@ -57,8 +57,8 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
   // Aggregation options
   const [aggregationMethod, setAggregationMethod] = useState<"daily" | "weekly" | "monthly">("daily");
   
-  // Fetch test data
-  const { data: speedTests, isLoading } = useQuery({
+  // Fetch test data with pagination support
+  const { data: speedTestsResponse, isLoading } = useQuery({
     queryKey: customerId 
       ? ["/api/speed-tests", customerId] 
       : ["/api/speed-tests"],
@@ -73,9 +73,12 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
         throw new Error("Failed to fetch speed test data");
       }
       
-      return response.json() as Promise<SpeedTest[]>;
+      return response.json();
     }
   });
+  
+  // Extract actual tests array from the paginated response
+  const speedTests = speedTestsResponse?.data || [];
 
   if (isLoading) {
     return (
@@ -111,8 +114,8 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
       case "all":
       default:
         // For "all", find min and max dates in the data
-        const dates = speedTests.map(test => new Date(test.timestamp));
-        const minDate = new Date(Math.min(...dates.map(d => d.getTime())));
+        const dates = speedTests.map((test: SpeedTest) => new Date(test.timestamp));
+        const minDate = new Date(Math.min(...dates.map((d: Date) => d.getTime())));
         return [minDate, now];
     }
   };
@@ -120,10 +123,10 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
   // Filter tests by date range
   const [rangeStart, rangeEnd] = getDateRangeFromSelection();
   
-  const filteredTests = speedTests.filter(test => {
+  const filteredTests = speedTests.filter((test: SpeedTest) => {
     const testDate = new Date(test.timestamp);
     return testDate >= rangeStart && testDate <= rangeEnd;
-  }).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  }).sort((a: SpeedTest, b: SpeedTest) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   // Helper functions for data analysis
   const calcPercentile = (values: number[], percentile: number) => {
@@ -226,7 +229,7 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
     for (const [key, entry] of aggregated.entries()) {
       const values = entry.values;
       if (values.length > 0) {
-        entry.avg = values.reduce((sum, val) => sum + val, 0) / values.length;
+        entry.avg = values.reduce((sum: number, val: number) => sum + val, 0) / values.length;
         entry.min = Math.min(...values);
         entry.max = Math.max(...values);
         entry.median = calcPercentile(values, 50);
@@ -266,7 +269,7 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
     const previousRangeEnd = new Date(rangeEnd.getTime() - rangeDuration);
     
     // Get data from previous period
-    const previousPeriodTests = speedTests.filter(test => {
+    const previousPeriodTests = speedTests.filter((test: SpeedTest) => {
       const testDate = new Date(test.timestamp);
       return testDate >= previousRangeStart && testDate <= previousRangeEnd;
     });
@@ -310,9 +313,9 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
   const chartData = getChartData();
 
   // Stats for summary
-  const metricValues = filteredTests.map(test => getMetricValue(test, analysisMetric));
+  const metricValues = filteredTests.map((test: SpeedTest) => getMetricValue(test, analysisMetric));
   const avgValue = metricValues.length > 0 
-    ? metricValues.reduce((sum, val) => sum + val, 0) / metricValues.length 
+    ? metricValues.reduce((sum: number, val: number) => sum + val, 0) / metricValues.length 
     : 0;
   const minValue = metricValues.length > 0 ? Math.min(...metricValues) : 0;
   const maxValue = metricValues.length > 0 ? Math.max(...metricValues) : 0;
@@ -704,7 +707,7 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
             ) : (
               // Distribution view - show a scatter plot
               <ComposedChart
-                data={filteredTests.map(test => ({
+                data={filteredTests.map((test: SpeedTest) => ({
                   timestamp: format(new Date(test.timestamp), 'yyyy-MM-dd'),
                   [analysisMetric]: getMetricValue(test, analysisMetric),
                 }))}
@@ -729,7 +732,7 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
                 <Legend />
                 <Scatter
                   name={getMetricLabel(analysisMetric)}
-                  data={filteredTests.map(test => ({
+                  data={filteredTests.map((test: SpeedTest) => ({
                     timestamp: format(new Date(test.timestamp), 'yyyy-MM-dd'),
                     [analysisMetric]: getMetricValue(test, analysisMetric),
                   }))}
