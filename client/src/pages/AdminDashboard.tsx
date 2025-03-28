@@ -59,42 +59,16 @@ export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
+  // Get the logout mutation from the auth context
+  const { logoutMutation } = useAuth();
+  
   // Handle logout
-  const handleLogout = async () => {
-    try {
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (response.ok) {
-        // Remove authentication state from localStorage
-        localStorage.removeItem('isAdminAuthenticated');
-        
-        // Show success toast
-        toast({
-          title: "Success",
-          description: "Logged out successfully",
-        });
-        
-        // Redirect to login page
-        setLocation('/admin/login');
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to logout",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An error occurred during logout",
-        variant: "destructive"
-      });
-    }
+  const handleLogout = () => {
+    // Immediately redirect to login
+    setLocation('/admin/login');
+    
+    // Then perform the actual logout mutation
+    logoutMutation.mutate();
   };
 
   // Fetch all test data with pagination
