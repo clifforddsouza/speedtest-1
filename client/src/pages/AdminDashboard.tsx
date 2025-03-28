@@ -7,11 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import UserRegistrationForm from "@/components/UserRegistrationForm";
 import UserManagementTable from "@/components/UserManagementTable";
 import InternetPlansTable from "@/components/InternetPlansTable";
-import AdvancedAnalytics from "@/components/AdvancedAnalytics";
-import PerformanceInsights from "@/components/PerformanceInsights";
-import SpeedTestComparison from "@/components/SpeedTestComparison";
 import HistoricalDataViewer from "@/components/HistoricalDataViewer";
-import { Settings, BarChart3, LogOut, FileDown, Share2, Zap, Activity, History, Wifi } from "lucide-react";
+import { Settings, BarChart3, LogOut, FileDown, History, Wifi } from "lucide-react";
 import { 
   Select, 
   SelectContent, 
@@ -639,18 +636,6 @@ export default function AdminDashboard() {
                   <TabsTrigger value="reports" className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
                     <span>Summary Reports</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="advanced" className="flex items-center gap-2">
-                    <Activity className="h-4 w-4" />
-                    <span>Advanced Analytics</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="insights" className="flex items-center gap-2">
-                    <Zap className="h-4 w-4" />
-                    <span>Performance Insights</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="comparison" className="flex items-center gap-2">
-                    <Share2 className="h-4 w-4" />
-                    <span>Comparison Analysis</span>
                   </TabsTrigger>
                   <TabsTrigger value="history" className="flex items-center gap-2">
                     <History className="h-4 w-4" />
@@ -1373,31 +1358,7 @@ export default function AdminDashboard() {
                   </div>
                 </TabsContent>
                 
-                {/* Performance Visualization section removed as requested */}
-                
-                {/* Advanced Analytics Tab */}
-                <TabsContent value="advanced">
-                  <div className="p-4">
-                    <h2 className="text-xl font-bold mb-4">Advanced Analytics</h2>
-                    <p>Advanced analytics functionality has been moved to a dedicated section.</p>
-                  </div>
-                </TabsContent>
-                
-                {/* Performance Insights Tab */}
-                <TabsContent value="insights">
-                  <div className="p-4">
-                    <h2 className="text-xl font-bold mb-4">Performance Insights</h2>
-                    <p>Performance insights functionality has been moved to a dedicated section.</p>
-                  </div>
-                </TabsContent>
-                
-                {/* Comparison Analysis Tab */}
-                <TabsContent value="comparison">
-                  <div className="p-4">
-                    <h2 className="text-xl font-bold mb-4">Comparison Analysis</h2>
-                    <p>Comparison analysis functionality has been moved to a dedicated section.</p>
-                  </div>
-                </TabsContent>
+                {/* All analytics sections removed as requested */}
                 
                 <TabsContent value="history">
                   <HistoricalDataViewer customerId={selectedCustomerId} adminView={true} />
