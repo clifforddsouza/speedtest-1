@@ -21,7 +21,7 @@ export default function AdminLogin() {
         if (response.status === 200) {
           // User is already authenticated and has admin privileges
           localStorage.setItem('isAdminAuthenticated', 'true');
-          setLocation('/admin');
+          setLocation('admin');
         } else {
           // User not authenticated or not admin
           localStorage.removeItem('isAdminAuthenticated');
@@ -75,7 +75,7 @@ export default function AdminLogin() {
           localStorage.setItem('isAdminAuthenticated', 'true');
           
           // Redirect to admin dashboard with the proper path format
-          setLocation('/admin');
+          setLocation('admin');
         } else {
           // User logged in but doesn't have admin privileges
           toast({

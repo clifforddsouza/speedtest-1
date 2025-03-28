@@ -13,22 +13,23 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { UserProtectedRoute } from "@/lib/user-protected-route";
 
 function Router() {
+  // Remove any leading slashes from the basename
   return (
     <Switch>
       {/* Protected main route - only authenticated users can access */}
       <UserProtectedRoute path="/" component={Home} />
       
       {/* Login routes */}
-      <Route path="/login" component={UserLogin} />
-      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="login" component={UserLogin} />
+      <Route path="admin/login" component={AdminLogin} />
       
       {/* Redirect to login page as an additional entry point */}
-      <Route path="/start">
-        {() => <Redirect to="/login" />}
+      <Route path="start">
+        {() => <Redirect to="login" />}
       </Route>
       
       {/* Admin dashboard with protected route */}
-      <Route path="/admin">
+      <Route path="admin">
         {(params) => (
           <ProtectedRoute>
             <AdminDashboard />

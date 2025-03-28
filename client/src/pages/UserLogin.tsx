@@ -19,7 +19,7 @@ export default function UserLogin() {
   useEffect(() => {
     // If user is already logged in, redirect to home
     if (user) {
-      setLocation("/");
+      setLocation("");
     }
   }, [user, setLocation]);
 
@@ -94,7 +94,7 @@ export default function UserLogin() {
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-500">
                 Admin access? 
-                <Button variant="link" className="p-0 ml-1" onClick={() => setLocation("/admin/login")}>
+                <Button variant="link" className="p-0 ml-1" onClick={() => setLocation("admin/login")}>
                   Login with Admin Access
                 </Button>
               </p>

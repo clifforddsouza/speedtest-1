@@ -28,7 +28,7 @@ export function UserProtectedRoute({
     // Use wouter's Redirect component for better URL handling
     return (
       <Route path={path}>
-        <Redirect to="/login" />
+        <Redirect to="login" />
       </Route>
     );
   }
