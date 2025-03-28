@@ -928,75 +928,173 @@ export default function AdminDashboard() {
                                   Month
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Avg Download (Mbps)
+                                  Test Count
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  80th % Download
+                                  Download Speed (Mbps)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Avg Upload (Mbps)
+                                  Upload Speed (Mbps)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  80th % Upload
+                                  Ping (ms)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Avg Ping (ms)
+                                  Jitter (ms)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  80th % Ping
-                                </th>
-                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Avg Jitter (ms)
-                                </th>
-                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  80th % Jitter
-                                </th>
-                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Avg Packet Loss (%)
-                                </th>
-                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  80th % Packet Loss
+                                  Packet Loss (%)
                                 </th>
                               </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
+                              {/* Regular monthly data rows */}
                               {monthlyData.map((item, index) => (
                                 <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {item.period || ''}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {typeof item.downloadAvg === 'number' ? item.downloadAvg.toFixed(2) : '0.00'} Mbps
+                                    {item.testCount || 0}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.download80 === 'number' ? item.download80.toFixed(2) : '0.00'} Mbps
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {typeof item.downloadAvg === 'number' ? item.downloadAvg.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.uploadAvg === 'number' ? item.uploadAvg.toFixed(2) : '0.00'} Mbps
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.upload80 === 'number' ? item.upload80.toFixed(2) : '0.00'} Mbps
-                                  </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.pingAvg === 'number' ? item.pingAvg.toFixed(1) : '0.0'} ms
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.ping80 === 'number' ? item.ping80.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.jitterAvg === 'number' ? item.jitterAvg.toFixed(1) : '0.0'} ms
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.jitter80 === 'number' ? item.jitter80.toFixed(1) : '0.0'} ms
-                                  </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.packetLossAvg === 'number' ? item.packetLossAvg.toFixed(2) : '0.00'}%
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.packetLoss80 === 'number' ? item.packetLoss80.toFixed(2) : '0.00'}%
-                                  </td>
                                 </tr>
                               ))}
+                              
+                              {/* Separator row */}
+                              <tr className="bg-gray-100">
+                                <td colSpan={7} className="px-6 py-2"></td>
+                              </tr>
+                              
+                              {/* 80th Percentile Summary Title */}
+                              <tr className="bg-blue-50">
+                                <td colSpan={7} className="px-6 py-3 text-sm font-bold text-blue-800">
+                                  80th Percentile Summary (All Data)
+                                </td>
+                              </tr>
+                              
+                              {/* Calculate 80th percentiles for all metrics */}
+                              {(() => {
+                                // Helper function for calculations
+                                const calculatePercentile = (arr: number[], percentile: number) => {
+                                  if (arr.length === 0) return 0;
+                                  const sorted = [...arr].sort((a, b) => a - b);
+                                  const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
+                                  return sorted[Math.max(0, Math.min(index, sorted.length - 1))];
+                                };
+                                
+                                // Collect all test data
+                                const allTests = safeFilteredTests;
+                                
+                                // Extract metrics
+                                const downloads = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.downloadSpeed === 'number' ? t.downloadSpeed : (typeof t.download_speed === 'number' ? t.download_speed : 0));
+                                const uploads = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.uploadSpeed === 'number' ? t.uploadSpeed : (typeof t.upload_speed === 'number' ? t.upload_speed : 0));
+                                const pings = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.ping === 'number' ? t.ping : 0);
+                                const jitters = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.jitter === 'number' ? t.jitter : 0);
+                                const packetLosses = allTests.map(t => {
+                                  const pl = typeof t.packetLoss === 'number' ? t.packetLoss : (typeof t.packet_loss === 'number' ? t.packet_loss : 0);
+                                  return pl;
+                                });
+                                
+                                // Calculate 80th percentiles
+                                const download80 = calculatePercentile(downloads, 80);
+                                const upload80 = calculatePercentile(uploads, 80);
+                                const ping80 = calculatePercentile(pings, 80);
+                                const jitter80 = calculatePercentile(jitters, 80);
+                                const packetLoss80 = calculatePercentile(packetLosses, 80);
+                                
+                                // Format values
+                                const format = (val: number, decimals = 2) => {
+                                  return isNaN(val) || !isFinite(val) ? "0.00" : val.toFixed(decimals);
+                                };
+                                
+                                // Return summary rows
+                                return (
+                                  <>
+                                    <tr className="bg-blue-50">
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        Download Speed
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                        {allTests.length}
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-bold text-blue-800">
+                                        {format(download80)} Mbps
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                    </tr>
+                                    <tr className="bg-blue-50">
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        Upload Speed
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-bold text-blue-800">
+                                        {format(upload80)} Mbps
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                    </tr>
+                                    <tr className="bg-blue-50">
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        Ping
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-bold text-blue-800">
+                                        {format(ping80, 1)} ms
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                    </tr>
+                                    <tr className="bg-blue-50">
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        Jitter
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-bold text-blue-800">
+                                        {format(jitter80, 1)} ms
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                    </tr>
+                                    <tr className="bg-blue-50">
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        Packet Loss
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-bold text-blue-800">
+                                        {format(packetLoss80)}%
+                                      </td>
+                                    </tr>
+                                  </>
+                                );
+                              })()}
                             </tbody>
                           </table>
                         </div>
@@ -1056,75 +1154,173 @@ export default function AdminDashboard() {
                                   Quarter
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Avg Download (Mbps)
+                                  Test Count
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  80th % Download
+                                  Download Speed (Mbps)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Avg Upload (Mbps)
+                                  Upload Speed (Mbps)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  80th % Upload
+                                  Ping (ms)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Avg Ping (ms)
+                                  Jitter (ms)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  80th % Ping
-                                </th>
-                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Avg Jitter (ms)
-                                </th>
-                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  80th % Jitter
-                                </th>
-                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Avg Packet Loss (%)
-                                </th>
-                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  80th % Packet Loss
+                                  Packet Loss (%)
                                 </th>
                               </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
+                              {/* Regular quarterly data rows */}
                               {quarterlyData.map((item, index) => (
                                 <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                     {item.period || ''}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {typeof item.downloadAvg === 'number' ? item.downloadAvg.toFixed(2) : '0.00'} Mbps
+                                    {item.testCount || 0}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.download80 === 'number' ? item.download80.toFixed(2) : '0.00'} Mbps
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {typeof item.downloadAvg === 'number' ? item.downloadAvg.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.uploadAvg === 'number' ? item.uploadAvg.toFixed(2) : '0.00'} Mbps
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.upload80 === 'number' ? item.upload80.toFixed(2) : '0.00'} Mbps
-                                  </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.pingAvg === 'number' ? item.pingAvg.toFixed(1) : '0.0'} ms
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.ping80 === 'number' ? item.ping80.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.jitterAvg === 'number' ? item.jitterAvg.toFixed(1) : '0.0'} ms
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.jitter80 === 'number' ? item.jitter80.toFixed(1) : '0.0'} ms
-                                  </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.packetLossAvg === 'number' ? item.packetLossAvg.toFixed(2) : '0.00'}%
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.packetLoss80 === 'number' ? item.packetLoss80.toFixed(2) : '0.00'}%
-                                  </td>
                                 </tr>
                               ))}
+                              
+                              {/* Separator row */}
+                              <tr className="bg-gray-100">
+                                <td colSpan={7} className="px-6 py-2"></td>
+                              </tr>
+                              
+                              {/* 80th Percentile Summary Title */}
+                              <tr className="bg-blue-50">
+                                <td colSpan={7} className="px-6 py-3 text-sm font-bold text-blue-800">
+                                  80th Percentile Summary (All Data)
+                                </td>
+                              </tr>
+                              
+                              {/* Calculate 80th percentiles for all metrics */}
+                              {(() => {
+                                // Helper function for calculations
+                                const calculatePercentile = (arr: number[], percentile: number) => {
+                                  if (arr.length === 0) return 0;
+                                  const sorted = [...arr].sort((a, b) => a - b);
+                                  const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
+                                  return sorted[Math.max(0, Math.min(index, sorted.length - 1))];
+                                };
+                                
+                                // Collect all test data
+                                const allTests = safeFilteredTests;
+                                
+                                // Extract metrics
+                                const downloads = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.downloadSpeed === 'number' ? t.downloadSpeed : (typeof t.download_speed === 'number' ? t.download_speed : 0));
+                                const uploads = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.uploadSpeed === 'number' ? t.uploadSpeed : (typeof t.upload_speed === 'number' ? t.upload_speed : 0));
+                                const pings = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.ping === 'number' ? t.ping : 0);
+                                const jitters = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.jitter === 'number' ? t.jitter : 0);
+                                const packetLosses = allTests.map(t => {
+                                  const pl = typeof t.packetLoss === 'number' ? t.packetLoss : (typeof t.packet_loss === 'number' ? t.packet_loss : 0);
+                                  return pl;
+                                });
+                                
+                                // Calculate 80th percentiles
+                                const download80 = calculatePercentile(downloads, 80);
+                                const upload80 = calculatePercentile(uploads, 80);
+                                const ping80 = calculatePercentile(pings, 80);
+                                const jitter80 = calculatePercentile(jitters, 80);
+                                const packetLoss80 = calculatePercentile(packetLosses, 80);
+                                
+                                // Format values
+                                const format = (val: number, decimals = 2) => {
+                                  return isNaN(val) || !isFinite(val) ? "0.00" : val.toFixed(decimals);
+                                };
+                                
+                                // Return summary rows
+                                return (
+                                  <>
+                                    <tr className="bg-blue-50">
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        Download Speed
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500">
+                                        {allTests.length}
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-bold text-blue-800">
+                                        {format(download80)} Mbps
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                    </tr>
+                                    <tr className="bg-blue-50">
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        Upload Speed
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-bold text-blue-800">
+                                        {format(upload80)} Mbps
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                    </tr>
+                                    <tr className="bg-blue-50">
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        Ping
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-bold text-blue-800">
+                                        {format(ping80, 1)} ms
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                    </tr>
+                                    <tr className="bg-blue-50">
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        Jitter
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-bold text-blue-800">
+                                        {format(jitter80, 1)} ms
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                    </tr>
+                                    <tr className="bg-blue-50">
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        Packet Loss
+                                      </td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm text-gray-500"></td>
+                                      <td className="px-6 py-2 whitespace-nowrap text-sm font-bold text-blue-800">
+                                        {format(packetLoss80)}%
+                                      </td>
+                                    </tr>
+                                  </>
+                                );
+                              })()}
                             </tbody>
                           </table>
                         </div>

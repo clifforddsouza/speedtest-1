@@ -145,23 +145,18 @@ export function generateQuarterlyPercentileReport(tests: SpeedTestWithSnakeCase[
     return aQuarterNum - bQuarterNum;
   });
   
-  // Define CSV headers
+  // Define CSV headers - consolidated format without separate 80th percentile columns
   const headers = [
     "Quarter",
     "Test Count",
-    "Download Avg (Mbps)",
-    "Download 80th (Mbps)",
-    "Upload Avg (Mbps)",
-    "Upload 80th (Mbps)",
-    "Ping Avg (ms)",
-    "Ping 80th (ms)",
-    "Jitter Avg (ms)",
-    "Jitter 80th (ms)",
-    "Packet Loss Avg (%)",
-    "Packet Loss 80th (%)"
+    "Download Speed (Mbps)",
+    "Upload Speed (Mbps)",
+    "Ping (ms)",
+    "Jitter (ms)",
+    "Packet Loss (%)"
   ].join(",");
   
-  // Format each row
+  // Format each row with just the averages
   const rows = quarterlyStats.map(stat => {
     // Helper function to safely format numbers and handle NaN, null, or undefined values
     const safeFormat = (value: number | null | undefined, decimals: number = 2): string => {
@@ -176,15 +171,10 @@ export function generateQuarterlyPercentileReport(tests: SpeedTestWithSnakeCase[
       stat.quarter,
       stat.testCount,
       safeFormat(stat.downloadAvg),
-      safeFormat(stat.download80),
       safeFormat(stat.uploadAvg),
-      safeFormat(stat.upload80),
       safeFormat(stat.pingAvg),
-      safeFormat(stat.ping80),
       safeFormat(stat.jitterAvg),
-      safeFormat(stat.jitter80),
-      safeFormat(stat.packetLossAvg),
-      safeFormat(stat.packetLoss80)
+      safeFormat(stat.packetLossAvg)
     ].join(",");
   });
   
@@ -220,22 +210,29 @@ export function generateQuarterlyPercentileReport(tests: SpeedTestWithSnakeCase[
     return isFinite(value) ? value.toFixed(decimals) : "0.00";
   };
   
-  // Add a blank row and then the 80th percentile summary row for all data
-  const summaryRow = [
-    "80th PERCENTILE ALL DATA",
-    filteredTests.length,
-    "",
-    safeFormat(overallDownload80),
-    "",
-    safeFormat(overallUpload80),
-    "",
-    safeFormat(overallPing80),
-    "",
-    safeFormat(overallJitter80),
-    "",
-    safeFormat(overallPacketLoss80)
-  ].join(",");
+  // Add a blank row
+  const blankRow = ["", "", "", "", "", "", ""].join(",");
   
-  // Combine headers, data rows, blank row, and summary row
-  return [headers, ...rows, "", summaryRow].join("\n");
+  // Add summary section for 80th percentiles
+  const summary80thTitle = ["80th PERCENTILE SUMMARY", "", "", "", "", "", ""].join(",");
+  
+  // Create separate rows for each metric's 80th percentile
+  const download80Row = ["Download Speed (Mbps)", filteredTests.length, safeFormat(overallDownload80), "", "", "", ""].join(",");
+  const upload80Row = ["Upload Speed (Mbps)", "", safeFormat(overallUpload80), "", "", "", ""].join(",");
+  const ping80Row = ["Ping (ms)", "", "", "", safeFormat(overallPing80), "", ""].join(",");
+  const jitter80Row = ["Jitter (ms)", "", "", "", "", safeFormat(overallJitter80), ""].join(",");
+  const packetLoss80Row = ["Packet Loss (%)", "", "", "", "", "", safeFormat(overallPacketLoss80)].join(",");
+  
+  // Combine headers, data rows, blank row, and summary rows
+  return [
+    headers, 
+    ...rows, 
+    blankRow,
+    summary80thTitle,
+    download80Row,
+    upload80Row,
+    ping80Row,
+    jitter80Row,
+    packetLoss80Row
+  ].join("\n");
 }
