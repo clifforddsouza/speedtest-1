@@ -914,9 +914,22 @@ export default function AdminDashboard() {
                                   
                                   // Find the filtered tests for this specific month
                                   const monthTests = filteredTests.filter((test: SpeedTestWithSnakeCase) => {
-                                    // Convert test timestamp to month format (e.g., Jan 2025, Feb 2025, etc.)
+                                    // Make sure test has a valid timestamp
+                                    if (!test.timestamp) return false;
+
+                                    // Parse the timestamp
                                     const testDate = new Date(test.timestamp);
-                                    const testMonth = testDate.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+
+                                    // Skip if invalid date
+                                    if (isNaN(testDate.getTime())) return false;
+
+                                    // Get month/year from test date
+                                    const testMonthName = testDate.toLocaleString('en-US', { month: 'short' });
+                                    const testYear = testDate.getFullYear();
+                                    const testMonth = `${testMonthName} ${testYear}`;
+                                    
+                                    // Debug
+                                    console.log(`Comparing test month: "${testMonth}" with filter month: "${month}"`);
                                     
                                     return testMonth === month;
                                   });
@@ -1157,9 +1170,12 @@ export default function AdminDashboard() {
                                     const testDate = new Date(test.timestamp);
                                     const testQuarter = 'Q' + (Math.floor(testDate.getMonth() / 3) + 1);
                                     const testYear = testDate.getFullYear();
-                                    const fullQuarter = testQuarter;
                                     
-                                    return fullQuarter === quarter;
+                                    // Extract just the quarter part (Q1, Q2, etc.) from the displayed quarter (e.g., "Q1 2025")
+                                    const [quarterPart] = quarter.split(' ');
+                                    
+                                    // Check if this test is from the current quarter
+                                    return testQuarter === quarterPart && testYear === 2025;
                                   });
                                   
                                   if (quarterTests.length === 0) {
