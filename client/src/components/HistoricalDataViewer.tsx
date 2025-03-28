@@ -179,11 +179,23 @@ export default function HistoricalDataViewer({ customerId, adminView = false }: 
     return filteredData.map(test => {
       const timestamp = new Date(test.timestamp);
       
+      // Helper function to safely get field values, accounting for different naming conventions
+      const getField = <T,>(test: any, camelCase: string, snakeCase: string, defaultValue: T): T => {
+        return (test[camelCase] !== undefined && test[camelCase] !== null) 
+          ? test[camelCase] 
+          : (test[snakeCase] !== undefined && test[snakeCase] !== null)
+            ? test[snakeCase]
+            : defaultValue;
+      };
+      
       // Handle both camelCase and snake_case formats for field names
-      const downloadSpeed = test.downloadSpeed ?? test.download_speed ?? 0;
-      const uploadSpeed = test.uploadSpeed ?? test.upload_speed ?? 0;
-      const packetLoss = test.packetLoss ?? test.packet_loss ?? 0;
-      const customerId = test.customerId || test.customer_id || '';
+      const downloadSpeed = getField(test, 'downloadSpeed', 'download_speed', 0);
+      const uploadSpeed = getField(test, 'uploadSpeed', 'upload_speed', 0);
+      const packetLoss = getField(test, 'packetLoss', 'packet_loss', 0);
+      const customerId = getField(test, 'customerId', 'customer_id', '');
+      const ping = getField(test, 'ping', 'ping', 0);
+      const jitter = getField(test, 'jitter', 'jitter', 0);
+      const testLocation = getField(test, 'testLocation', 'test_location', null);
       
       return {
         date: format(timestamp, "yyyy-MM-dd"),
@@ -192,10 +204,10 @@ export default function HistoricalDataViewer({ customerId, adminView = false }: 
         timestamp: timestamp.getTime(),
         download: downloadSpeed,
         upload: uploadSpeed,
-        ping: test.ping ?? 0,
-        jitter: test.jitter ?? 0,
+        ping: ping,
+        jitter: jitter,
         packetLoss: packetLoss,
-        location: test.testLocation ?? null,
+        location: testLocation,
         customerId: customerId,
       };
     });

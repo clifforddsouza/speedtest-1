@@ -135,11 +135,11 @@ export default function PercentileAnalysis({ customerId }: PercentileAnalysisPro
     // Calculate percentiles
     return result.map(item => ({
       period: item.period,
-      download80: calcPercentile(item.downloadTests, 90),
-      upload80: calcPercentile(item.uploadTests, 90),
-      ping80: calcPercentile(item.pingTests, 90),
-      jitter80: calcPercentile(item.jitterTests, 90),
-      packetLoss80: calcPercentile(item.packetLossTests, 90),
+      download80: calcPercentile(item.downloadTests, 80),
+      upload80: calcPercentile(item.uploadTests, 80),
+      ping80: calcPercentile(item.pingTests, 80),
+      jitter80: calcPercentile(item.jitterTests, 80),
+      packetLoss80: calcPercentile(item.packetLossTests, 80),
       testCount: item.downloadTests.length
     }));
   };

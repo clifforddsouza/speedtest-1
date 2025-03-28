@@ -33,6 +33,9 @@ export default function TestResultsPanel({ onViewDetails }: TestResultsPanelProp
     queryKey: ["/api/speed-tests"],
     staleTime: 10000, // 10 seconds
   });
+  
+  // Log the response data to debug
+  console.log("Speed tests response:", paginatedResponse);
 
   const testResults = paginatedResponse?.data || [];
   const hasResults = !isLoading && !isError && testResults && testResults.length > 0;
@@ -110,16 +113,50 @@ export default function TestResultsPanel({ onViewDetails }: TestResultsPanelProp
             <tbody className="bg-white divide-y divide-gray-200">
               {testResults.map((test: SpeedTestWithSnakeCase) => {
                 // Normalize the test data for display
-                const customerId = test.customerId || test.customer_id || "-";
-                const downloadSpeed = test.downloadSpeed ?? test.download_speed ?? 0;
-                const uploadSpeed = test.uploadSpeed ?? test.upload_speed ?? 0;
-                const ping = test.ping ?? 0;
-                const jitter = test.jitter ?? 0;
-                const packetLoss = test.packetLoss ?? test.packet_loss ?? 0;
+                // Note: Field names in Postgres are snake_case, but they may get transformed to camelCase by Drizzle or other ORM
+                // Creating safer getters that check both formats
+                const getField = <T,>(test: any, camelCase: string, snakeCase: string, defaultValue: T): T => {
+                  return (test[camelCase] !== undefined && test[camelCase] !== null) 
+                    ? test[camelCase] 
+                    : (test[snakeCase] !== undefined && test[snakeCase] !== null)
+                      ? test[snakeCase]
+                      : defaultValue;
+                };
+                
+                const customerId = getField(test, 'customerId', 'customer_id', '-');
+                const downloadSpeed = getField(test, 'downloadSpeed', 'download_speed', 0);
+                const uploadSpeed = getField(test, 'uploadSpeed', 'upload_speed', 0);
+                const ping = getField(test, 'ping', 'ping', 0);
+                const jitter = getField(test, 'jitter', 'jitter', 0);
+                const packetLoss = getField(test, 'packetLoss', 'packet_loss', 0);
+                const timestamp = getField<string | number | Date | null>(test, 'timestamp', 'timestamp', null);
+                const isp = getField(test, 'isp', 'isp', '-');
+                
+                // Safely format the timestamp regardless of its type
+                const formattedDate = (() => {
+                  try {
+                    if (!timestamp) return "-";
+                    
+                    // First, make sure we have a valid input
+                    const dateStr = typeof timestamp === 'string' 
+                      ? timestamp 
+                      : typeof timestamp === 'number'
+                        ? new Date(timestamp).toISOString()
+                        : timestamp instanceof Date
+                          ? timestamp.toISOString()
+                          : null;
+                    
+                    if (!dateStr) return "-";
+                    return formatDateTime(dateStr);
+                  } catch (e) {
+                    console.error("Error formatting timestamp:", e);
+                    return "-";
+                  }
+                })();
                 
                 return (
                   <tr key={test.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{test.timestamp ? formatDateTime(test.timestamp.toString()) : "-"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{formattedDate}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{customerId}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {downloadSpeed > 0 ? `${downloadSpeed.toFixed(2)} Mbps` : "-"}
@@ -136,7 +173,7 @@ export default function TestResultsPanel({ onViewDetails }: TestResultsPanelProp
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       {packetLoss > 0 ? `${packetLoss.toFixed(1)}%` : "-"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{test.isp || "-"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{isp}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <Button 
                         variant="ghost" 

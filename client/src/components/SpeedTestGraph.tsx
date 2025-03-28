@@ -60,17 +60,38 @@ export default function SpeedTestGraph({ customerId }: SpeedTestGraphProps) {
   // Sort data by timestamp (oldest to newest) and normalize field names
   const chartData = [...speedTests]
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-    .map(test => ({
-      ...test,
-      // Normalize field names for consistent access
-      downloadSpeed: test.downloadSpeed || test.download_speed || 0,
-      uploadSpeed: test.uploadSpeed || test.upload_speed || 0,
-      packetLoss: test.packetLoss || test.packet_loss || 0,
-      customerId: test.customerId || test.customer_id || "",
-      internetPlan: test.internetPlan || test.internet_plan || "",
-      timestamp: new Date(test.timestamp),
-      formattedDate: format(new Date(test.timestamp), 'MM/dd/yyyy HH:mm')
-    }));
+    .map(test => {
+      // Helper function to safely get field values with different naming conventions
+      const getField = <T,>(test: any, camelCase: string, snakeCase: string, defaultValue: T): T => {
+        return (test[camelCase] !== undefined && test[camelCase] !== null) 
+          ? test[camelCase] 
+          : (test[snakeCase] !== undefined && test[snakeCase] !== null)
+            ? test[snakeCase]
+            : defaultValue;
+      };
+      
+      // Get timestamp and ensure it's a valid date
+      const timestamp = new Date(test.timestamp);
+      let formattedDate;
+      try {
+        formattedDate = format(timestamp, 'MM/dd/yyyy HH:mm');
+      } catch (e) {
+        console.error("Error formatting date:", e);
+        formattedDate = "Invalid date";
+      }
+      
+      return {
+        ...test,
+        // Normalize field names for consistent access
+        downloadSpeed: getField(test, 'downloadSpeed', 'download_speed', 0),
+        uploadSpeed: getField(test, 'uploadSpeed', 'upload_speed', 0),
+        packetLoss: getField(test, 'packetLoss', 'packet_loss', 0),
+        customerId: getField(test, 'customerId', 'customer_id', ""),
+        internetPlan: getField(test, 'internetPlan', 'internet_plan', ""),
+        timestamp: timestamp,
+        formattedDate: formattedDate
+      };
+    });
 
   // Calculate 80th percentile for download and upload speeds
   const calcPercentile = (values: number[], percentile: number) => {
@@ -87,8 +108,8 @@ export default function SpeedTestGraph({ customerId }: SpeedTestGraphProps) {
   // Handle both camelCase and snake_case field names
   const downloadSpeeds = chartData.map(test => test.downloadSpeed || test.download_speed || 0);
   const uploadSpeeds = chartData.map(test => test.uploadSpeed || test.upload_speed || 0);
-  const percentile80Download = calcPercentile(downloadSpeeds, 90);
-  const percentile80Upload = calcPercentile(uploadSpeeds, 90);
+  const percentile80Download = calcPercentile(downloadSpeeds, 80);
+  const percentile80Upload = calcPercentile(uploadSpeeds, 80);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -104,7 +125,17 @@ export default function SpeedTestGraph({ customerId }: SpeedTestGraphProps) {
             <XAxis 
               dataKey="formattedDate" 
               tick={{fontSize: 12}}
-              tickFormatter={(value) => format(new Date(value), 'MM/dd')}
+              tickFormatter={(value) => {
+                try {
+                  // Only try to format if value is a valid date string
+                  return typeof value === 'string' && !value.includes('Invalid') 
+                    ? format(new Date(value), 'MM/dd') 
+                    : value;
+                } catch (e) {
+                  console.error("Error formatting tick date:", e);
+                  return value;
+                }
+              }}
             />
             <YAxis 
               yAxisId="left"

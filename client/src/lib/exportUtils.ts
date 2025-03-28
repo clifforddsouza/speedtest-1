@@ -340,19 +340,24 @@ export function generateMonthlyPercentileReport(tests: SpeedTestWithSnakeCase[],
   
   // Format each row
   const rows = monthlyStats.map(stat => {
+    // Helper function to safely format numbers and handle NaN values
+    const safeFormat = (value: number, decimals: number = 2): string => {
+      return isNaN(value) ? "0.00" : value.toFixed(decimals);
+    };
+    
     return [
       stat.month,
       stat.testCount,
-      stat.downloadAvg.toFixed(2),
-      stat.download80.toFixed(2),
-      stat.uploadAvg.toFixed(2),
-      stat.upload80.toFixed(2),
-      stat.pingAvg.toFixed(2),
-      stat.ping80.toFixed(2),
-      stat.jitterAvg.toFixed(2),
-      stat.jitter80.toFixed(2),
-      stat.packetLossAvg.toFixed(2),
-      stat.packetLoss80.toFixed(2)
+      safeFormat(stat.downloadAvg),
+      safeFormat(stat.download80),
+      safeFormat(stat.uploadAvg),
+      safeFormat(stat.upload80),
+      safeFormat(stat.pingAvg),
+      safeFormat(stat.ping80),
+      safeFormat(stat.jitterAvg),
+      safeFormat(stat.jitter80),
+      safeFormat(stat.packetLossAvg),
+      safeFormat(stat.packetLoss80)
     ].join(",");
   });
   
@@ -379,20 +384,25 @@ export function generateMonthlyPercentileReport(tests: SpeedTestWithSnakeCase[],
   const jitter80 = calculateOverallPercentile(allJitters, 80);
   const packetLoss80 = calculateOverallPercentile(allPacketLosses, 80);
   
+  // Helper function to safely format numbers and handle NaN values
+  const safeFormat = (value: number, decimals: number = 2): string => {
+    return isNaN(value) ? "0.00" : value.toFixed(decimals);
+  };
+  
   // Add a blank row and then the 80th percentile summary row for all data
   const summaryRow = [
     "80th PERCENTILE ALL DATA",
     filteredTests.length,
     "",
-    download80.toFixed(2),
+    safeFormat(download80),
     "",
-    upload80.toFixed(2),
+    safeFormat(upload80),
     "",
-    ping80.toFixed(2),
+    safeFormat(ping80),
     "",
-    jitter80.toFixed(2),
+    safeFormat(jitter80),
     "",
-    packetLoss80.toFixed(2)
+    safeFormat(packetLoss80)
   ].join(",");
   
   // Combine headers, data rows, blank row, and summary row
