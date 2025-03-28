@@ -65,8 +65,46 @@ export function convertSpeedTestsToCSV(tests: SpeedTestWithSnakeCase[]): string 
     ].join(",");
   });
   
-  // Combine headers and rows
-  return [headers, ...rows].join("\n");
+  // Calculate 80th percentile values for metrics
+  const calculatePercentile = (values: number[], percentile: number) => {
+    if (values.length === 0) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
+    const safeIndex = Math.min(Math.max(0, index), sorted.length - 1);
+    return sorted[safeIndex];
+  };
+  
+  // Extract values for percentile calculations
+  const pingValues = tests.map(test => test.ping || 0);
+  const packetLossValues = tests.map(test => test.packetLoss || test.packet_loss || 0);
+  const downloadValues = tests.map(test => test.downloadSpeed || test.download_speed || 0);
+  const uploadValues = tests.map(test => test.uploadSpeed || test.upload_speed || 0);
+  const jitterValues = tests.map(test => test.jitter || 0);
+  
+  // Calculate 80th percentile
+  const ping80 = calculatePercentile(pingValues, 80);
+  const packetLoss80 = calculatePercentile(packetLossValues, 80);
+  const download80 = calculatePercentile(downloadValues, 80);
+  const upload80 = calculatePercentile(uploadValues, 80);
+  const jitter80 = calculatePercentile(jitterValues, 80);
+  
+  // Add a blank row and then the 80th percentile summary row
+  const summaryRow = [
+    "",
+    "80th PERCENTILE",
+    "",
+    "",
+    "",
+    "",
+    `${ping80.toFixed(1)} ms`,
+    `${packetLoss80.toFixed(1)}%`,
+    `${download80.toFixed(2)} Mbps`,
+    `${upload80.toFixed(2)} Mbps`,
+    `${jitter80.toFixed(1)} ms`
+  ].join(",");
+  
+  // Combine headers, data rows, blank row, and summary row
+  return [headers, ...rows, "", summaryRow].join("\n");
 }
 
 /**
@@ -120,14 +158,9 @@ export function formatSpeedTestDataForReport(tests: SpeedTestWithSnakeCase[], cu
     percentiles: {
       download80: calculatePercentile(downloadSpeeds, 80),
       upload80: calculatePercentile(uploadSpeeds, 80),
-      download90: calculatePercentile(downloadSpeeds, 90),
-      upload90: calculatePercentile(uploadSpeeds, 90),
       ping80: calculatePercentile(pings, 80),
-      ping90: calculatePercentile(pings, 90),
       jitter80: calculatePercentile(jitters, 80),
-      jitter90: calculatePercentile(jitters, 90),
-      packetLoss80: calculatePercentile(packetLosses, 80),
-      packetLoss90: calculatePercentile(packetLosses, 90)
+      packetLoss80: calculatePercentile(packetLosses, 80)
     },
     tests: tests.map(test => ({
       ...test,
@@ -275,18 +308,12 @@ export function generateMonthlyPercentileReport(tests: SpeedTestWithSnakeCase[],
       pingAvg: calculateAverage(pings),
       jitterAvg: calculateAverage(jitters),
       packetLossAvg: calculateAverage(packetLosses),
-      // Calculate 80th percentiles
+      // Calculate 80th percentiles only
       download80: calculatePercentile(downloadSpeeds, 80),
       upload80: calculatePercentile(uploadSpeeds, 80),
       ping80: calculatePercentile(pings, 80),
       jitter80: calculatePercentile(jitters, 80),
-      packetLoss80: calculatePercentile(packetLosses, 80),
-      // Calculate 90th percentiles
-      download90: calculatePercentile(downloadSpeeds, 90),
-      upload90: calculatePercentile(uploadSpeeds, 90),
-      ping90: calculatePercentile(pings, 90),
-      jitter90: calculatePercentile(jitters, 90),
-      packetLoss90: calculatePercentile(packetLosses, 90)
+      packetLoss80: calculatePercentile(packetLosses, 80)
     };
   });
   
@@ -301,19 +328,14 @@ export function generateMonthlyPercentileReport(tests: SpeedTestWithSnakeCase[],
     "Test Count",
     "Download Avg (Mbps)",
     "Download 80th (Mbps)",
-    "Download 90th (Mbps)",
     "Upload Avg (Mbps)",
     "Upload 80th (Mbps)",
-    "Upload 90th (Mbps)",
     "Ping Avg (ms)",
     "Ping 80th (ms)",
-    "Ping 90th (ms)",
     "Jitter Avg (ms)",
     "Jitter 80th (ms)",
-    "Jitter 90th (ms)",
     "Packet Loss Avg (%)",
-    "Packet Loss 80th (%)",
-    "Packet Loss 90th (%)"
+    "Packet Loss 80th (%)"
   ].join(",");
   
   // Format each row
@@ -323,22 +345,56 @@ export function generateMonthlyPercentileReport(tests: SpeedTestWithSnakeCase[],
       stat.testCount,
       stat.downloadAvg.toFixed(2),
       stat.download80.toFixed(2),
-      stat.download90.toFixed(2),
       stat.uploadAvg.toFixed(2),
       stat.upload80.toFixed(2),
-      stat.upload90.toFixed(2),
       stat.pingAvg.toFixed(2),
       stat.ping80.toFixed(2),
-      stat.ping90.toFixed(2),
       stat.jitterAvg.toFixed(2),
       stat.jitter80.toFixed(2),
-      stat.jitter90.toFixed(2),
       stat.packetLossAvg.toFixed(2),
-      stat.packetLoss80.toFixed(2),
-      stat.packetLoss90.toFixed(2)
+      stat.packetLoss80.toFixed(2)
     ].join(",");
   });
   
-  // Combine headers and rows
-  return [headers, ...rows].join("\n");
+  // Calculate 80th percentile for all data
+  const calculateOverallPercentile = (values: number[], percentile: number): number => {
+    if (values.length === 0) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
+    const safeIndex = Math.min(Math.max(0, index), sorted.length - 1);
+    return sorted[safeIndex];
+  };
+  
+  // Gather all metrics from all tests for overall percentile calculation
+  const allDownloadSpeeds = filteredTests.map(test => test.downloadSpeed || test.download_speed || 0);
+  const allUploadSpeeds = filteredTests.map(test => test.uploadSpeed || test.upload_speed || 0);
+  const allPings = filteredTests.map(test => test.ping || 0);
+  const allJitters = filteredTests.map(test => test.jitter || 0);
+  const allPacketLosses = filteredTests.map(test => test.packetLoss || test.packet_loss || 0);
+  
+  // Calculate 80th percentile values for all data
+  const download80 = calculateOverallPercentile(allDownloadSpeeds, 80);
+  const upload80 = calculateOverallPercentile(allUploadSpeeds, 80);
+  const ping80 = calculateOverallPercentile(allPings, 80);
+  const jitter80 = calculateOverallPercentile(allJitters, 80);
+  const packetLoss80 = calculateOverallPercentile(allPacketLosses, 80);
+  
+  // Add a blank row and then the 80th percentile summary row for all data
+  const summaryRow = [
+    "80th PERCENTILE ALL DATA",
+    filteredTests.length,
+    "",
+    download80.toFixed(2),
+    "",
+    upload80.toFixed(2),
+    "",
+    ping80.toFixed(2),
+    "",
+    jitter80.toFixed(2),
+    "",
+    packetLoss80.toFixed(2)
+  ].join(",");
+  
+  // Combine headers, data rows, blank row, and summary row
+  return [headers, ...rows, "", summaryRow].join("\n");
 }
