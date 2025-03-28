@@ -158,7 +158,7 @@ export default function AdminDashboard() {
   };
 
   // Extract unique customer IDs
-  const customerIds = speedTests ? Array.from(new Set(speedTests.map(test => test.customerId))) : [];
+  const customerIds = speedTests ? Array.from(new Set(speedTests.map((test: SpeedTest) => test.customerId))) : [];
 
   // Group data by period (month or quarter)
   interface Period {
@@ -314,7 +314,7 @@ export default function AdminDashboard() {
   };
 
   const filteredCustomerIds = filterCustomerId
-    ? customerIds.filter(id => id.toLowerCase().includes(filterCustomerId.toLowerCase()))
+    ? customerIds.filter((id: string) => id.toLowerCase().includes(filterCustomerId.toLowerCase()))
     : customerIds;
 
   // Common header for both data present and no data views
@@ -589,8 +589,8 @@ export default function AdminDashboard() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">All Customers</SelectItem>
-                            {filteredCustomerIds.map(id => (
-                              <SelectItem key={id} value={id}>{id}</SelectItem>
+                            {filteredCustomerIds.map((id: string) => (
+                              <SelectItem key={`customer-${id}`} value={id}>{id}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>

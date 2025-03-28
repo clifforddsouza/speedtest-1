@@ -20,7 +20,7 @@ export default function PerformanceInsights({ customerId }: PerformanceInsightsP
   const [period, setPeriod] = useState<InsightPeriod>("30days");
   
   // Fetch test data
-  const { data: speedTests, isLoading } = useQuery({
+  const { data: speedTestsResponse, isLoading } = useQuery({
     queryKey: customerId 
       ? ["/api/speed-tests", customerId] 
       : ["/api/speed-tests"],
@@ -35,9 +35,13 @@ export default function PerformanceInsights({ customerId }: PerformanceInsightsP
         throw new Error("Failed to fetch speed test data");
       }
       
-      return response.json() as Promise<SpeedTest[]>;
+      const jsonData = await response.json();
+      return jsonData;
     }
   });
+  
+  // Extract the actual tests array from the response
+  const speedTests = speedTestsResponse?.data || [];
 
   if (isLoading) {
     return (
