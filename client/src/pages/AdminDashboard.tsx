@@ -164,7 +164,7 @@ export default function AdminDashboard() {
 
   // Helper functions for percentile calculations
   const calcPercentile = (values: number[], percentile: number) => {
-    if (values.length === 0) return 0;
+    if (!values || values.length === 0) return 0;
     const sorted = [...values].sort((a, b) => a - b);
     // For 90th percentile, we want the value at which 90% of values fall below
     // So we need to use ceiling or a different formula to get the correct index
@@ -865,37 +865,37 @@ export default function AdminDashboard() {
                               {monthlyData.map((item, index) => (
                                 <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {item.period}
+                                    {item.period || ''}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.downloadAvg.toFixed(2)} Mbps
+                                    {typeof item.downloadAvg === 'number' ? item.downloadAvg.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {item.download90.toFixed(2)} Mbps
+                                    {typeof item.download90 === 'number' ? item.download90.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.uploadAvg.toFixed(2)} Mbps
+                                    {typeof item.uploadAvg === 'number' ? item.uploadAvg.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {item.upload90.toFixed(2)} Mbps
+                                    {typeof item.upload90 === 'number' ? item.upload90.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.pingAvg.toFixed(1)} ms
+                                    {typeof item.pingAvg === 'number' ? item.pingAvg.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {item.ping90.toFixed(1)} ms
+                                    {typeof item.ping90 === 'number' ? item.ping90.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.jitterAvg.toFixed(1)} ms
+                                    {typeof item.jitterAvg === 'number' ? item.jitterAvg.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {item.jitter90.toFixed(1)} ms
+                                    {typeof item.jitter90 === 'number' ? item.jitter90.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.packetLossAvg.toFixed(2)}%
+                                    {typeof item.packetLossAvg === 'number' ? item.packetLossAvg.toFixed(2) : '0.00'}%
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {item.packetLoss90.toFixed(2)}%
+                                    {typeof item.packetLoss90 === 'number' ? item.packetLoss90.toFixed(2) : '0.00'}%
                                   </td>
                                 </tr>
                               ))}
@@ -993,37 +993,37 @@ export default function AdminDashboard() {
                               {quarterlyData.map((item, index) => (
                                 <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {item.period}
+                                    {item.period || ''}
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.downloadAvg.toFixed(2)} Mbps
+                                    {typeof item.downloadAvg === 'number' ? item.downloadAvg.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {item.download90.toFixed(2)} Mbps
+                                    {typeof item.download90 === 'number' ? item.download90.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.uploadAvg.toFixed(2)} Mbps
+                                    {typeof item.uploadAvg === 'number' ? item.uploadAvg.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {item.upload90.toFixed(2)} Mbps
+                                    {typeof item.upload90 === 'number' ? item.upload90.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.pingAvg.toFixed(1)} ms
+                                    {typeof item.pingAvg === 'number' ? item.pingAvg.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {item.ping90.toFixed(1)} ms
+                                    {typeof item.ping90 === 'number' ? item.ping90.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.jitterAvg.toFixed(1)} ms
+                                    {typeof item.jitterAvg === 'number' ? item.jitterAvg.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {item.jitter90.toFixed(1)} ms
+                                    {typeof item.jitter90 === 'number' ? item.jitter90.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.packetLossAvg.toFixed(2)}%
+                                    {typeof item.packetLossAvg === 'number' ? item.packetLossAvg.toFixed(2) : '0.00'}%
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {item.packetLoss90.toFixed(2)}%
+                                    {typeof item.packetLoss90 === 'number' ? item.packetLoss90.toFixed(2) : '0.00'}%
                                   </td>
                                 </tr>
                               ))}
