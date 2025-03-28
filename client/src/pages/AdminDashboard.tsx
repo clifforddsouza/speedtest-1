@@ -875,51 +875,7 @@ export default function AdminDashboard() {
                       </TabsList>
                       
                       <TabsContent value="monthly">
-                        <div className="flex justify-end mb-4">
-                          <Button 
-                            variant="secondary" 
-                            className="flex items-center gap-2"
-                            onClick={() => {
-                              // Export monthly percentile report with 80th percentiles
-                              if (filteredTests.length > 0) {
-                                const csvContent = generateMonthlyPercentileReport(filteredTests, selectedPlan);
-                                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                                const url = URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                
-                                // Create a descriptive filename with date range
-                                const customerId_ = selectedCustomerId || 'all-customers';
-                                const plan_ = selectedPlan || 'all-plans';
-                                const startPeriod = useDatePicker && startDate 
-                                  ? format(startDate, 'yyyy-MM-dd') 
-                                  : 'last-' + dateRange + '-months';
-                                const endPeriod = useDatePicker && endDate 
-                                  ? format(endDate, 'yyyy-MM-dd') 
-                                  : 'now';
-                                
-                                link.setAttribute('href', url);
-                                link.setAttribute('download', `${customerId_}-${plan_}-monthly-percentiles-${startPeriod}-to-${endPeriod}.csv`);
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                
-                                toast({
-                                  title: "Export Successful",
-                                  description: `Monthly report with 80th percentiles exported to CSV`,
-                                });
-                              } else {
-                                toast({
-                                  title: "Export Failed",
-                                  description: "No data to export",
-                                  variant: "destructive"
-                                });
-                              }
-                            }}
-                          >
-                            <FileDown className="h-4 w-4" />
-                            Export Monthly Report with 80th Percentiles
-                          </Button>
-                        </div>
+                        {/* No global export button anymore, each month gets its own */}
                         <div className="overflow-x-auto">
                           <table className="min-w-full divide-y divide-gray-200">
                             <thead>
@@ -949,31 +905,88 @@ export default function AdminDashboard() {
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                               {/* Regular monthly data rows */}
-                              {monthlyData.map((item, index) => (
-                                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {item.period || ''}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.testCount || 0}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {typeof item.downloadAvg === 'number' ? item.downloadAvg.toFixed(2) : '0.00'} Mbps
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {typeof item.uploadAvg === 'number' ? item.uploadAvg.toFixed(2) : '0.00'} Mbps
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {typeof item.pingAvg === 'number' ? item.pingAvg.toFixed(1) : '0.0'} ms
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {typeof item.jitterAvg === 'number' ? item.jitterAvg.toFixed(1) : '0.0'} ms
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {typeof item.packetLossAvg === 'number' ? item.packetLossAvg.toFixed(2) : '0.00'}%
-                                  </td>
-                                </tr>
-                              ))}
+                              {monthlyData.map((item, index) => {
+                                const month = item.period || '';
+                                
+                                // Helper function to export individual month data
+                                const exportMonthData = () => {
+                                  if (!month) return;
+                                  
+                                  // Find the filtered tests for this specific month
+                                  const monthTests = filteredTests.filter((test: SpeedTestWithSnakeCase) => {
+                                    // Convert test timestamp to month format (e.g., Jan 2025, Feb 2025, etc.)
+                                    const testDate = new Date(test.timestamp);
+                                    const testMonth = testDate.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+                                    
+                                    return testMonth === month;
+                                  });
+                                  
+                                  if (monthTests.length === 0) {
+                                    toast({
+                                      title: "Export Failed",
+                                      description: `No data to export for ${month}`,
+                                      variant: "destructive"
+                                    });
+                                    return;
+                                  }
+                                  
+                                  // Generate CSV content for this month only
+                                  const csvContent = generateMonthlyPercentileReport(monthTests, selectedPlan);
+                                  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                                  const url = URL.createObjectURL(blob);
+                                  const link = document.createElement('a');
+                                  
+                                  // Create a descriptive filename
+                                  const customerId_ = selectedCustomerId || 'all-customers';
+                                  const plan_ = selectedPlan || 'all-plans';
+                                  
+                                  link.setAttribute('href', url);
+                                  link.setAttribute('download', `${customerId_}-${plan_}-${month.replace(' ', '-')}-report.csv`);
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  
+                                  toast({
+                                    title: "Export Successful",
+                                    description: `${month} report exported to CSV`,
+                                  });
+                                };
+                                
+                                return (
+                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center gap-2">
+                                      {month}
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        className="h-6 w-6 ml-2 text-gray-500 hover:text-blue-600"
+                                        onClick={exportMonthData}
+                                        title={`Export ${month} data`}
+                                      >
+                                        <FileDown className="h-4 w-4" />
+                                      </Button>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {item.testCount || 0}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {typeof item.downloadAvg === 'number' ? item.downloadAvg.toFixed(2) : '0.00'} Mbps
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {typeof item.uploadAvg === 'number' ? item.uploadAvg.toFixed(2) : '0.00'} Mbps
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {typeof item.pingAvg === 'number' ? item.pingAvg.toFixed(1) : '0.0'} ms
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {typeof item.jitterAvg === 'number' ? item.jitterAvg.toFixed(1) : '0.0'} ms
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {typeof item.packetLossAvg === 'number' ? item.packetLossAvg.toFixed(2) : '0.00'}%
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                               
                               {/* Separator row */}
                               <tr className="bg-gray-100">
@@ -1005,7 +1018,7 @@ export default function AdminDashboard() {
                                 const uploads = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.uploadSpeed === 'number' ? t.uploadSpeed : (typeof t.upload_speed === 'number' ? t.upload_speed : 0));
                                 const pings = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.ping === 'number' ? t.ping : 0);
                                 const jitters = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.jitter === 'number' ? t.jitter : 0);
-                                const packetLosses = allTests.map(t => {
+                                const packetLosses = allTests.map((t: SpeedTestWithSnakeCase) => {
                                   const pl = typeof t.packetLoss === 'number' ? t.packetLoss : (typeof t.packet_loss === 'number' ? t.packet_loss : 0);
                                   return pl;
                                 });
@@ -1101,51 +1114,7 @@ export default function AdminDashboard() {
                       </TabsContent>
                       
                       <TabsContent value="quarterly">
-                        <div className="flex justify-end mb-4">
-                          <Button 
-                            variant="secondary" 
-                            className="flex items-center gap-2"
-                            onClick={() => {
-                              // Export quarterly percentile report with 80th percentiles
-                              if (filteredTests.length > 0) {
-                                const csvContent = generateQuarterlyPercentileReport(filteredTests, selectedPlan);
-                                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                                const url = URL.createObjectURL(blob);
-                                const link = document.createElement('a');
-                                
-                                // Create a descriptive filename with date range
-                                const customerId_ = selectedCustomerId || 'all-customers';
-                                const plan_ = selectedPlan || 'all-plans';
-                                const startPeriod = useDatePicker && startDate 
-                                  ? format(startDate, 'yyyy-MM-dd') 
-                                  : 'Q1-Q4-' + new Date().getFullYear();
-                                const endPeriod = useDatePicker && endDate 
-                                  ? format(endDate, 'yyyy-MM-dd') 
-                                  : 'now';
-                                
-                                link.setAttribute('href', url);
-                                link.setAttribute('download', `${customerId_}-${plan_}-quarterly-percentiles-${startPeriod}-to-${endPeriod}.csv`);
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
-                                
-                                toast({
-                                  title: "Export Successful",
-                                  description: `Quarterly report with 80th percentiles exported to CSV`,
-                                });
-                              } else {
-                                toast({
-                                  title: "Export Failed",
-                                  description: "No data to export",
-                                  variant: "destructive"
-                                });
-                              }
-                            }}
-                          >
-                            <FileDown className="h-4 w-4" />
-                            Export Quarterly Report with 80th Percentiles
-                          </Button>
-                        </div>
+                        {/* No global export button anymore, each quarter gets its own */}
                         <div className="overflow-x-auto">
                           <table className="min-w-full divide-y divide-gray-200">
                             <thead>
@@ -1175,31 +1144,90 @@ export default function AdminDashboard() {
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                               {/* Regular quarterly data rows */}
-                              {quarterlyData.map((item, index) => (
-                                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                    {item.period || ''}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {item.testCount || 0}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {typeof item.downloadAvg === 'number' ? item.downloadAvg.toFixed(2) : '0.00'} Mbps
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {typeof item.uploadAvg === 'number' ? item.uploadAvg.toFixed(2) : '0.00'} Mbps
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {typeof item.pingAvg === 'number' ? item.pingAvg.toFixed(1) : '0.0'} ms
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {typeof item.jitterAvg === 'number' ? item.jitterAvg.toFixed(1) : '0.0'} ms
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {typeof item.packetLossAvg === 'number' ? item.packetLossAvg.toFixed(2) : '0.00'}%
-                                  </td>
-                                </tr>
-                              ))}
+                              {quarterlyData.map((item, index) => {
+                                const quarter = item.period || '';
+                                
+                                // Helper function to export individual quarter data
+                                const exportQuarterData = () => {
+                                  if (!quarter) return;
+                                  
+                                  // Find the filtered tests for this specific quarter
+                                  const quarterTests = filteredTests.filter((test: SpeedTestWithSnakeCase) => {
+                                    // Convert test timestamp to quarter format (e.g., Q1, Q2, Q3, Q4)
+                                    const testDate = new Date(test.timestamp);
+                                    const testQuarter = 'Q' + (Math.floor(testDate.getMonth() / 3) + 1);
+                                    const testYear = testDate.getFullYear();
+                                    const fullQuarter = testQuarter;
+                                    
+                                    return fullQuarter === quarter;
+                                  });
+                                  
+                                  if (quarterTests.length === 0) {
+                                    toast({
+                                      title: "Export Failed",
+                                      description: `No data to export for ${quarter}`,
+                                      variant: "destructive"
+                                    });
+                                    return;
+                                  }
+                                  
+                                  // Generate CSV content for this quarter only
+                                  const csvContent = generateQuarterlyPercentileReport(quarterTests, selectedPlan);
+                                  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                                  const url = URL.createObjectURL(blob);
+                                  const link = document.createElement('a');
+                                  
+                                  // Create a descriptive filename
+                                  const customerId_ = selectedCustomerId || 'all-customers';
+                                  const plan_ = selectedPlan || 'all-plans';
+                                  
+                                  link.setAttribute('href', url);
+                                  link.setAttribute('download', `${customerId_}-${plan_}-${quarter}-report.csv`);
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  
+                                  toast({
+                                    title: "Export Successful",
+                                    description: `${quarter} report exported to CSV`,
+                                  });
+                                };
+                                
+                                return (
+                                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center gap-2">
+                                      {quarter}
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        className="h-6 w-6 ml-2 text-gray-500 hover:text-blue-600"
+                                        onClick={exportQuarterData}
+                                        title={`Export ${quarter} data`}
+                                      >
+                                        <FileDown className="h-4 w-4" />
+                                      </Button>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {item.testCount || 0}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {typeof item.downloadAvg === 'number' ? item.downloadAvg.toFixed(2) : '0.00'} Mbps
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {typeof item.uploadAvg === 'number' ? item.uploadAvg.toFixed(2) : '0.00'} Mbps
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {typeof item.pingAvg === 'number' ? item.pingAvg.toFixed(1) : '0.0'} ms
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {typeof item.jitterAvg === 'number' ? item.jitterAvg.toFixed(1) : '0.0'} ms
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                      {typeof item.packetLossAvg === 'number' ? item.packetLossAvg.toFixed(2) : '0.00'}%
+                                    </td>
+                                  </tr>
+                                );
+                              })}
                               
                               {/* Separator row */}
                               <tr className="bg-gray-100">
@@ -1231,7 +1259,7 @@ export default function AdminDashboard() {
                                 const uploads = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.uploadSpeed === 'number' ? t.uploadSpeed : (typeof t.upload_speed === 'number' ? t.upload_speed : 0));
                                 const pings = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.ping === 'number' ? t.ping : 0);
                                 const jitters = allTests.map((t: SpeedTestWithSnakeCase) => typeof t.jitter === 'number' ? t.jitter : 0);
-                                const packetLosses = allTests.map(t => {
+                                const packetLosses = allTests.map((t: SpeedTestWithSnakeCase) => {
                                   const pl = typeof t.packetLoss === 'number' ? t.packetLoss : (typeof t.packet_loss === 'number' ? t.packet_loss : 0);
                                   return pl;
                                 });
