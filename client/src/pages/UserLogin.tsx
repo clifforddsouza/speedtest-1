@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,11 +15,13 @@ export default function UserLogin() {
   const { loginMutation, user } = useAuth();
   const isLoading = loginMutation.isPending;
 
-  // If user is already logged in, redirect to home
-  if (user) {
-    setLocation("/");
-    return null;
-  }
+  // Use useEffect to handle redirects when auth state changes
+  useEffect(() => {
+    // If user is already logged in, redirect to home
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,7 +94,7 @@ export default function UserLogin() {
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-500">
                 Admin access? 
-                <Button variant="link" className="p-0 ml-1" onClick={() => setLocation("admin/login")}>
+                <Button variant="link" className="p-0 ml-1" onClick={() => setLocation("/admin/login")}>
                   Login to Admin Dashboard
                 </Button>
               </p>
