@@ -68,7 +68,7 @@ export default function AdminLogin() {
         if (sessionResponse.status === 200) {
           toast({
             title: "Success",
-            description: "Logged in as administrator successfully",
+            description: "Logged in to your SpeedTest account successfully",
           });
           
           // Store authentication state in localStorage
@@ -80,7 +80,7 @@ export default function AdminLogin() {
           // User logged in but doesn't have admin privileges
           toast({
             title: "Access Denied",
-            description: "Your account does not have administrative privileges",
+            description: "Your account does not have the necessary privileges",
             variant: "destructive"
           });
           
@@ -115,7 +115,7 @@ export default function AdminLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md p-8">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold">Admin Login</h1>
+          <h1 className="text-2xl font-bold">Login to your SpeedTest account</h1>
           <p className="text-gray-500 mt-2">Please enter your credentials</p>
         </div>
         
@@ -126,7 +126,7 @@ export default function AdminLogin() {
               <Input
                 id="username"
                 type="text" 
-                placeholder="Enter admin username"
+                placeholder="Enter your username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={isLoading}

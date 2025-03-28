@@ -53,8 +53,8 @@ export default function UserLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <Card className="w-full max-w-md p-8">
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-bold">User Login</h1>
-          <p className="text-gray-500 mt-2">Please log in to access the speed test</p>
+          <h1 className="text-2xl font-bold">Login to your SpeedTest account</h1>
+          <p className="text-gray-500 mt-2">Please enter your credentials</p>
         </div>
         
         <form onSubmit={handleLogin}>
@@ -64,7 +64,7 @@ export default function UserLogin() {
               <Input
                 id="username"
                 type="text" 
-                placeholder="Enter username"
+                placeholder="Enter your username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={isLoading}
@@ -95,7 +95,7 @@ export default function UserLogin() {
               <p className="text-sm text-gray-500">
                 Admin access? 
                 <Button variant="link" className="p-0 ml-1" onClick={() => setLocation("/admin/login")}>
-                  Login to Admin Dashboard
+                  Login with Admin Access
                 </Button>
               </p>
             </div>
