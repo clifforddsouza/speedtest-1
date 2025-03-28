@@ -19,24 +19,27 @@ interface SpeedTestGraphProps {
 
 export default function SpeedTestGraph({ customerId }: SpeedTestGraphProps) {
   // Fetch test data
-  const { data: speedTests, isLoading } = useQuery({
+  const { data: response, isLoading } = useQuery({
     queryKey: customerId 
       ? ["/api/speed-tests", customerId] 
       : ["/api/speed-tests"],
     queryFn: async () => {
-      const response = await fetch(
+      const res = await fetch(
         customerId 
           ? `/api/speed-tests?customerId=${encodeURIComponent(customerId)}` 
           : "/api/speed-tests"
       );
       
-      if (!response.ok) {
+      if (!res.ok) {
         throw new Error("Failed to fetch speed test data");
       }
       
-      return response.json() as Promise<SpeedTest[]>;
+      return res.json();
     }
   });
+  
+  // Extract the tests from the paginated response
+  const speedTests = response?.data || [];
 
   if (isLoading) {
     return (
@@ -54,11 +57,17 @@ export default function SpeedTestGraph({ customerId }: SpeedTestGraphProps) {
     );
   }
 
-  // Sort data by timestamp (oldest to newest)
+  // Sort data by timestamp (oldest to newest) and normalize field names
   const chartData = [...speedTests]
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
     .map(test => ({
       ...test,
+      // Normalize field names for consistent access
+      downloadSpeed: test.downloadSpeed || test.download_speed || 0,
+      uploadSpeed: test.uploadSpeed || test.upload_speed || 0,
+      packetLoss: test.packetLoss || test.packet_loss || 0,
+      customerId: test.customerId || test.customer_id || "",
+      internetPlan: test.internetPlan || test.internet_plan || "",
       timestamp: new Date(test.timestamp),
       formattedDate: format(new Date(test.timestamp), 'MM/dd/yyyy HH:mm')
     }));
@@ -75,8 +84,9 @@ export default function SpeedTestGraph({ customerId }: SpeedTestGraphProps) {
     return sorted[safeIndex];
   };
 
-  const downloadSpeeds = chartData.map(test => test.downloadSpeed);
-  const uploadSpeeds = chartData.map(test => test.uploadSpeed);
+  // Handle both camelCase and snake_case field names
+  const downloadSpeeds = chartData.map(test => test.downloadSpeed || test.download_speed || 0);
+  const uploadSpeeds = chartData.map(test => test.uploadSpeed || test.upload_speed || 0);
   const percentile90Download = calcPercentile(downloadSpeeds, 90);
   const percentile90Upload = calcPercentile(uploadSpeeds, 90);
 
@@ -112,7 +122,7 @@ export default function SpeedTestGraph({ customerId }: SpeedTestGraphProps) {
             <Line 
               yAxisId="left"
               type="monotone" 
-              dataKey="downloadSpeed" 
+              dataKey="downloadSpeed"
               name="Download" 
               stroke="#3b82f6" 
               strokeWidth={2}
@@ -122,7 +132,7 @@ export default function SpeedTestGraph({ customerId }: SpeedTestGraphProps) {
             <Line 
               yAxisId="left"
               type="monotone" 
-              dataKey="uploadSpeed" 
+              dataKey="uploadSpeed"
               name="Upload" 
               stroke="#10b981" 
               strokeWidth={2}

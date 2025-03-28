@@ -12,6 +12,15 @@ import { Calendar as CalendarIcon, ChevronDown, ChevronUp, FileDown, Filter } fr
 import { SpeedTest } from "@shared/schema";
 import { format, startOfMonth, endOfMonth, addMonths, subMonths, isWithinInterval, parseISO } from "date-fns";
 import { convertSpeedTestsToCSV } from "@/lib/exportUtils";
+
+// Interface to handle both snake_case and camelCase fields from the API
+interface SpeedTestWithSnakeCase extends SpeedTest {
+  customer_id?: string;
+  download_speed?: number; 
+  upload_speed?: number;
+  packet_loss?: number;
+  internet_plan?: string;
+}
 import { cn } from "@/lib/utils";
 import {
   LineChart,
@@ -128,7 +137,7 @@ export default function HistoricalDataViewer({ customerId, adminView = false }: 
   }, [timeRange]);
 
   // Helper function to filter data by date range
-  const filterDataByDateRange = (data: SpeedTest[]) => {
+  const filterDataByDateRange = (data: SpeedTestWithSnakeCase[]) => {
     if (!startDate || !endDate) return data;
     
     return data.filter(test => {
@@ -170,18 +179,24 @@ export default function HistoricalDataViewer({ customerId, adminView = false }: 
     return filteredData.map(test => {
       const timestamp = new Date(test.timestamp);
       
+      // Handle both camelCase and snake_case formats for field names
+      const downloadSpeed = test.downloadSpeed ?? test.download_speed ?? 0;
+      const uploadSpeed = test.uploadSpeed ?? test.upload_speed ?? 0;
+      const packetLoss = test.packetLoss ?? test.packet_loss ?? 0;
+      const customerId = test.customerId || test.customer_id || '';
+      
       return {
         date: format(timestamp, "yyyy-MM-dd"),
         time: format(timestamp, "HH:mm"),
         formattedDate: format(timestamp, "MMM dd, yyyy"),
         timestamp: timestamp.getTime(),
-        download: test.downloadSpeed,
-        upload: test.uploadSpeed,
-        ping: test.ping,
-        jitter: test.jitter,
-        packetLoss: test.packetLoss,
-        location: test.testLocation,
-        customerId: test.customerId,
+        download: downloadSpeed,
+        upload: uploadSpeed,
+        ping: test.ping ?? 0,
+        jitter: test.jitter ?? 0,
+        packetLoss: packetLoss,
+        location: test.testLocation ?? null,
+        customerId: customerId,
       };
     });
   };

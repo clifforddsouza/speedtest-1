@@ -1,12 +1,22 @@
 import { SpeedTest } from "@shared/schema";
 import { format } from "date-fns";
 
+// Interface to handle both snake_case and camelCase fields from the API
+// to make TypeScript happy while we deal with the field format inconsistency
+interface SpeedTestWithSnakeCase extends SpeedTest {
+  customer_id?: string;
+  download_speed?: number; 
+  upload_speed?: number;
+  packet_loss?: number;
+  internet_plan?: string;
+}
+
 /**
  * Converts an array of speed test objects to CSV format
  * @param tests Array of SpeedTest objects
  * @returns CSV formatted string
  */
-export function convertSpeedTestsToCSV(tests: SpeedTest[]): string {
+export function convertSpeedTestsToCSV(tests: SpeedTestWithSnakeCase[]): string {
   if (!tests || tests.length === 0) {
     return "No data to export";
   }
@@ -64,7 +74,7 @@ export function convertSpeedTestsToCSV(tests: SpeedTest[]): string {
  * @param tests Array of SpeedTest objects
  * @returns Formatted data object for PDF generation
  */
-export function formatSpeedTestDataForReport(tests: SpeedTest[], customerId?: string) {
+export function formatSpeedTestDataForReport(tests: SpeedTestWithSnakeCase[], customerId?: string) {
   // Calculate averages - handle both camelCase and snake_case field names
   const downloadSpeeds = tests.map(test => test.downloadSpeed || test.download_speed || 0);
   const uploadSpeeds = tests.map(test => test.uploadSpeed || test.upload_speed || 0);
@@ -132,7 +142,7 @@ export function formatSpeedTestDataForReport(tests: SpeedTest[], customerId?: st
  * @param test SpeedTest object
  * @returns Score from 0-100
  */
-export function calculatePerformanceScore(test: SpeedTest): number {
+export function calculatePerformanceScore(test: SpeedTestWithSnakeCase): number {
   // Formula weighting different factors (adjust as needed)
   const downloadWeight = 0.35;
   const uploadWeight = 0.25;
@@ -199,7 +209,7 @@ export function getPerformanceGrade(score: number): string {
  * @param planFilter Optional internet plan name to filter by
  * @returns CSV formatted string with monthly report including 80th percentile values
  */
-export function generateMonthlyPercentileReport(tests: SpeedTest[], planFilter?: string): string {
+export function generateMonthlyPercentileReport(tests: SpeedTestWithSnakeCase[], planFilter?: string): string {
   if (!tests || tests.length === 0) {
     return "No data to export";
   }
@@ -214,7 +224,7 @@ export function generateMonthlyPercentileReport(tests: SpeedTest[], planFilter?:
   }
   
   // Group tests by month
-  const testsByMonth = new Map<string, SpeedTest[]>();
+  const testsByMonth = new Map<string, SpeedTestWithSnakeCase[]>();
   
   filteredTests.forEach(test => {
     const testDate = new Date(test.timestamp);

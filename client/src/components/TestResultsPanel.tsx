@@ -8,8 +8,18 @@ interface TestResultsPanelProps {
   onViewDetails: (test: SpeedTest) => void;
 }
 
+// Interface to handle both snake_case and camelCase fields from the API
+// to make TypeScript happy while we deal with the field format inconsistency
+interface SpeedTestWithSnakeCase extends SpeedTest {
+  customer_id?: string;
+  download_speed?: number; 
+  upload_speed?: number;
+  packet_loss?: number;
+  internet_plan?: string;
+}
+
 interface PaginatedResponse {
-  data: SpeedTest[];
+  data: SpeedTestWithSnakeCase[];
   pagination: {
     page: number;
     limit: number;
@@ -98,54 +108,48 @@ export default function TestResultsPanel({ onViewDetails }: TestResultsPanelProp
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {testResults.map((test: SpeedTest) => (
-                <tr key={test.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.timestamp ? formatDateTime(test.timestamp.toString()) : "-"}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{test.customerId || test.customer_id || "-"}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {test.downloadSpeed !== null && test.downloadSpeed !== undefined 
-                      ? `${test.downloadSpeed.toFixed(2)} Mbps` 
-                      : test.download_speed !== null && test.download_speed !== undefined 
-                        ? `${test.download_speed.toFixed(2)} Mbps` 
-                        : "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {test.uploadSpeed !== null && test.uploadSpeed !== undefined 
-                      ? `${test.uploadSpeed.toFixed(2)} Mbps` 
-                      : test.upload_speed !== null && test.upload_speed !== undefined 
-                        ? `${test.upload_speed.toFixed(2)} Mbps` 
-                        : "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {test.ping !== null && test.ping !== undefined 
-                      ? `${test.ping.toFixed(1)} ms` 
-                      : "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {test.jitter !== null && test.jitter !== undefined 
-                      ? `${test.jitter.toFixed(1)} ms` 
-                      : "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    {test.packetLoss !== null && test.packetLoss !== undefined 
-                      ? `${test.packetLoss.toFixed(1)}%` 
-                      : test.packet_loss !== null && test.packet_loss !== undefined 
-                        ? `${test.packet_loss.toFixed(1)}%` 
-                        : "-"}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.isp || "-"}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-primary hover:text-blue-700"
-                      onClick={() => onViewDetails(test)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {testResults.map((test: SpeedTestWithSnakeCase) => {
+                // Normalize the test data for display
+                const customerId = test.customerId || test.customer_id || "-";
+                const downloadSpeed = test.downloadSpeed ?? test.download_speed ?? 0;
+                const uploadSpeed = test.uploadSpeed ?? test.upload_speed ?? 0;
+                const ping = test.ping ?? 0;
+                const jitter = test.jitter ?? 0;
+                const packetLoss = test.packetLoss ?? test.packet_loss ?? 0;
+                
+                return (
+                  <tr key={test.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{test.timestamp ? formatDateTime(test.timestamp.toString()) : "-"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{customerId}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {downloadSpeed > 0 ? `${downloadSpeed.toFixed(2)} Mbps` : "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {uploadSpeed > 0 ? `${uploadSpeed.toFixed(2)} Mbps` : "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {ping > 0 ? `${ping.toFixed(1)} ms` : "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {jitter > 0 ? `${jitter.toFixed(1)} ms` : "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {packetLoss > 0 ? `${packetLoss.toFixed(1)}%` : "-"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{test.isp || "-"}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="text-primary hover:text-blue-700"
+                        onClick={() => onViewDetails(test)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

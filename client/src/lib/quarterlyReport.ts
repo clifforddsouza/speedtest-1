@@ -1,13 +1,22 @@
 import { format } from "date-fns";
 import { SpeedTest } from "@shared/schema";
 
+// Interface to handle both snake_case and camelCase fields from the API
+interface SpeedTestWithSnakeCase extends SpeedTest {
+  customer_id?: string;
+  download_speed?: number; 
+  upload_speed?: number;
+  packet_loss?: number;
+  internet_plan?: string;
+}
+
 /**
  * Converts an array of speed tests to a quarterly report with percentiles
  * @param tests Array of SpeedTest objects
  * @param planFilter Optional internet plan name to filter by
  * @returns CSV formatted string with quarterly report including 80th percentile values
  */
-export function generateQuarterlyPercentileReport(tests: SpeedTest[], planFilter?: string): string {
+export function generateQuarterlyPercentileReport(tests: SpeedTestWithSnakeCase[], planFilter?: string): string {
   if (!tests || tests.length === 0) {
     return "No data to export";
   }
@@ -22,7 +31,7 @@ export function generateQuarterlyPercentileReport(tests: SpeedTest[], planFilter
   }
   
   // Group tests by quarter
-  const testsByQuarter = new Map<string, SpeedTest[]>();
+  const testsByQuarter = new Map<string, SpeedTestWithSnakeCase[]>();
   
   filteredTests.forEach(test => {
     const testDate = new Date(test.timestamp);
