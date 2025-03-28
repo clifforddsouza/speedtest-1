@@ -25,11 +25,16 @@ export function UserProtectedRoute({
 
   if (!user) {
     console.log("User not authenticated, redirecting to login");
-    // Ensure the path doesn't start with a slash to avoid double slashes
-    const loginPath = "login";
+    // Use window.location.href directly to avoid router issues
     return (
       <Route path={path}>
-        <Redirect to={loginPath} />
+        {() => {
+          // Use a small timeout to allow the render cycle to complete
+          setTimeout(() => {
+            window.location.href = "/login";
+          }, 0);
+          return null;
+        }}
       </Route>
     );
   }
