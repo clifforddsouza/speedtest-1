@@ -20,16 +20,16 @@ function Router() {
       <UserProtectedRoute path="/" component={Home} />
       
       {/* Login routes */}
-      <Route path="login" component={UserLogin} />
-      <Route path="admin/login" component={AdminLogin} />
+      <Route path="/login" component={UserLogin} />
+      <Route path="/admin/login" component={AdminLogin} />
       
       {/* Redirect to login page as an additional entry point */}
-      <Route path="start">
-        {() => <Redirect to="login" />}
+      <Route path="/start">
+        {() => <Redirect to="/login" />}
       </Route>
       
       {/* Admin dashboard with protected route */}
-      <Route path="admin">
+      <Route path="/admin">
         {(params) => (
           <ProtectedRoute>
             <AdminDashboard />

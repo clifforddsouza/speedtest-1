@@ -8,12 +8,23 @@ interface TestResultsPanelProps {
   onViewDetails: (test: SpeedTest) => void;
 }
 
+interface PaginatedResponse {
+  data: SpeedTest[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+}
+
 export default function TestResultsPanel({ onViewDetails }: TestResultsPanelProps) {
-  const { data: testResults, isLoading, isError } = useQuery<SpeedTest[]>({
+  const { data: paginatedResponse, isLoading, isError } = useQuery<PaginatedResponse>({
     queryKey: ["/api/speed-tests"],
     staleTime: 10000, // 10 seconds
   });
 
+  const testResults = paginatedResponse?.data || [];
   const hasResults = !isLoading && !isError && testResults && testResults.length > 0;
 
   const formatDateTime = (dateStr: string) => {

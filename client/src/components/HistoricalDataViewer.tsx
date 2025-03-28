@@ -89,9 +89,9 @@ export default function HistoricalDataViewer({ customerId, adminView = false }: 
   
   // Update pagination state from the response
   useEffect(() => {
-    if (speedTestsResponse) {
-      setTotalPages(speedTestsResponse.totalPages || 1);
-      setTotalCount(speedTestsResponse.totalCount || 0);
+    if (speedTestsResponse?.pagination) {
+      setTotalPages(speedTestsResponse.pagination.totalPages || 1);
+      setTotalCount(speedTestsResponse.pagination.totalCount || 0);
     }
   }, [speedTestsResponse]);
 
