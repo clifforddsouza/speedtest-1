@@ -132,7 +132,7 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
   const calcPercentile = (values: number[], percentile: number) => {
     if (values.length === 0) return 0;
     const sorted = [...values].sort((a, b) => a - b);
-    // For 90th percentile, we want the value at which 90% of values fall below
+    // For 80th percentile, we want the value at which 90% of values fall below
     // So we need to use ceiling or a different formula to get the correct index
     const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
     // Make sure index is within bounds
@@ -179,7 +179,7 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
       min: number,
       max: number,
       median: number,
-      p90: number,
+      p80: number,
       count: number,
       compareValues?: number[],
       compareAvg?: number,
@@ -219,7 +219,7 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
           min: 0,
           max: 0,
           median: 0,
-          p90: 0,
+          p80: 0,
           count: 1
         });
       }
@@ -233,7 +233,7 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
         entry.min = Math.min(...values);
         entry.max = Math.max(...values);
         entry.median = calcPercentile(values, 50);
-        entry.p90 = calcPercentile(values, 90);
+        entry.p80 = calcPercentile(values, 80);
         entry.count = values.length;
       }
     }
@@ -255,7 +255,7 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
           [`${analysisMetric}Min`]: entry.min,
           [`${analysisMetric}Max`]: entry.max,
           [`${analysisMetric}Median`]: entry.median,
-          [`${analysisMetric}90th`]: entry.p90,
+          [`${analysisMetric}80th`]: entry.p80,
           count: entry.count
         };
       });
@@ -320,7 +320,7 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
   const minValue = metricValues.length > 0 ? Math.min(...metricValues) : 0;
   const maxValue = metricValues.length > 0 ? Math.max(...metricValues) : 0;
   const medianValue = calcPercentile(metricValues, 50);
-  const p90Value = calcPercentile(metricValues, 90);
+  const p80Value = calcPercentile(metricValues, 80);
   
   // Calculate trend (simple: are the last 3 data points trending up or down)
   const trendData = chartData.slice(-3);
@@ -545,8 +545,8 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
           </div>
           
           <div className="bg-gray-50 rounded-lg p-4">
-            <div className="text-sm text-gray-500">90th %ile</div>
-            <div className="text-xl font-semibold">{p90Value !== undefined && !isNaN(p90Value) ? p90Value.toFixed(2) : 'N/A'}</div>
+            <div className="text-sm text-gray-500">80th %ile</div>
+            <div className="text-xl font-semibold">{p80Value !== undefined && !isNaN(p80Value) ? p80Value.toFixed(2) : 'N/A'}</div>
           </div>
           
           <div className="bg-gray-50 rounded-lg p-4">
@@ -612,13 +612,13 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
                     }}
                   />
                 )}
-                {p90Value !== undefined && !isNaN(p90Value) && (
+                {p80Value !== undefined && !isNaN(p80Value) && (
                   <ReferenceLine
-                    y={p90Value}
+                    y={p80Value}
                     stroke="#333"
                     strokeDasharray="3 3"
                     label={{ 
-                      value: `90th %ile: ${p90Value.toFixed(2)}`, 
+                      value: `80th %ile: ${p80Value.toFixed(2)}`, 
                       position: 'right',
                       offset: 20
                     }}
@@ -756,13 +756,13 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
                     }}
                   />
                 )}
-                {p90Value !== undefined && !isNaN(p90Value) && (
+                {p80Value !== undefined && !isNaN(p80Value) && (
                   <ReferenceLine
-                    y={p90Value}
+                    y={p80Value}
                     stroke="#333"
                     strokeDasharray="3 3"
                     label={{ 
-                      value: `90th %ile: ${p90Value.toFixed(2)}`, 
+                      value: `80th %ile: ${p80Value.toFixed(2)}`, 
                       position: 'right',
                       offset: 20
                     }}

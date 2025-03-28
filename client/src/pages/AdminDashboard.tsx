@@ -160,7 +160,7 @@ export default function AdminDashboard() {
   const calcPercentile = (values: number[], percentile: number) => {
     if (!values || values.length === 0) return 0;
     const sorted = [...values].sort((a, b) => a - b);
-    // For 90th percentile, we want the value at which 90% of values fall below
+    // For 80th percentile, we want the value at which 90% of values fall below
     // So we need to use ceiling or a different formula to get the correct index
     const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
     // Make sure index is within bounds
@@ -280,34 +280,32 @@ export default function AdminDashboard() {
         ? item.downloadTests.reduce((a, b) => a + b, 0) / item.downloadTests.length 
         : 0,
       download50: calcPercentile(item.downloadTests, 50),  // Median
-      download90: calcPercentile(item.downloadTests, 90),
-      download95: calcPercentile(item.downloadTests, 95),
+      download80: calcPercentile(item.downloadTests, 80),
       
       // Upload stats
       uploadAvg: item.uploadTests.length > 0 
         ? item.uploadTests.reduce((a, b) => a + b, 0) / item.uploadTests.length 
         : 0,
       upload50: calcPercentile(item.uploadTests, 50),  // Median
-      upload90: calcPercentile(item.uploadTests, 90),
-      upload95: calcPercentile(item.uploadTests, 95),
+      upload80: calcPercentile(item.uploadTests, 80),
       
       // Ping stats
       pingAvg: item.pingTests.length > 0 
         ? item.pingTests.reduce((a, b) => a + b, 0) / item.pingTests.length 
         : 0,
-      ping90: calcPercentile(item.pingTests, 90),
+      ping80: calcPercentile(item.pingTests, 80),
       
       // Jitter stats
       jitterAvg: item.jitterTests.length > 0 
         ? item.jitterTests.reduce((a, b) => a + b, 0) / item.jitterTests.length 
         : 0,
-      jitter90: calcPercentile(item.jitterTests, 90),
+      jitter80: calcPercentile(item.jitterTests, 80),
       
       // Packet loss stats
       packetLossAvg: item.packetLossTests.length > 0 
         ? item.packetLossTests.reduce((a, b) => a + b, 0) / item.packetLossTests.length 
         : 0,
-      packetLoss90: calcPercentile(item.packetLossTests, 90),
+      packetLoss80: calcPercentile(item.packetLossTests, 80),
       
       // Test count
       testCount: item.downloadTests.length
@@ -837,31 +835,31 @@ export default function AdminDashboard() {
                                   Avg Download (Mbps)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  90th % Download
+                                  80th % Download
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Avg Upload (Mbps)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  90th % Upload
+                                  80th % Upload
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Avg Ping (ms)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  90th % Ping
+                                  80th % Ping
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Avg Jitter (ms)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  90th % Jitter
+                                  80th % Jitter
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Avg Packet Loss (%)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  90th % Packet Loss
+                                  80th % Packet Loss
                                 </th>
                               </tr>
                             </thead>
@@ -875,31 +873,31 @@ export default function AdminDashboard() {
                                     {typeof item.downloadAvg === 'number' ? item.downloadAvg.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.download90 === 'number' ? item.download90.toFixed(2) : '0.00'} Mbps
+                                    {typeof item.download80 === 'number' ? item.download80.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.uploadAvg === 'number' ? item.uploadAvg.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.upload90 === 'number' ? item.upload90.toFixed(2) : '0.00'} Mbps
+                                    {typeof item.upload80 === 'number' ? item.upload80.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.pingAvg === 'number' ? item.pingAvg.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.ping90 === 'number' ? item.ping90.toFixed(1) : '0.0'} ms
+                                    {typeof item.ping80 === 'number' ? item.ping80.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.jitterAvg === 'number' ? item.jitterAvg.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.jitter90 === 'number' ? item.jitter90.toFixed(1) : '0.0'} ms
+                                    {typeof item.jitter80 === 'number' ? item.jitter80.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.packetLossAvg === 'number' ? item.packetLossAvg.toFixed(2) : '0.00'}%
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.packetLoss90 === 'number' ? item.packetLoss90.toFixed(2) : '0.00'}%
+                                    {typeof item.packetLoss80 === 'number' ? item.packetLoss80.toFixed(2) : '0.00'}%
                                   </td>
                                 </tr>
                               ))}
@@ -965,31 +963,31 @@ export default function AdminDashboard() {
                                   Avg Download (Mbps)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  90th % Download
+                                  80th % Download
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Avg Upload (Mbps)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  90th % Upload
+                                  80th % Upload
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Avg Ping (ms)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  90th % Ping
+                                  80th % Ping
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Avg Jitter (ms)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  90th % Jitter
+                                  80th % Jitter
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Avg Packet Loss (%)
                                 </th>
                                 <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  90th % Packet Loss
+                                  80th % Packet Loss
                                 </th>
                               </tr>
                             </thead>
@@ -1003,31 +1001,31 @@ export default function AdminDashboard() {
                                     {typeof item.downloadAvg === 'number' ? item.downloadAvg.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.download90 === 'number' ? item.download90.toFixed(2) : '0.00'} Mbps
+                                    {typeof item.download80 === 'number' ? item.download80.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.uploadAvg === 'number' ? item.uploadAvg.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.upload90 === 'number' ? item.upload90.toFixed(2) : '0.00'} Mbps
+                                    {typeof item.upload80 === 'number' ? item.upload80.toFixed(2) : '0.00'} Mbps
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.pingAvg === 'number' ? item.pingAvg.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.ping90 === 'number' ? item.ping90.toFixed(1) : '0.0'} ms
+                                    {typeof item.ping80 === 'number' ? item.ping80.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.jitterAvg === 'number' ? item.jitterAvg.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.jitter90 === 'number' ? item.jitter90.toFixed(1) : '0.0'} ms
+                                    {typeof item.jitter80 === 'number' ? item.jitter80.toFixed(1) : '0.0'} ms
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {typeof item.packetLossAvg === 'number' ? item.packetLossAvg.toFixed(2) : '0.00'}%
                                   </td>
                                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">
-                                    {typeof item.packetLoss90 === 'number' ? item.packetLoss90.toFixed(2) : '0.00'}%
+                                    {typeof item.packetLoss80 === 'number' ? item.packetLoss80.toFixed(2) : '0.00'}%
                                   </td>
                                 </tr>
                               ))}
@@ -1130,7 +1128,7 @@ export default function AdminDashboard() {
                               data={currentData.map((item) => ({ 
                                 name: item.period, 
                                 avgLoss: item.packetLossAvg,
-                                p90Loss: item.packetLoss90
+                                p80Loss: item.packetLoss80
                               }))}
                               margin={{ top: 5, right: 30, left: 20, bottom: 40 }}
                             >
@@ -1145,7 +1143,7 @@ export default function AdminDashboard() {
                               <Tooltip formatter={(value) => [Number(value).toFixed(2) + '%', '']} />
                               <Legend />
                               <Bar dataKey="avgLoss" name="Avg. Packet Loss" fill="#ef4444" />
-                              <Bar dataKey="p90Loss" name="90th % Packet Loss" fill="#f87171" />
+                              <Bar dataKey="p80Loss" name="80th % Packet Loss" fill="#f87171" />
                             </BarChart>
                           </ResponsiveContainer>
                         </div>

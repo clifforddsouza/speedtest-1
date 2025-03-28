@@ -59,11 +59,11 @@ export default function PercentileAnalysis({ customerId }: PercentileAnalysisPro
     );
   }
 
-  // Calculate 90th percentile
+  // Calculate 80th percentile
   const calcPercentile = (values: number[], percentile: number) => {
     if (values.length === 0) return 0;
     const sorted = [...values].sort((a, b) => a - b);
-    // For 90th percentile, we want the value at which 90% of values fall below
+    // For 80th percentile, we want the value at which 80% of values fall below
     // So we need to use ceiling or a different formula to get the correct index
     const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
     // Make sure index is within bounds
@@ -135,11 +135,11 @@ export default function PercentileAnalysis({ customerId }: PercentileAnalysisPro
     // Calculate percentiles
     return result.map(item => ({
       period: item.period,
-      download90: calcPercentile(item.downloadTests, 90),
-      upload90: calcPercentile(item.uploadTests, 90),
-      ping90: calcPercentile(item.pingTests, 90),
-      jitter90: calcPercentile(item.jitterTests, 90),
-      packetLoss90: calcPercentile(item.packetLossTests, 90),
+      download80: calcPercentile(item.downloadTests, 90),
+      upload80: calcPercentile(item.uploadTests, 90),
+      ping80: calcPercentile(item.pingTests, 90),
+      jitter80: calcPercentile(item.jitterTests, 90),
+      packetLoss80: calcPercentile(item.packetLossTests, 90),
       testCount: item.downloadTests.length
     }));
   };
@@ -152,7 +152,7 @@ export default function PercentileAnalysis({ customerId }: PercentileAnalysisPro
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-        <h2 className="text-lg font-semibold">90th Percentile Analysis</h2>
+        <h2 className="text-lg font-semibold">80th Percentile Analysis</h2>
         
         <Tabs value={periodType} onValueChange={(value) => setPeriodType(value as PeriodType)} className="mt-2 md:mt-0">
           <TabsList>
@@ -181,23 +181,23 @@ export default function PercentileAnalysis({ customerId }: PercentileAnalysisPro
             />
             <Tooltip 
               formatter={(value: any, name: string) => {
-                if (name === "download90") return [`${value} Mbps`, "Download (90th %ile)"];
-                if (name === "upload90") return [`${value} Mbps`, "Upload (90th %ile)"];
-                if (name === "ping90") return [`${value} ms`, "Ping (90th %ile)"];
-                if (name === "jitter90") return [`${value} ms`, "Jitter (90th %ile)"];
-                if (name === "packetLoss90") return [`${value}%`, "Packet Loss (90th %ile)"];
+                if (name === "download80") return [`${value} Mbps`, "Download (80th %ile)"];
+                if (name === "upload80") return [`${value} Mbps`, "Upload (80th %ile)"];
+                if (name === "ping80") return [`${value} ms`, "Ping (80th %ile)"];
+                if (name === "jitter80") return [`${value} ms`, "Jitter (80th %ile)"];
+                if (name === "packetLoss80") return [`${value}%`, "Packet Loss (80th %ile)"];
                 if (name === "testCount") return [`${value}`, "Test Count"];
                 return [value, name];
               }}
             />
             <Legend formatter={(value) => {
-              if (value === "download90") return "Download (90th %ile)";
-              if (value === "upload90") return "Upload (90th %ile)";
+              if (value === "download80") return "Download (80th %ile)";
+              if (value === "upload80") return "Upload (80th %ile)";
               if (value === "testCount") return "Test Count";
               return value;
             }} />
-            <Bar dataKey="download90" name="download90" fill="#3b82f6" />
-            <Bar dataKey="upload90" name="upload90" fill="#10b981" />
+            <Bar dataKey="download80" name="download80" fill="#3b82f6" />
+            <Bar dataKey="upload80" name="upload80" fill="#10b981" />
             <Bar dataKey="testCount" name="testCount" fill="#9ca3af" />
           </BarChart>
         </ResponsiveContainer>
@@ -211,19 +211,19 @@ export default function PercentileAnalysis({ customerId }: PercentileAnalysisPro
                 Period
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Download (90th %ile)
+                Download (80th %ile)
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Upload (90th %ile)
+                Upload (80th %ile)
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ping (90th %ile)
+                Ping (80th %ile)
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Jitter (90th %ile)
+                Jitter (80th %ile)
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Packet Loss (90th %ile)
+                Packet Loss (80th %ile)
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Test Count
@@ -237,19 +237,19 @@ export default function PercentileAnalysis({ customerId }: PercentileAnalysisPro
                   {item.period}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {item.download90.toFixed(1)} Mbps
+                  {item.download80.toFixed(1)} Mbps
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {item.upload90.toFixed(1)} Mbps
+                  {item.upload80.toFixed(1)} Mbps
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {item.ping90.toFixed(1)} ms
+                  {item.ping80.toFixed(1)} ms
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {item.jitter90.toFixed(1)} ms
+                  {item.jitter80.toFixed(1)} ms
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {item.packetLoss90.toFixed(2)}%
+                  {item.packetLoss80.toFixed(2)}%
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {item.testCount}

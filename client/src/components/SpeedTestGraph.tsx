@@ -72,11 +72,11 @@ export default function SpeedTestGraph({ customerId }: SpeedTestGraphProps) {
       formattedDate: format(new Date(test.timestamp), 'MM/dd/yyyy HH:mm')
     }));
 
-  // Calculate 90th percentile for download and upload speeds
+  // Calculate 80th percentile for download and upload speeds
   const calcPercentile = (values: number[], percentile: number) => {
     if (values.length === 0) return 0;
     const sorted = [...values].sort((a, b) => a - b);
-    // For 90th percentile, we want the value at which 90% of values fall below
+    // For 80th percentile, we want the value at which 80% of values fall below
     // So we need to use ceiling or a different formula to get the correct index
     const index = Math.ceil(sorted.length * (percentile / 100)) - 1;
     // Make sure index is within bounds
@@ -87,8 +87,8 @@ export default function SpeedTestGraph({ customerId }: SpeedTestGraphProps) {
   // Handle both camelCase and snake_case field names
   const downloadSpeeds = chartData.map(test => test.downloadSpeed || test.download_speed || 0);
   const uploadSpeeds = chartData.map(test => test.uploadSpeed || test.upload_speed || 0);
-  const percentile90Download = calcPercentile(downloadSpeeds, 90);
-  const percentile90Upload = calcPercentile(uploadSpeeds, 90);
+  const percentile80Download = calcPercentile(downloadSpeeds, 90);
+  const percentile80Upload = calcPercentile(uploadSpeeds, 90);
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
@@ -140,23 +140,23 @@ export default function SpeedTestGraph({ customerId }: SpeedTestGraphProps) {
               activeDot={{ r: 6 }}
             />
             <ReferenceLine 
-              y={percentile90Download} 
+              y={percentile80Download} 
               yAxisId="left" 
               stroke="#3b82f6" 
               strokeDasharray="3 3" 
               label={{ 
-                value: `90th %ile D: ${percentile90Download.toFixed(1)} Mbps`, 
+                value: `80th %ile D: ${percentile80Download.toFixed(1)} Mbps`, 
                 fill: '#3b82f6',
                 position: 'right' 
               }} 
             />
             <ReferenceLine 
-              y={percentile90Upload} 
+              y={percentile80Upload} 
               yAxisId="left" 
               stroke="#10b981" 
               strokeDasharray="3 3" 
               label={{ 
-                value: `90th %ile U: ${percentile90Upload.toFixed(1)} Mbps`, 
+                value: `80th %ile U: ${percentile80Upload.toFixed(1)} Mbps`, 
                 fill: '#10b981',
                 position: 'right',
                 offset: 20
