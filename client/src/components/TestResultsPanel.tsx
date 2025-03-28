@@ -100,13 +100,13 @@ export default function TestResultsPanel({ onViewDetails }: TestResultsPanelProp
             <tbody className="bg-white divide-y divide-gray-200">
               {testResults.map((test: SpeedTest) => (
                 <tr key={test.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{formatDateTime(test.timestamp.toString())}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{test.customerId}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.downloadSpeed.toFixed(2)} Mbps</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.uploadSpeed.toFixed(2)} Mbps</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.ping.toFixed(1)} ms</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.jitter.toFixed(1)} ms</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.packetLoss.toFixed(1)}%</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.timestamp ? formatDateTime(test.timestamp.toString()) : "-"}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{test.customerId || "-"}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.downloadSpeed !== null && test.downloadSpeed !== undefined ? `${test.downloadSpeed.toFixed(2)} Mbps` : "-"}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.uploadSpeed !== null && test.uploadSpeed !== undefined ? `${test.uploadSpeed.toFixed(2)} Mbps` : "-"}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.ping !== null && test.ping !== undefined ? `${test.ping.toFixed(1)} ms` : "-"}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.jitter !== null && test.jitter !== undefined ? `${test.jitter.toFixed(1)} ms` : "-"}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">{test.packetLoss !== null && test.packetLoss !== undefined ? `${test.packetLoss.toFixed(1)}%` : "-"}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">{test.isp || "-"}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <Button 

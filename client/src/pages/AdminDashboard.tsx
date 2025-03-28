@@ -98,7 +98,10 @@ export default function AdminDashboard() {
   });
   
   // Extract the data and pagination info
-  const speedTests = speedTestsResponse?.data || [];
+  // Ensure we handle both nested 'data' field format and direct array format for backward compatibility
+  const speedTests = Array.isArray(speedTestsResponse?.data) 
+    ? speedTestsResponse.data 
+    : (Array.isArray(speedTestsResponse) ? speedTestsResponse : []);
   
   // Update pagination info when response changes
   useEffect(() => {
