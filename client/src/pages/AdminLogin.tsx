@@ -74,8 +74,8 @@ export default function AdminLogin() {
           // Store authentication state in localStorage
           localStorage.setItem('isAdminAuthenticated', 'true');
           
-          // Redirect to admin dashboard - ensure no trailing slash
-          setLocation('admin');
+          // Redirect to admin dashboard with the proper path format
+          setLocation('/admin');
         } else {
           // User logged in but doesn't have admin privileges
           toast({

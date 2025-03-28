@@ -83,7 +83,7 @@ export default function Home() {
             
             {/* Only show admin dashboard link for admin users */}
             {user && (user.role === "admin" || user.role === "super_admin" || user.role === "manager") && (
-              <Link href="/admin/login" className="bg-primary text-white px-3 py-1 rounded text-sm font-medium hover:bg-opacity-90 transition-colors">
+              <Link to="/admin" className="bg-primary text-white px-3 py-1 rounded text-sm font-medium hover:bg-opacity-90 transition-colors">
                 Admin Dashboard
               </Link>
             )}

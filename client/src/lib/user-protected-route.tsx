@@ -25,16 +25,10 @@ export function UserProtectedRoute({
 
   if (!user) {
     console.log("User not authenticated, redirecting to login");
-    // Use window.location.href directly to avoid router issues
+    // Use wouter's Redirect component for better URL handling
     return (
       <Route path={path}>
-        {() => {
-          // Use a small timeout to allow the render cycle to complete
-          setTimeout(() => {
-            window.location.href = "/login";
-          }, 0);
-          return null;
-        }}
+        <Redirect to="/login" />
       </Route>
     );
   }
