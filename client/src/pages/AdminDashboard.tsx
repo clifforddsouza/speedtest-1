@@ -42,6 +42,15 @@ import {
 import { convertSpeedTestsToCSV, generateMonthlyPercentileReport } from "@/lib/exportUtils";
 import { generateQuarterlyPercentileReport } from "@/lib/quarterlyReport";
 import type { SpeedTest, InternetPlan } from "@shared/schema";
+
+// Interface to handle both snake_case and camelCase fields from the API
+interface SpeedTestWithSnakeCase extends SpeedTest {
+  customer_id?: string;
+  download_speed?: number; 
+  upload_speed?: number;
+  packet_loss?: number;
+  internet_plan?: string;
+}
 import { format, startOfMonth, endOfMonth, sub, add, isWithinInterval, startOfQuarter, endOfQuarter, isAfter, isBefore, isSameMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -178,7 +187,7 @@ export default function AdminDashboard() {
     label: string;
   }
 
-  const groupDataByPeriod = (data: SpeedTest[], type: "monthly" | "quarterly") => {
+  const groupDataByPeriod = (data: (SpeedTest | SpeedTestWithSnakeCase)[], type: "monthly" | "quarterly") => {
     // Generate periods
     const periods: Period[] = [];
     
@@ -220,9 +229,11 @@ export default function AdminDashboard() {
     } else {
       // Use predefined date range
       const now = new Date();
+      const currentYear = now.getFullYear();
       
-      for (let i = 0; i < dateRange; i++) {
-        if (type === "monthly") {
+      if (type === "monthly") {
+        // Generate last n months as before
+        for (let i = 0; i < dateRange; i++) {
           const monthStart = startOfMonth(sub(now, { months: i }));
           const monthEnd = endOfMonth(monthStart);
           periods.push({
@@ -230,13 +241,19 @@ export default function AdminDashboard() {
             end: monthEnd,
             label: format(monthStart, 'MMM yyyy')
           });
-        } else {
-          const quarterStart = startOfQuarter(sub(now, { months: i * 3 }));
+        }
+      } else {
+        // For quarterly view, always show Q1-Q4 of the current year
+        for (let quarter = 0; quarter < 4; quarter++) {
+          // Create Date for the first month of each quarter (0, 3, 6, 9)
+          const quarterMonth = quarter * 3;
+          const quarterStart = new Date(currentYear, quarterMonth, 1);
           const quarterEnd = endOfQuarter(quarterStart);
+          
           periods.push({
             start: quarterStart,
             end: quarterEnd,
-            label: `Q${Math.floor(quarterStart.getMonth() / 3) + 1} ${quarterStart.getFullYear()}`
+            label: `Q${quarter + 1} ${currentYear}`
           });
         }
       }
@@ -268,19 +285,40 @@ export default function AdminDashboard() {
           return;
         }
         
-        // Get numeric values with fallbacks for both camelCase and snake_case fields
-        const downloadSpeed = typeof test.downloadSpeed === 'number' ? test.downloadSpeed : 
-                           (typeof test.download_speed === 'number' ? test.download_speed : 0);
+        // Get numeric values with fallbacks
+        let downloadSpeed = 0;
+        let uploadSpeed = 0;
+        let ping = 0;
+        let jitter = 0;
+        let packetLoss = 0;
         
-        const uploadSpeed = typeof test.uploadSpeed === 'number' ? test.uploadSpeed : 
-                         (typeof test.upload_speed === 'number' ? test.upload_speed : 0);
+        // Read standard camelCase fields first
+        if (typeof test.downloadSpeed === 'number') {
+          downloadSpeed = test.downloadSpeed;
+        } 
+        if (typeof test.uploadSpeed === 'number') {
+          uploadSpeed = test.uploadSpeed;
+        }
+        if (typeof test.ping === 'number') {
+          ping = test.ping;
+        }
+        if (typeof test.jitter === 'number') {
+          jitter = test.jitter;
+        }
+        if (typeof test.packetLoss === 'number') {
+          packetLoss = test.packetLoss;
+        }
         
-        const ping = typeof test.ping === 'number' ? test.ping : 0;
-        
-        const jitter = typeof test.jitter === 'number' ? test.jitter : 0;
-        
-        const packetLoss = typeof test.packetLoss === 'number' ? test.packetLoss : 
-                        (typeof test.packet_loss === 'number' ? test.packet_loss : 0);
+        // Try to read snake_case fields from SpeedTestWithSnakeCase if needed
+        if (downloadSpeed === 0 && 'download_speed' in test && typeof (test as any).download_speed === 'number') {
+          downloadSpeed = (test as any).download_speed;
+        }
+        if (uploadSpeed === 0 && 'upload_speed' in test && typeof (test as any).upload_speed === 'number') {
+          uploadSpeed = (test as any).upload_speed;
+        }
+        if (packetLoss === 0 && 'packet_loss' in test && typeof (test as any).packet_loss === 'number') {
+          packetLoss = (test as any).packet_loss;
+        }
         
         // Find the matching period and add the data
         for (let i = 0; i < periods.length; i++) {
@@ -340,7 +378,7 @@ export default function AdminDashboard() {
   };
 
   // Ensure we have valid data with safe defaults for empty or null values
-  const safeFilteredTests = filteredTests.filter(test => {
+  const safeFilteredTests = filteredTests.filter((test: SpeedTest) => {
     try {
       // Make sure the timestamp is valid and can be converted to a Date
       const testDate = new Date(test.timestamp);
@@ -754,16 +792,24 @@ export default function AdminDashboard() {
                           </div>
                         ) : (
                           <Select
-                            value={dateRange.toString()}
+                            value={activeReportTab === "quarterly" ? "4" : dateRange.toString()}
                             onValueChange={(value) => setDateRange(parseInt(value))}
+                            disabled={activeReportTab === "quarterly"} // Disable for quarterly reports
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select date range" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="3">Last 3 {activeReportTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
-                              <SelectItem value="6">Last 6 {activeReportTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
-                              <SelectItem value="12">Last 12 {activeReportTab === "monthly" ? "Months" : "Quarters"}</SelectItem>
+                              {activeReportTab === "monthly" ? (
+                                <>
+                                  <SelectItem value="3">Last 3 Months</SelectItem>
+                                  <SelectItem value="6">Last 6 Months</SelectItem>
+                                  <SelectItem value="12">Last 12 Months</SelectItem>
+                                </>
+                              ) : (
+                                // For quarterly view, we don't need selection since it always shows all 4 quarters of current year
+                                <SelectItem value="4">Quarters 1-4 ({new Date().getFullYear()})</SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                         )}
@@ -788,7 +834,9 @@ export default function AdminDashboard() {
                             const plan_ = selectedPlan || 'all-plans';
                             const startPeriod = useDatePicker && startDate 
                               ? format(startDate, 'yyyy-MM-dd') 
-                              : 'last-' + dateRange + (activeReportTab === 'monthly' ? 'months' : 'quarters');
+                              : activeReportTab === 'monthly' 
+                                ? 'last-' + dateRange + '-months' 
+                                : 'Q1-Q4-' + new Date().getFullYear();
                             const endPeriod = useDatePicker && endDate 
                               ? format(endDate, 'yyyy-MM-dd') 
                               : 'now';
@@ -972,7 +1020,7 @@ export default function AdminDashboard() {
                                 const plan_ = selectedPlan || 'all-plans';
                                 const startPeriod = useDatePicker && startDate 
                                   ? format(startDate, 'yyyy-MM-dd') 
-                                  : 'last-' + dateRange + '-quarters';
+                                  : 'Q1-Q4-' + new Date().getFullYear();
                                 const endPeriod = useDatePicker && endDate 
                                   ? format(endDate, 'yyyy-MM-dd') 
                                   : 'now';

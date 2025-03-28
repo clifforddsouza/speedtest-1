@@ -30,8 +30,15 @@ export function generateQuarterlyPercentileReport(tests: SpeedTestWithSnakeCase[
     return `No data found for the specified plan: ${planFilter}`;
   }
   
-  // Group tests by quarter
+  // Group tests by quarter - always show all 4 quarters for the current year
   const testsByQuarter = new Map<string, SpeedTestWithSnakeCase[]>();
+  const currentYear = new Date().getFullYear();
+  
+  // Create entries for all 4 quarters of the current year
+  for (let quarter = 1; quarter <= 4; quarter++) {
+    const quarterKey = `${currentYear}-Q${quarter}`;
+    testsByQuarter.set(quarterKey, []);
+  }
   
   filteredTests.forEach(test => {
     try {
@@ -62,14 +69,14 @@ export function generateQuarterlyPercentileReport(tests: SpeedTestWithSnakeCase[
       }
       
       const year = testDate.getFullYear();
-      const quarter = Math.floor(testDate.getMonth() / 3) + 1;
-      const quarterKey = `${year}-Q${quarter}`; // Format: 2023-Q1
-      
-      if (!testsByQuarter.has(quarterKey)) {
-        testsByQuarter.set(quarterKey, []);
+      // Only include tests from the current year for the quarterly report
+      if (year === currentYear) {
+        const quarter = Math.floor(testDate.getMonth() / 3) + 1;
+        const quarterKey = `${year}-Q${quarter}`; // Format: 2023-Q1
+        
+        // The key should always exist since we pre-populated the map
+        testsByQuarter.get(quarterKey)?.push(test);
       }
-      
-      testsByQuarter.get(quarterKey)?.push(test);
     } catch (error) {
       console.error('Error processing test timestamp:', error, test);
     }
