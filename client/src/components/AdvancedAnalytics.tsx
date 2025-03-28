@@ -536,22 +536,25 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-sm text-gray-500">Average</div>
-            <div className="text-xl font-semibold">{avgValue.toFixed(2)}</div>
+            <div className="text-xl font-semibold">{avgValue !== undefined && !isNaN(avgValue) ? avgValue.toFixed(2) : 'N/A'}</div>
           </div>
           
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-sm text-gray-500">Median</div>
-            <div className="text-xl font-semibold">{medianValue.toFixed(2)}</div>
+            <div className="text-xl font-semibold">{medianValue !== undefined && !isNaN(medianValue) ? medianValue.toFixed(2) : 'N/A'}</div>
           </div>
           
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-sm text-gray-500">90th %ile</div>
-            <div className="text-xl font-semibold">{p90Value.toFixed(2)}</div>
+            <div className="text-xl font-semibold">{p90Value !== undefined && !isNaN(p90Value) ? p90Value.toFixed(2) : 'N/A'}</div>
           </div>
           
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="text-sm text-gray-500">Min / Max</div>
-            <div className="text-xl font-semibold">{minValue.toFixed(2)} / {maxValue.toFixed(2)}</div>
+            <div className="text-xl font-semibold">
+              {minValue !== undefined && !isNaN(minValue) ? minValue.toFixed(2) : 'N/A'} / 
+              {maxValue !== undefined && !isNaN(maxValue) ? maxValue.toFixed(2) : 'N/A'}
+            </div>
           </div>
           
           <div className="bg-gray-50 rounded-lg p-4">
@@ -598,25 +601,29 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
                   dot={{ r: 4 }}
                   activeDot={{ r: 6 }}
                 />
-                <ReferenceLine
-                  y={avgValue}
-                  stroke="#666"
-                  strokeDasharray="3 3"
-                  label={{ 
-                    value: `Avg: ${avgValue.toFixed(2)}`, 
-                    position: 'right'
-                  }}
-                />
-                <ReferenceLine
-                  y={p90Value}
-                  stroke="#333"
-                  strokeDasharray="3 3"
-                  label={{ 
-                    value: `90th %ile: ${p90Value.toFixed(2)}`, 
-                    position: 'right',
-                    offset: 20
-                  }}
-                />
+                {avgValue !== undefined && !isNaN(avgValue) && (
+                  <ReferenceLine
+                    y={avgValue}
+                    stroke="#666"
+                    strokeDasharray="3 3"
+                    label={{ 
+                      value: `Avg: ${avgValue.toFixed(2)}`, 
+                      position: 'right'
+                    }}
+                  />
+                )}
+                {p90Value !== undefined && !isNaN(p90Value) && (
+                  <ReferenceLine
+                    y={p90Value}
+                    stroke="#333"
+                    strokeDasharray="3 3"
+                    label={{ 
+                      value: `90th %ile: ${p90Value.toFixed(2)}`, 
+                      position: 'right',
+                      offset: 20
+                    }}
+                  />
+                )}
               </LineChart>
             ) : analysisView === "comparison" ? (
               <ComposedChart
@@ -738,25 +745,29 @@ export default function AdvancedAnalytics({ customerId, adminView = false }: Adv
                   }))}
                   fill={getMetricColor(analysisMetric)}
                 />
-                <ReferenceLine
-                  y={avgValue}
-                  stroke="#666"
-                  strokeDasharray="3 3"
-                  label={{ 
-                    value: `Avg: ${avgValue.toFixed(2)}`, 
-                    position: 'right'
-                  }}
-                />
-                <ReferenceLine
-                  y={p90Value}
-                  stroke="#333"
-                  strokeDasharray="3 3"
-                  label={{ 
-                    value: `90th %ile: ${p90Value.toFixed(2)}`, 
-                    position: 'right',
-                    offset: 20
-                  }}
-                />
+                {avgValue !== undefined && !isNaN(avgValue) && (
+                  <ReferenceLine
+                    y={avgValue}
+                    stroke="#666"
+                    strokeDasharray="3 3"
+                    label={{ 
+                      value: `Avg: ${avgValue.toFixed(2)}`, 
+                      position: 'right'
+                    }}
+                  />
+                )}
+                {p90Value !== undefined && !isNaN(p90Value) && (
+                  <ReferenceLine
+                    y={p90Value}
+                    stroke="#333"
+                    strokeDasharray="3 3"
+                    label={{ 
+                      value: `90th %ile: ${p90Value.toFixed(2)}`, 
+                      position: 'right',
+                      offset: 20
+                    }}
+                  />
+                )}
               </ComposedChart>
             )}
           </ResponsiveContainer>
