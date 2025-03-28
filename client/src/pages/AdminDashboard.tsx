@@ -97,17 +97,25 @@ export default function AdminDashboard() {
     }
   };
 
-  // Fetch all test data
-  const { data: speedTests, isLoading: isLoadingTests } = useQuery({
-    queryKey: ["/api/speed-tests"],
+  // Fetch all test data with pagination
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(100); // Fetch a large number for admin dashboard
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  
+  const { data: speedTestsResponse, isLoading: isLoadingTests } = useQuery({
+    queryKey: ["/api/speed-tests", page, limit],
     queryFn: async () => {
-      const response = await fetch("/api/speed-tests");
+      const response = await fetch(`/api/speed-tests?page=${page}&limit=${limit}`);
       if (!response.ok) {
         throw new Error("Failed to fetch speed test data");
       }
-      return response.json() as Promise<SpeedTest[]>;
+      return response.json();
     }
   });
+  
+  // Extract the data and pagination info
+  const speedTests = speedTestsResponse?.data || [];
   
   // Fetch internet plans
   const { data: internetPlans, isLoading: isLoadingPlans } = useQuery({

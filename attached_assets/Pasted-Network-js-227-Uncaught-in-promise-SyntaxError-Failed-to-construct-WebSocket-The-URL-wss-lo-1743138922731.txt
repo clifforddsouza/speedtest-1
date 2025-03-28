@@ -1,0 +1,26 @@
+Network.js:227 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=Fkihgr15DQH-' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+_app-fe8fbc239cea618f.js:13 Invalid href 'https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev//admin' passed to next/router in page: '/replEnvironmentDesktop'. Repeated forward-slashes (//) or backslashes \ are not valid in the href.
+Console.js:61 Admin session verified
+AdminDashboard.tsx:135 Uncaught TypeError: speedTests.filter is not a function
+    at AdminDashboard (AdminDashboard.tsx:135:49)
+AdminDashboard.tsx:135 Uncaught TypeError: speedTests.filter is not a function
+    at AdminDashboard (AdminDashboard.tsx:135:49)
+Console.js:61 The above error occurred in the <AdminDashboard> component:
+
+    at AdminDashboard (https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/src/pages/AdminDashboard.tsx:61:49)
+    at ProtectedRoute (https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/src/components/ProtectedRoute.tsx:21:42)
+    at Route (https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.de…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4a873f05:191:16)
+    at Switch (https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.de…/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=4a873f05:247:17)
+    at Router
+    at AuthProvider (https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.dev/src/hooks/use-auth.tsx:26:32)
+    at QueryClientProvider (https://58f1fb32-d9f8-4865-b12c-d8903cde044c-00-1fo80l0d19eg.kirk.replit.de…rkspace/node_modules/.vite/deps/@tanstack_react-query.js?v=4a873f05:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+
+chunk-RPCDYKBN.js?v=4a873f05:9129 Uncaught TypeError: speedTests.filter is not a function
+    at AdminDashboard (AdminDashboard.tsx:135:49)
