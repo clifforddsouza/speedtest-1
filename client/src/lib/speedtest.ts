@@ -115,8 +115,8 @@ export const measurePacketLoss = async (): Promise<number> => {
       let wsUrl;
       try {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // Always use the current host for WebSocket connection
-        wsUrl = `${protocol}//${window.location.host}/ws`;
+        // Always use the current host for WebSocket connection with the correct path
+        wsUrl = `${protocol}//${window.location.host}/api/ws-packet-test`;
         console.log('Connecting to WebSocket at:', wsUrl);
       } catch (error) {
         console.error('Error creating WebSocket URL:', error);
