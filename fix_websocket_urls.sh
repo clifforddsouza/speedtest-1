@@ -1,111 +1,284 @@
 #!/bin/bash
 
-# This script fixes WebSocket connection issues in the client-side code
-# especially for setups behind Nginx or other proxies
+# This script fixes WebSocket connection issues in the SpeedTest client
+# It focuses on ensuring WebSocket URLs are constructed correctly for the environment
 
-echo "=== Fixing WebSocket URL Construction ==="
+echo "=== Fixing WebSocket Connection URLs ==="
 
-# Find all JavaScript files in the dist directory
-echo "Searching for JavaScript files in your application..."
-DIST_BASE="/opt/speedtest/dist"
-SEARCH_DIRS=("$DIST_BASE" "$DIST_BASE/client" "$DIST_BASE/assets" "$DIST_BASE/public")
-JS_FILES=()
+# Set working directory
+APP_DIR="/opt/speedtest"
+cd "$APP_DIR" || { echo "Error: Could not cd to $APP_DIR"; exit 1; }
 
-for dir in "${SEARCH_DIRS[@]}"; do
-  if [ -d "$dir" ]; then
-    echo "Searching in $dir..."
-    FOUND_FILES=$(find "$dir" -type f -name "*.js" 2>/dev/null)
-    if [ -n "$FOUND_FILES" ]; then
-      while IFS= read -r file; do
-        JS_FILES+=("$file")
-      done <<< "$FOUND_FILES"
-    fi
+# Create backup directory
+BACKUP_DIR="./backups/websocket_fix_$(date +%Y%m%d%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+echo "Created backup directory: $BACKUP_DIR"
+
+# Step 1: Find the client-side WebSocket code
+echo "Looking for WebSocket connection files..."
+WS_FILES=()
+
+# Common locations to check
+find_targets=(
+  "./client/src/lib/speedtest.ts"
+  "./client/src/components/SpeedTestPanel.tsx"
+  "./client/src/lib/packetTest.ts"
+  "./client/src/lib/websocket.ts"
+  "./client/src/utils/websocket.ts"
+)
+
+# Search for files first in common locations
+for target in "${find_targets[@]}"; do
+  if [ -f "$target" ]; then
+    echo "Found potential WebSocket file: $target"
+    WS_FILES+=("$target")
   fi
 done
 
-# Also search any directories that contain index-*.js files
-INDEX_DIRS=$(find /opt/speedtest -type f -name "index-*.js" -exec dirname {} \; 2>/dev/null | sort -u)
-if [ -n "$INDEX_DIRS" ]; then
-  while IFS= read -r dir; do
-    echo "Found potential JS bundle directory: $dir"
-    FOUND_FILES=$(find "$dir" -type f -name "*.js" 2>/dev/null)
-    if [ -n "$FOUND_FILES" ]; then
-      while IFS= read -r file; do
-        JS_FILES+=("$file")
-      done <<< "$FOUND_FILES"
-    fi
-  done <<< "$INDEX_DIRS"
+# If none found in common locations, search for WebSocket usages
+if [ ${#WS_FILES[@]} -eq 0 ]; then
+  echo "Searching for files with WebSocket usage..."
+  FOUND_FILES=$(grep -r --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" "new WebSocket" . | cut -d: -f1 | sort -u)
+  
+  if [ -n "$FOUND_FILES" ]; then
+    while IFS= read -r file; do
+      echo "Found WebSocket usage in: $file"
+      WS_FILES+=("$file")
+    done <<< "$FOUND_FILES"
+  fi
+  
+  # Also check for websocket imports
+  IMPORT_FILES=$(grep -r --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" "import.*WebSocket" . | cut -d: -f1 | sort -u)
+  
+  if [ -n "$IMPORT_FILES" ]; then
+    while IFS= read -r file; do
+      if ! [[ " ${WS_FILES[@]} " =~ " ${file} " ]]; then
+        echo "Found WebSocket import in: $file"
+        WS_FILES+=("$file")
+      fi
+    done <<< "$IMPORT_FILES"
+  fi
 fi
 
-if [ ${#JS_FILES[@]} -eq 0 ]; then
-  echo "Error: No JavaScript files found. Your application may have a different structure."
-  echo "Please manually search for your JavaScript files with:"
-  echo "  find /opt/speedtest -type f -name \"*.js\" | grep -v node_modules"
+if [ ${#WS_FILES[@]} -eq 0 ]; then
+  echo "! Could not find any files with WebSocket usage"
+  echo "Trying broader search patterns..."
+  
+  # Final attempt with broader patterns
+  LAST_ATTEMPT=$(grep -r --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" -E "websocket|ws:|wss:" . | cut -d: -f1 | sort -u)
+  
+  if [ -n "$LAST_ATTEMPT" ]; then
+    while IFS= read -r file; do
+      echo "Found potential WebSocket reference in: $file"
+      WS_FILES+=("$file")
+    done <<< "$LAST_ATTEMPT"
+  fi
+fi
+
+if [ ${#WS_FILES[@]} -eq 0 ]; then
+  echo "! Could not find any WebSocket-related files"
   exit 1
 fi
 
-echo "Found ${#JS_FILES[@]} JavaScript files to check"
+# Step 2: Fix the WebSocket URLs in each file
+echo ""
+echo "Fixing WebSocket URLs in found files..."
 
-# Function to patch WebSocket URL if found
-patch_websocket_url() {
-  local file="$1"
-  local backup="${file}.bak"
+for file in "${WS_FILES[@]}"; do
+  echo "Processing $file..."
   
-  echo "Checking $file for WebSocket URLs..."
+  # Create backup
+  cp "$file" "$BACKUP_DIR/$(basename "$file").bak"
   
-  # Check if file contains WebSocket constructor
+  # Check file content
   if grep -q "new WebSocket" "$file"; then
-    echo "✓ Found WebSocket usage in $file"
+    echo "Found WebSocket constructor in $file"
     
-    # Create backup
-    cp "$file" "$backup"
-    echo "  Created backup at $backup"
+    # Create temporary file
+    TEMP_FILE=$(mktemp)
     
-    # First attempt: Try to fix complete WebSocket URL pattern
-    sed -i 's|wsUrl = `${protocol}//${window\.location\.host}/api/ws-packet-test`|wsUrl = `${protocol}//${window.location.host}/api/ws-packet-test`|g' "$file"
-    sed -i 's|wsUrl=`${protocol}//${window\.location\.host}/api/ws-packet-test`|wsUrl=`${protocol}//${window.location.host}/api/ws-packet-test`|g' "$file"
+    # Different patterns to fix:
+    # 1. Hardcoded localhost
+    # 2. Incorrect protocol detection
+    # 3. Incorrect path construction
+    cat "$file" | sed '
+      # Fix hardcoded localhost WebSocket URLs
+      s|new WebSocket("ws://localhost:[0-9]\+|new WebSocket(wsUrl|g
+      s|new WebSocket("wss://localhost:[0-9]\+|new WebSocket(wsUrl|g
+      s|new WebSocket(`ws://localhost:[0-9]\+|new WebSocket(wsUrl|g
+      s|new WebSocket(`wss://localhost:[0-9]\+|new WebSocket(wsUrl|g
+      
+      # Fix direct window.location.hostname usage without protocol
+      s|new WebSocket("ws://" + window.location.hostname|new WebSocket(wsUrl|g
+      s|new WebSocket("wss://" + window.location.hostname|new WebSocket(wsUrl|g
+      s|new WebSocket(`ws://${window.location.hostname}|new WebSocket(wsUrl|g
+      s|new WebSocket(`wss://${window.location.hostname}|new WebSocket(wsUrl|g
+      
+      # Fix protocol detection
+      s|const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";|const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";|g
+      s|const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";|const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";|g
+      
+      # Fix wrong path
+      s|/ws-speedtest|/api/ws-packet-test|g
+      s|/ws-packet-test|/api/ws-packet-test|g
+      s|/ws-ping|/api/ws-packet-test|g
+      s|/ws|/api/ws-packet-test|g
+    ' > "$TEMP_FILE"
     
-    # Second attempt: Look for various ways the URL might be constructed
-    sed -i 's|ws://" + location.host + "/api/ws-packet-test|ws://" + location.host + "/api/ws-packet-test|g' "$file"
-    sed -i 's|wss://" + location.host + "/api/ws-packet-test|wss://" + location.host + "/api/ws-packet-test|g' "$file"
+    # Check if we need to add wsUrl construction if it doesn't exist
+    if ! grep -q "const \(wsUrl\|websocketUrl\) = " "$TEMP_FILE" && grep -q "new WebSocket(wsUrl" "$TEMP_FILE"; then
+      # Need to add wsUrl construction
+      echo "Adding WebSocket URL construction..."
+      
+      # Find the appropriate place to add the code - before first WebSocket usage
+      WS_LINE=$(grep -n "new WebSocket" "$TEMP_FILE" | head -1 | cut -d: -f1)
+      if [ -n "$WS_LINE" ]; then
+        # Create another temp file
+        TEMP_FILE2=$(mktemp)
+        
+        # Add wsUrl construction before WebSocket usage
+        head -n $((WS_LINE - 1)) "$TEMP_FILE" > "$TEMP_FILE2"
+        cat >> "$TEMP_FILE2" << 'EOF'
+  // Construct WebSocket URL with correct protocol and host
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const wsUrl = `${protocol}//${window.location.host}/api/ws-packet-test`;
+EOF
+        tail -n +$WS_LINE "$TEMP_FILE" >> "$TEMP_FILE2"
+        mv "$TEMP_FILE2" "$TEMP_FILE"
+      fi
+    elif grep -q "new WebSocket(" "$TEMP_FILE" && ! grep -q "new WebSocket(wsUrl" "$TEMP_FILE" && ! grep -q "const \(wsUrl\|websocketUrl\) = " "$TEMP_FILE"; then
+      # WebSocket constructor exists but doesn't use wsUrl and no wsUrl defined
+      echo "Updating WebSocket constructor to use dynamic URL..."
+      
+      # Create another temp file
+      TEMP_FILE2=$(mktemp)
+      
+      # First add wsUrl construction before first WebSocket usage
+      WS_LINE=$(grep -n "new WebSocket" "$TEMP_FILE" | head -1 | cut -d: -f1)
+      head -n $((WS_LINE - 1)) "$TEMP_FILE" > "$TEMP_FILE2"
+      cat >> "$TEMP_FILE2" << 'EOF'
+  // Construct WebSocket URL with correct protocol and host
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const wsUrl = `${protocol}//${window.location.host}/api/ws-packet-test`;
+EOF
+      
+      # Then update the WebSocket constructor
+      cat "$TEMP_FILE" | tail -n +$WS_LINE | sed '
+        s|new WebSocket("[^"]*")|new WebSocket(wsUrl)|g
+        s|new WebSocket(`[^`]*`)|new WebSocket(wsUrl)|g
+      ' >> "$TEMP_FILE2"
+      
+      mv "$TEMP_FILE2" "$TEMP_FILE"
+    fi
     
-    # Third attempt: More general WebSocket URL patterns (if they exist)
-    sed -i 's|new WebSocket("ws://localhost|new WebSocket("ws://" + window.location.host|g' "$file"
-    sed -i 's|new WebSocket("wss://localhost|new WebSocket("wss://" + window.location.host|g' "$file"
+    # Replace original file
+    mv "$TEMP_FILE" "$file"
+    echo "✓ Updated WebSocket URL in $file"
+  elif grep -q "websocket.*url" "$file" || grep -q "wsUrl" "$file"; then
+    echo "Found WebSocket URL variables in $file"
     
-    echo "  Updated WebSocket URL construction in $file"
-    return 0
-  fi
-  
-  return 1
-}
-
-# Try to patch all JavaScript files
-PATCHED=0
-for file in "${JS_FILES[@]}"; do
-  if patch_websocket_url "$file"; then
-    PATCHED=$((PATCHED + 1))
+    # Create temporary file
+    TEMP_FILE=$(mktemp)
+    
+    # Fix URL construction
+    cat "$file" | sed '
+      # Fix protocol detection
+      s|const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";|const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";|g
+      s|const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";|const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";|g
+      
+      # Fix wrong path
+      s|/ws-speedtest|/api/ws-packet-test|g
+      s|/ws-packet-test|/api/ws-packet-test|g
+      s|/ws-ping|/api/ws-packet-test|g
+      s|/ws|/api/ws-packet-test|g
+      
+      # Fix URL construction
+      s|`${protocol}//${window.location.hostname}:[0-9]\+/|`${protocol}//${window.location.host}/|g
+      s|`${wsProtocol}//${window.location.hostname}:[0-9]\+/|`${wsProtocol}//${window.location.host}/|g
+      s|"${protocol}//" + window.location.hostname + ":[0-9]\+/|"${protocol}//" + window.location.host + "/|g
+      s|"${wsProtocol}//" + window.location.hostname + ":[0-9]\+/|"${wsProtocol}//" + window.location.host + "/|g
+    ' > "$TEMP_FILE"
+    
+    # Replace original file
+    mv "$TEMP_FILE" "$file"
+    echo "✓ Updated WebSocket URL construction in $file"
+  else
+    echo "! No direct WebSocket URL usage found in $file"
   fi
 done
 
-if [ $PATCHED -eq 0 ]; then
-  echo "! Warning: Could not find WebSocket URLs in any JavaScript files"
-  echo "  The WebSocket URL may be constructed differently or in a file not found by this script"
+# Step 3: Check and fix server-side WebSocket code
+echo ""
+echo "Checking server-side WebSocket implementation..."
+
+SERVER_WS_FILES=(
+  "./server/routes.ts"
+  "./server/index.ts"
+  "./server/app.ts"
+  "./server/websocket.ts"
+)
+
+for file in "${SERVER_WS_FILES[@]}"; do
+  if [ -f "$file" ]; then
+    echo "Checking $file for WebSocket server implementation..."
+    
+    # Check if file contains WebSocket server setup
+    if grep -q "WebSocketServer" "$file" || grep -q "new Server" "$file"; then
+      echo "Found WebSocket server in $file"
+      
+      # Create backup
+      cp "$file" "$BACKUP_DIR/$(basename "$file").bak"
+      
+      # Check if path is correctly set
+      if ! grep -q "path: '/api/ws-packet-test'" "$file"; then
+        # Need to fix the path
+        echo "Updating WebSocket server path..."
+        
+        # Create temporary file
+        TEMP_FILE=$(mktemp)
+        
+        # Update WebSocket server path
+        cat "$file" | sed '
+          # Fix WebSocketServer with no path or different path
+          s|new WebSocketServer({ server: \([^}]*\)})|new WebSocketServer({ server: \1, path: "/api/ws-packet-test" })|g
+          s|new WebSocketServer({ server: \([^,]*\), path: "[^"]*" })|new WebSocketServer({ server: \1, path: "/api/ws-packet-test" })|g
+          s|new Server({ server: \([^}]*\)})|new Server({ server: \1, path: "/api/ws-packet-test" })|g
+          s|new Server({ server: \([^,]*\), path: "[^"]*" })|new Server({ server: \1, path: "/api/ws-packet-test" })|g
+        ' > "$TEMP_FILE"
+        
+        # Replace original file
+        mv "$TEMP_FILE" "$file"
+        echo "✓ Updated WebSocket server path in $file"
+      else
+        echo "✓ WebSocket server path already correct in $file"
+      fi
+    fi
+  fi
+done
+
+# Step 4: Restart the application
+echo ""
+echo "Restarting the application to apply changes..."
+if command -v pm2 &> /dev/null && pm2 list | grep -q speedtest; then
+  pm2 restart speedtest
+  echo "✓ Restarted application with PM2"
 else
-  echo "✓ Successfully patched $PATCHED JavaScript files"
+  echo "! Could not restart application with PM2"
+  echo "  Please restart the application manually"
 fi
 
 echo ""
-echo "=== Nginx Configuration for WebSockets ==="
-echo "Add the following to your Nginx server configuration:"
+echo "=== WebSocket Fix Complete ==="
 echo ""
-echo "   location /api/ws-packet-test {"
-echo "     proxy_pass http://localhost:3000;"
-echo "     proxy_http_version 1.1;"
-echo "     proxy_set_header Upgrade \$http_upgrade;"
-echo "     proxy_set_header Connection \"upgrade\";"
-echo "     proxy_set_header Host \$host;"
-echo "   }"
+echo "Changes made:"
+echo "1. Fixed WebSocket URL construction in client-side code"
+echo "2. Updated WebSocket server path to /api/ws-packet-test if needed"
+echo "3. Restarted the application"
 echo ""
-echo "=== Fix Applied ==="
-echo "Restart your application with: pm2 restart speedtest"
+echo "The WebSocket connections should now be correctly established using the server's"
+echo "actual hostname and proper protocol detection."
+echo ""
+echo "If you still experience issues:"
+echo "1. Check browser console for WebSocket connection errors"
+echo "2. Check application logs: pm2 logs speedtest"
+echo "3. You can restore from backups in: $BACKUP_DIR"
