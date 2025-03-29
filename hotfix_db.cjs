@@ -1,169 +1,172 @@
-#!/usr/bin/env node
-
-// This script directly replaces the Neon WebSocket connection with a direct PostgreSQL connection
-// It's designed to be run as a standalone script to immediately fix the database connection
-// Run with: node hotfix_db.cjs
-
 const fs = require('fs');
 const path = require('path');
-const { promisify } = require('util');
-const { exec: execCallback } = require('child_process');
+const { execSync } = require('child_process');
 
-// Promisify for better async handling
-const exec = promisify(execCallback);
-const readFile = promisify(fs.readFile);
-const writeFile = promisify(fs.writeFile);
-const mkdir = promisify(fs.mkdir);
+// Create backup directory
+const backupDir = path.join('/opt/speedtest/backups', `hotfix_js_${Date.now()}`);
+if (!fs.existsSync(backupDir)) {
+  fs.mkdirSync(backupDir, { recursive: true });
+}
 
-// Base directory
-const baseDir = '/opt/speedtest';
-const distDir = path.join(baseDir, 'dist');
-const serverDir = path.join(distDir, 'server');
-const backupDir = path.join(baseDir, 'backups', `hotfix_${new Date().toISOString().replace(/[:.]/g, '_')}`);
+console.log('Created backup directory:', backupDir);
 
-async function fixDatabase() {
+// Install the pg package
+try {
+  console.log('Installing pg package...');
+  execSync('cd /opt/speedtest && npm install pg && npm install --save-dev @types/pg', { stdio: 'inherit' });
+  console.log('Installed pg packages successfully');
+} catch (error) {
+  console.error('Error installing packages:', error.message);
+}
+
+// Find all compiled db.js files (including in dist directory)
+console.log('Searching for compiled db.js files...');
+let jsFiles;
+try {
+  jsFiles = execSync('find /opt/speedtest -name "db.js" | grep -v node_modules', { encoding: 'utf8' }).trim().split('\n');
+  console.log(`Found ${jsFiles.length} db.js files:`, jsFiles);
+} catch (error) {
+  console.error('Error finding db.js files:', error.message);
+  process.exit(1);
+}
+
+// Update each db.js file
+jsFiles.forEach(filePath => {
+  if (!filePath) return;
+  
+  console.log(`Processing file: ${filePath}`);
+  
+  // Create backup
+  const backupPath = path.join(backupDir, `${path.basename(filePath)}.bak`);
+  fs.copyFileSync(filePath, backupPath);
+  console.log(`Backed up to: ${backupPath}`);
+  
+  // Determine if it's a ES module or CommonJS
+  const fileContent = fs.readFileSync(filePath, 'utf8');
+  const isESM = fileContent.includes('export ') || fileContent.includes('import ');
+  
+  let newContent;
+  if (isESM) {
+    newContent = `import pg from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
+import * as schema from "../shared/schema.js";
+
+// Set SSL options for PostgreSQL
+process.env.PGSSLMODE = 'require';
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+console.log("Initializing PostgreSQL connection...");
+const { Pool } = pg;
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+// Add connection status logging
+pool.on('connect', () => {
+  console.log('Connected to PostgreSQL database');
+});
+
+pool.on('error', (err) => {
+  console.error('PostgreSQL connection error:', err);
+});
+
+export const db = drizzle(pool, { schema });
+`;
+  } else {
+    newContent = `"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.db = exports.pool = void 0;
+
+const pg_1 = require("pg");
+const node_postgres_1 = require("drizzle-orm/node-postgres");
+const schema = require("../shared/schema");
+
+// Set SSL options for PostgreSQL
+process.env.PGSSLMODE = 'require';
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+console.log("Initializing PostgreSQL connection...");
+exports.pool = new pg_1.Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+// Add connection status logging
+exports.pool.on('connect', () => {
+  console.log('Connected to PostgreSQL database');
+});
+
+exports.pool.on('error', (err) => {
+  console.error('PostgreSQL connection error:', err);
+});
+
+exports.db = (0, node_postgres_1.drizzle)(exports.pool, { schema });
+`;
+  }
+  
+  // Write the new content
+  fs.writeFileSync(filePath, newContent);
+  console.log(`Updated ${filePath} with direct PostgreSQL connection`);
+});
+
+// Create a test script
+const testScriptPath = '/opt/speedtest/test_db.js';
+const testScript = `const { Pool } = require('pg');
+require('dotenv').config();
+
+// Set SSL options for PostgreSQL
+process.env.PGSSLMODE = 'require';
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+async function testConnection() {
   try {
-    console.log('=== SpeedTest Database Hotfix ===');
-    
-    // Create backup directory
-    await mkdir(backupDir, { recursive: true });
-    console.log(`Created backup directory: ${backupDir}`);
-    
-    // Install pg package if not present
-    try {
-      console.log('Checking if pg package is installed...');
-      await exec('npm list pg');
-      console.log('pg package is already installed');
-    } catch (err) {
-      console.log('Installing pg package...');
-      await exec('npm install pg');
-      console.log('✓ pg package installed');
-    }
-    
-    // Find db.js in the compiled directory
-    const dbJsPath = path.join(serverDir, 'db.js');
-    let found = false;
-    
-    if (fs.existsSync(dbJsPath)) {
-      found = true;
-      console.log(`Found db.js at: ${dbJsPath}`);
-      
-      // Back up the file
-      const backupPath = path.join(backupDir, 'db.js.bak');
-      fs.copyFileSync(dbJsPath, backupPath);
-      console.log(`✓ Created backup at: ${backupPath}`);
-      
-      // Create the new db.js file
-      const newDbJs = `
-import pg from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from '../shared/schema.js';
-
-console.log('Initializing PostgreSQL connection with direct connection...');
-
-const { Pool } = pg;
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
-
-export const db = drizzle(pool, { schema });
-`;
-      
-      // Write the new file
-      await writeFile(dbJsPath, newDbJs);
-      console.log(`✓ Updated ${dbJsPath} with direct PostgreSQL connection`);
-    }
-    
-    if (!found) {
-      console.log('Could not find db.js in expected location. Searching...');
-      
-      // Search for db.js in dist directory
-      try {
-        const { stdout } = await exec(`find ${distDir} -name "db.js" -type f`);
-        const files = stdout.trim().split('\n');
-        
-        if (files.length > 0 && files[0]) {
-          const foundPath = files[0];
-          console.log(`Found db.js at: ${foundPath}`);
-          
-          // Back up the file
-          const backupPath = path.join(backupDir, 'db.js.bak');
-          fs.copyFileSync(foundPath, backupPath);
-          console.log(`✓ Created backup at: ${backupPath}`);
-          
-          // Create the new db.js file
-          const newDbJs = `
-import pg from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from '../shared/schema.js';
-
-console.log('Initializing PostgreSQL connection with direct connection...');
-
-const { Pool } = pg;
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
-
-export const db = drizzle(pool, { schema });
-`;
-          
-          // Write the new file
-          await writeFile(foundPath, newDbJs);
-          console.log(`✓ Updated ${foundPath} with direct PostgreSQL connection`);
-          found = true;
-        }
-      } catch (err) {
-        console.log('Error searching for db.js:', err.message);
+    console.log("Testing database connection...");
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false
       }
-    }
+    });
     
-    if (!found) {
-      console.log('! Could not find compiled db.js file. Will try to create it.');
-      
-      // Create a new db.js file in the server directory
-      if (!fs.existsSync(serverDir)) {
-        await mkdir(serverDir, { recursive: true });
-        console.log(`Created server directory: ${serverDir}`);
-      }
-      
-      const newDbJsPath = path.join(serverDir, 'db.js');
-      const newDbJs = `
-import pg from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from '../shared/schema.js';
-
-console.log('Initializing PostgreSQL connection with direct connection...');
-
-const { Pool } = pg;
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
-});
-
-export const db = drizzle(pool, { schema });
-`;
-      
-      // Write the new file
-      await writeFile(newDbJsPath, newDbJs);
-      console.log(`✓ Created new ${newDbJsPath} with direct PostgreSQL connection`);
-    }
+    const client = await pool.connect();
+    console.log("✓ Successfully connected to the database");
     
-    // Restart the application
-    console.log('Restarting the application...');
-    try {
-      await exec('pm2 restart speedtest');
-      console.log('✓ Restarted application');
-    } catch (err) {
-      console.log('! Could not restart application with PM2');
-      console.log('  Please restart the application manually');
-    }
+    const result = await client.query('SELECT NOW()');
+    console.log("✓ Successfully executed query:", result.rows[0]);
     
-    console.log('\n=== Hotfix Complete ===');
-    console.log('The database connection should now be working properly.');
-    console.log('Check the application logs with: pm2 logs speedtest');
+    console.log("Checking database tables...");
+    const tablesResult = await client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
+    console.log("Database tables:", tablesResult.rows.map(row => row.table_name).join(', '));
     
+    client.release();
+    pool.end();
   } catch (err) {
-    console.error('Error applying hotfix:', err);
+    console.error("! Database connection error:", err);
   }
 }
 
-fixDatabase();
+testConnection();
+`;
+
+fs.writeFileSync(testScriptPath, testScript);
+console.log(`Created test script at: ${testScriptPath}`);
+
+// Install dotenv for test script
+try {
+  console.log('Installing dotenv...');
+  execSync('cd /opt/speedtest && npm install dotenv', { stdio: 'inherit' });
+  console.log('Installed dotenv successfully');
+} catch (error) {
+  console.error('Error installing dotenv:', error.message);
+}
+
+console.log('\nHotfix completed successfully!');
+console.log('\nNext steps:');
+console.log('1. Run the test script: node test_db.js');
+console.log('2. Restart the application: pm2 restart speedtest');
+console.log('3. Try logging in again');
