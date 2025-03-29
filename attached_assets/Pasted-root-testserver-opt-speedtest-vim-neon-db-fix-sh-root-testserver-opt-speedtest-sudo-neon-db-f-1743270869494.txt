@@ -1,0 +1,75 @@
+root@testserver:/opt/speedtest# vim neon_db_fix.sh
+root@testserver:/opt/speedtest# sudo ./neon_db_fix.sh
+=== SpeedTest Application Production Fix Script ===
+This script will fix database connection and authentication issues
+Installing required packages...
+
+up to date, audited 483 packages in 4s
+
+63 packages are looking for funding
+  run `npm fund` for details
+
+5 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Backed up original db.js file
+! Warning: Original auth.js file not found at /opt/speedtest/dist/server/auth.js
+Creating modified db.js file with direct PostgreSQL connection...
+Creating database test script...
+
+=== Fix Complete ===
+To verify database connection, run: node test_db_connection.js
+To restart your application, run: pm2 restart speedtest
+./neon_db_fix.sh: line 245: syntax error near unexpected token `fi'
+./neon_db_fix.sh: line 245: `  fi'
+root@testserver:/opt/speedtest# vim test_db.js
+root@testserver:/opt/speedtest# chmod +x neon_db_fix.sh
+sudo ./neon_db_fix.sh
+=== SpeedTest Application Production Fix Script ===
+This script will fix database connection and authentication issues
+Installing required packages...
+
+up to date, audited 483 packages in 3s
+
+63 packages are looking for funding
+  run `npm fund` for details
+
+5 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+✓ Backed up original db.js file
+! Warning: Original auth.js file not found at /opt/speedtest/dist/server/auth.js
+Creating modified db.js file with direct PostgreSQL connection...
+Creating database test script...
+
+=== Fix Complete ===
+To verify database connection, run: node test_db_connection.js
+To restart your application, run: pm2 restart speedtest
+./neon_db_fix.sh: line 245: syntax error near unexpected token `fi'
+./neon_db_fix.sh: line 245: `  fi'
+root@testserver:/opt/speedtest# node test_db.js
+file:///opt/speedtest/test_db.js:1
+const { Pool } = require('pg');
+                 ^
+
+ReferenceError: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and '/opt/speedtest/package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///opt/speedtest/test_db.js:1:18
+    at ModuleJob.run (node:internal/modules/esm/module_job:195:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:337:24)
+    at async loadESM (node:internal/process/esm_loader:34:7)
+    at async handleMainPromise (node:internal/modules/run_main:106:12)
+
+Node.js v18.20.8
+root@testserver:/opt/speedtest# vim fix_websocket_urls.sh
+root@testserver:/opt/speedtest# ./fix_websocket_urls.sh
+=== Fixing WebSocket URL Construction ===
+Searching for JavaScript files in your application...
+./fix_websocket_urls.sh: line 267: syntax error near unexpected token `done'
+./fix_websocket_urls.sh: line 267: `  done <<< "$INDEX_DIRS"'
