@@ -1,37 +1,42 @@
 #!/bin/bash
-# Minimal script to fix database connection issues by replacing @neondatabase/serverless with pg
+
+# Minimal script to fix database connection
+
 echo "=== Minimal Database Fix ==="
 
-# Check if running as root
-if [ "$EUID" -ne 0 ]; then
-  echo "Please run as root (sudo ./minimal_db_fix.sh)"
-  exit 1
-fi
-
-APP_DIR="/opt/speedtest"
-BACKUP_DIR="$APP_DIR/backups/db_fix_$(date +%Y%m%d%H%M%S)"
+# Create backup directory
+BACKUP_DIR="/opt/speedtest/backups/fix_$(date +%s)"
 mkdir -p "$BACKUP_DIR"
 echo "Created backup directory: $BACKUP_DIR"
 
-# Find and update db.ts file
-DB_TS_FILE="$APP_DIR/server/db.ts"
-if [ ! -f "$DB_TS_FILE" ]; then
-  DB_TS_FILE=$(find "$APP_DIR" -name "db.ts" | grep -v "node_modules" | head -1)
-fi
+# Install pg package
+echo "Installing PostgreSQL package..."
+cd /opt/speedtest
+npm install pg dotenv
 
-if [ -f "$DB_TS_FILE" ]; then
-  echo "Found database TypeScript file: $DB_TS_FILE"
-  cp "$DB_TS_FILE" "$BACKUP_DIR/db.ts.bak"
+# Find and fix db.ts file
+echo "Fixing db.ts file..."
+DB_TS_FILE=$(find /opt/speedtest -name "db.ts" | grep -v node_modules | head -1)
+if [ -n "$DB_TS_FILE" ]; then
+  cp "$DB_TS_FILE" "$BACKUP_DIR/$(basename "$DB_TS_FILE").bak"
+  echo "Backed up $DB_TS_FILE"
   
-  # Create a new db.ts file
-  cat > "$DB_TS_FILE" << 'EOF'
+  # Creating new db.ts file with PostgreSQL connection
+  cat > "$DB_TS_FILE" << 'EOT'
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schema from "../shared/schema";
 
+// Set SSL options to handle any certificate issues
+process.env.PGSSLMODE = 'require';
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 console.log("Initializing PostgreSQL connection...");
 export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL 
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 // Add connection status logging
@@ -44,56 +49,35 @@ pool.on('error', (err) => {
 });
 
 export const db = drizzle(pool, { schema });
-EOF
-  echo "✓ Updated database connection code in $DB_TS_FILE"
-else
-  echo "! Could not find database TypeScript file"
+EOT
+  echo "Updated $DB_TS_FILE"
 fi
 
-# Install required package
-echo "Installing pg package..."
-cd "$APP_DIR"
-npm install pg
-npm install --save-dev @types/pg
-echo "✓ Installed PostgreSQL packages"
-
-# Backup and fix package.json to make sure @neondatabase/serverless is not used
-PACKAGE_JSON="$APP_DIR/package.json"
-if [ -f "$PACKAGE_JSON" ]; then
-  cp "$PACKAGE_JSON" "$BACKUP_DIR/package.json.bak"
-  # Remove @neondatabase/serverless dependency if it exists
-  if grep -q '"@neondatabase/serverless"' "$PACKAGE_JSON"; then
-    echo "Found @neondatabase/serverless in package.json, removing..."
-    # Use a temporary file to avoid sed issues
-    cat "$PACKAGE_JSON" | grep -v '"@neondatabase/serverless"' > "$BACKUP_DIR/package.json.tmp"
-    cp "$BACKUP_DIR/package.json.tmp" "$PACKAGE_JSON"
-    echo "✓ Removed @neondatabase/serverless from package.json"
-  fi
-fi
-
-# Test database connection
-echo "Testing database connection..."
-cd "$APP_DIR"
-cat > test_db.js << 'EOF'
+# Create test script
+echo "Creating test database script..."
+cat > /opt/speedtest/test_db.js << 'EOT'
 const { Pool } = require('pg');
 require('dotenv').config();
 
+// Set SSL options to handle any certificate issues
+process.env.PGSSLMODE = 'require';
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 async function testConnection() {
   try {
-    console.log("Using DATABASE_URL:", process.env.DATABASE_URL || "Not found");
+    console.log("Testing database connection...");
     const pool = new Pool({
-      connectionString: process.env.DATABASE_URL
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false
+      }
     });
     
-    console.log("Testing database connection...");
     const client = await pool.connect();
     console.log("✓ Successfully connected to the database");
+    
     const result = await client.query('SELECT NOW()');
     console.log("✓ Successfully executed query:", result.rows[0]);
-    
-    console.log("Checking database tables...");
-    const tablesResult = await client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
-    console.log("Database tables:", tablesResult.rows.map(row => row.table_name).join(', '));
     
     client.release();
     pool.end();
@@ -103,23 +87,8 @@ async function testConnection() {
 }
 
 testConnection();
-EOF
+EOT
 
-npm install dotenv
-node test_db.js
-
-# Restart the application
-echo "Restarting the application..."
-cd "$APP_DIR"
-if command -v pm2 &> /dev/null; then
-  if pm2 list | grep -q speedtest; then
-    pm2 restart speedtest
-    echo "✓ Restarted application with PM2"
-  else
-    pm2 start npm --name speedtest -- start
-    echo "✓ Started application with PM2"
-  fi
-fi
-
-echo "Database fix complete. Try logging in again."
-echo "If you still have issues, check the application logs with: pm2 logs speedtest"
+echo "Fix completed! Now run:"
+echo "1. node test_db.js"
+echo "2. pm2 restart speedtest"
